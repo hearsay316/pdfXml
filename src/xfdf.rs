@@ -1,7 +1,21 @@
 //! XFDF (XML Forms Data Format) 解析模块
 //!
+//! 这个文件的工作可以简单理解成：
+//! “把 XFDF 这种 XML 文本，翻译成 Rust 里的注释对象”。
+//!
+//! 也就是把原本长得像这样：
+//! - `<text ...>`
+//! - `<highlight ...>`
+//! - `<line ...>`
+//! 这样的 XML 标签，
+//! 最后变成程序里能直接操作的 `Annotation`、`XfdfDocument` 等结构体。
+//!
+//! 读这个文件时，建议重点抓住两件事：
+//! 1. `parse`：负责一边读 XML，一边收集数据
+//! 2. `build_annotation`：负责把“收集到的字符串属性”组装成真正的注释对象
+//!
 //! XFDF 是 Adobe 定义的 XML 格式，用于表示 PDF 文档中的注释和表单数据。
-//! 
+//!
 //! 示例 XFDF 文件结构:
 //! ```xml
 //! <?xml version="1.0" encoding="UTF-8" ?>
@@ -23,6 +37,8 @@ use quick_xml::Reader;
 use std::collections::HashMap;
 
 fn extract_plain_text_from_richtext(input: &str) -> String {
+    // 有些 XFDF 会把内容放在富文本里，里面带 HTML 标签。
+    // 这里先做一个“够用”的清洗：去标签、还原常见实体、压缩空白。
     let no_tags = regex::Regex::new(r"<[^>]+>")
         .unwrap()
         .replace_all(input, " ")
@@ -63,7 +79,14 @@ pub struct XfdfField {
 }
 
 impl XfdfDocument {
-    /// 解析 XFDF/XML 字符串为文档对象
+    /// 解析 XFDF/XML 字符串为文档对象。
+    ///
+    /// 这整个函数可以理解成一个“小型状态机”：
+    /// - 看到开始标签，就进入某种状态
+    /// - 看到文本，就把内容暂存起来
+    /// - 看到结束标签，就把暂存的数据组装成最终对象
+    ///
+    /// 最后产出一个 `XfdfDocument`，里面包含字段、注释和元数据。
     pub fn parse(xml_str: &str) -> Result<Self> {
         let mut reader = Reader::from_str(xml_str);
         reader.config_mut().trim_text(true);
@@ -75,6 +98,9 @@ impl XfdfDocument {
             metadata: HashMap::new(),
         };
         
+        // 下面这些变量就是“解析过程中的临时工作台”。
+        // 因为 XML 是一段一段读出来的，所以要先把中间状态存起来，
+        // 等读完整个注释后，再一次性组装成最终对象。
         let mut buf = Vec::new();
         let mut in_annots = false;
         let mut in_fields = false;
@@ -82,7 +108,7 @@ impl XfdfDocument {
         let mut current_annotation_attrs: HashMap<String, String> = HashMap::new();
         let mut current_annotation_content: String = String::new();
         let mut current_annotation_type: Option<String> = None;
-        
+
         // 追踪注释内部子元素
         let mut in_inklist = false;
         let mut current_gesture_data: String = String::new();
@@ -91,6 +117,9 @@ impl XfdfDocument {
         let mut child_tag_content: String = String::new();  // 子标签的文本内容
 
         loop {
+            // quick-xml 每次只吐出一个事件：
+            // 可能是开始标签、结束标签、文本、空标签等。
+            // 我们就是在这里一边读事件，一边决定该把数据放到哪里。
             match reader.read_event_into(&mut buf) {
                 Ok(Event::Start(ref e)) => {
                     let tag_name = String::from_utf8_lossy(e.local_name().as_ref()).into_owned();
@@ -353,7 +382,10 @@ impl XfdfDocument {
         Ok(doc)
     }
     
-    /// 判断是否为已知的注释类型标签
+    /// 根据标签名判断：它是不是我们支持的注释类型。
+    ///
+    /// 比如 `text`、`highlight`、`square`、`polyline` 都算。
+    /// 如果不是这里列出的标签，解析器就不会把它当成注释对象来构建。
     fn is_annotation_tag(tag: &str) -> bool {
         matches!(tag,
             "text" | "highlight" | "underline" | "strikeout" | "squiggly" |
@@ -364,7 +396,11 @@ impl XfdfDocument {
         )
     }
     
-    /// 构建注释对象
+    /// 把“注释类型 + 属性字典 + 文本内容”组装成真正的 `Annotation`。
+    ///
+    /// 可以把它理解成解析阶段的“最后一道装配工序”。
+    /// 前面的 `parse` 负责把 XML 里的字符串先收集起来，
+    /// 这里再根据标签类型决定应该创建哪一种注释结构体。
     fn build_annotation(
         annotation_type: &str,
         attrs: &HashMap<String, String>,

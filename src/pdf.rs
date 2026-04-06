@@ -1,5 +1,17 @@
 //! PDF 生成和注释导出模块
 //!
+//! 这个文件负责做项目里最“落地”的那一步：
+//! 把已经解析好的注释数据，真正写进 PDF。
+//!
+//! 如果把整个项目想成一条流水线，那它大概是这样：
+//! 1. `xfdf.rs` 负责把 XFDF/XML 解析成 Rust 结构体
+//! 2. `pdf.rs` 负责把这些结构体变成 PDF 里的对象和外观
+//!
+//! 所以这里的核心关注点不是“怎么读 XML”，而是：
+//! - 注释在 PDF 里要写成什么字典
+//! - 颜色、边框、文字、坐标怎么落到 PDF 对象里
+//! - 怎样补显式 AP（Appearance Stream），让阅读器更稳定地显示图形
+//!
 //! 使用 lopdf 库创建 PDF 文件并将 XFDF 注释写入
 
 use base64::Engine;
@@ -14,6 +26,9 @@ use std::path::{Path, PathBuf};
 use ttf_parser::{Face, OutlineBuilder};
 
 fn contains_chinese(s: &str) -> bool {
+    // 这是一个很实用的小判断：
+    // 如果内容里有中文，就不能完全按简单西文字体那套方式处理。
+    // 后面的 FreeText 渲染、编码和字体选择都会用到它。
     s.chars().any(|c| {
         matches!(c,
             '\u{4E00}'..='\u{9FFF}' |
@@ -25,6 +40,8 @@ fn contains_chinese(s: &str) -> bool {
 }
 
 fn to_utf16be(s: &str) -> Vec<u8> {
+    // PDF 里如果直接写中文，常常需要转成 UTF-16BE。
+    // 可以简单理解成：把字符串变成 PDF 更容易正确识别的字节格式。
     let mut result = Vec::with_capacity(s.len() * 2 + 2);
     result.push(0xFE);
     result.push(0xFF);
@@ -129,12 +146,21 @@ fn parse_alignment_from_style(style: Option<&str>) -> i32 {
 
 #[derive(Debug, Clone)]
 struct FreeTextRenderSpec {
+    // 真正要画出来的文字内容。
     contents: String,
+    // PDF 里的默认外观字符串（DA）。
+    // 里面通常带字体、字号、颜色这类信息。
     da: String,
+    // 对齐方式：0=左对齐，1=居中，2=右对齐。
     align: i32,
+    // 是否包含中文/中日韩文字。
+    // 这个标记会决定后面走“普通文字 AP”还是“字形轮廓 AP”。
     is_cjk: bool,
 }
 
+// 这个结构体是给 ttf-parser 用的“画笔”。
+// 字体库告诉我们：一个字形要 move_to / line_to / curve_to 到哪里，
+// 我们就在这里把这些动作翻译成 PDF path 命令。
 struct GlyphPathBuilder {
     path: String,
     current_x: f32,
@@ -204,10 +230,16 @@ impl OutlineBuilder for GlyphPathBuilder {
 }
 
 pub struct PdfAnnotationExporter {
+    // 默认页面大小。创建“新 PDF”时会用到它。
+    // 目前默认值接近 A4（595 x 842 point）。
     page_size: (f64, f64),
 }
 
 impl PdfAnnotationExporter {
+    /// 创建一个导出器。
+    ///
+    /// 你可以把它理解成“准备好一个负责写 PDF 的工具对象”。
+    /// 后面无论是新建 PDF，还是合并到已有 PDF，都会通过它来完成。
     pub fn new() -> Self {
         Self {
             page_size: (595.0, 842.0),
@@ -215,6 +247,9 @@ impl PdfAnnotationExporter {
     }
 
     #[allow(dead_code)]
+    /// 创建一个自定义页面大小的导出器。
+    ///
+    /// 当你不是用默认页面尺寸时，可以用这个函数覆盖宽高。
     pub fn with_page_size(width: f64, height: f64) -> Self {
         Self {
             page_size: (width, height),
@@ -222,6 +257,8 @@ impl PdfAnnotationExporter {
     }
 
     fn candidate_chinese_font_paths() -> Vec<PathBuf> {
+        // 按顺序尝试几个常见中文字体。
+        // 这里只是“候选列表”，真正能不能用还要看文件是否存在。
         vec![
             PathBuf::from("C:/Windows/Fonts/simsun.ttc"),
             PathBuf::from("C:/Windows/Fonts/msyh.ttc"),
@@ -232,6 +269,8 @@ impl PdfAnnotationExporter {
     }
 
     fn load_chinese_font_bytes() -> Result<Vec<u8>> {
+        // 找到第一份可用中文字体后就直接读取。
+        // 后面的中文 FreeText 外观流会拿它的字形轮廓来画字。
         for path in Self::candidate_chinese_font_paths() {
             if path.exists() {
                 info!("使用中文字体轮廓: {:?}", path);
@@ -243,6 +282,8 @@ impl PdfAnnotationExporter {
     }
 
     fn load_chinese_face() -> Result<Face<'static>> {
+        // 把字体字节解析成 ttf-parser 能理解的 Face 对象。
+        // 后面可以通过它拿到每个字的轮廓。
         let bytes = Self::load_chinese_font_bytes()?;
         let leaked: &'static [u8] = Box::leak(bytes.into_boxed_slice());
         Face::parse(leaked, 0)
@@ -250,6 +291,8 @@ impl PdfAnnotationExporter {
     }
 
     fn build_freetext_render_spec(annotation: &FreeTextAnnotation) -> Option<FreeTextRenderSpec> {
+        // 先把 FreeText 真正渲染时需要的关键信息整理出来，
+        // 这样后面的“生成西文 AP / 生成中文 AP”就不用重复判断一遍。
         let base = &annotation.base;
         let contents = base.contents.as_ref()?.trim().to_string();
         if contents.is_empty() {
@@ -264,6 +307,8 @@ impl PdfAnnotationExporter {
         };
         let is_cjk = contains_chinese(&contents);
 
+        // DA 可以理解成“默认文字外观说明”。
+        // 这里会尽量把字体、字号、颜色整理成后面好直接使用的形式。
         let base_da = if let Some(da) = &annotation.default_appearance {
             if is_cjk {
                 replace_font_in_da(da, "/F0")
@@ -377,6 +422,8 @@ impl PdfAnnotationExporter {
     }
 
     fn build_text_ap_stream(spec: &FreeTextRenderSpec, rect: Option<&Rect>) -> lopdf::Object {
+        // 这是“普通西文文本”的 AP 生成方式。
+        // 思路比较直接：算出一个框，在里面用 Helvetica 把文字写进去。
         let font_size = parse_font_size_from_da(&spec.da);
         let (width, height) = if let Some(rect) = rect {
             (
@@ -389,6 +436,8 @@ impl PdfAnnotationExporter {
 
         let (r, g, b) = extract_fill_color_from_da(&spec.da);
         let escaped = escape_pdf_literal_string(&spec.contents);
+        // 这里的 text_width 只是一个近似值，目的不是排版系统级精确，
+        // 而是让左中右对齐大致可用。
         let text_width = spec.contents.chars().count() as f32 * font_size * 0.55;
         let x = if spec.align == 1 {
             ((width - text_width) / 2.0).max(2.0)
@@ -432,6 +481,8 @@ impl PdfAnnotationExporter {
     }
 
     fn build_cjk_ap_stream(spec: &FreeTextRenderSpec, rect: Option<&Rect>) -> Result<lopdf::Object> {
+        // 中文这条路不能简单依赖 Helvetica 直接写字，
+        // 所以这里改成“拿到字体字形轮廓，然后把每个字真正画出来”。
         let face = Self::load_chinese_face()?;
         let font_size = parse_font_size_from_da(&spec.da);
         let (width, height) = if let Some(rect) = rect {
@@ -468,6 +519,11 @@ impl PdfAnnotationExporter {
             if let Some(glyph_id) = face.glyph_index(ch) {
                 let mut builder = GlyphPathBuilder::new();
                 if face.outline_glyph(glyph_id, &mut builder).is_some() {
+                    // 对每个字符：
+                    // 1. 取字形轮廓
+                    // 2. 缩放到目标字号
+                    // 3. 平移到当前 x_cursor 位置
+                    // 4. 用 path 填充出来
                     content.push_str("q\n");
                     content.push_str(&format!("{} 0 0 {} {} {} cm\n", scale, scale, x_cursor, baseline));
                     content.push_str(&builder.path);
@@ -494,6 +550,7 @@ impl PdfAnnotationExporter {
 
 
     fn decode_stamp_image_data(image_data: &str) -> Result<Vec<u8>> {
+        // stamp 里的图片通常是 data URL/base64，这里先把它还原成原始字节。
         let encoded = image_data
             .split(",")
             .nth(1)
@@ -690,6 +747,8 @@ impl PdfAnnotationExporter {
     }
 
     fn build_arrowhead_path(tip_x: f32, tip_y: f32, base_x: f32, base_y: f32, size: f32, style: &str) -> Option<String> {
+        // 这里专门负责生成线段端点的小图形，比如箭头、方块、圆点。
+        // 返回的是一小段 PDF path 命令，最后会拼进 line 的 AP 里。
         let style = style.trim();
         if style.is_empty() || style.eq_ignore_ascii_case("None") {
             return None;
@@ -898,6 +957,8 @@ impl PdfAnnotationExporter {
     }
 
     pub fn export_to_new_pdf(&mut self, xfdf_doc: &XfdfDocument, output_path: &Path) -> Result<()> {
+        // 这种模式下，不依赖外部已有 PDF，
+        // 而是直接创建一个新的 PDF，把每一页的注释放进去。
         info!("创建新 PDF，共 {} 页", xfdf_doc.total_pages());
 
         let mut document = lopdf::Document::with_version("1.5");
@@ -928,6 +989,8 @@ impl PdfAnnotationExporter {
     }
 
     pub fn export_to_existing_pdf(&mut self, xfdf_doc: &XfdfDocument, input_path: &Path, output_path: &Path) -> Result<()> {
+        // 这种模式不是新建空白 PDF，
+        // 而是在已有 PDF 基础上，把 XFDF 里的注释挂到对应页面上。
         info!("打开现有 PDF 并合并注释");
 
         let mut document = lopdf::Document::load(input_path)
@@ -1010,6 +1073,9 @@ impl PdfAnnotationExporter {
     }
 
     fn build_annotation(&self, document: &mut lopdf::Document, annotation: &Annotation) -> Result<lopdf::Dictionary> {
+        // 这里是“把一种注释翻译成 PDF 字典”的总入口。
+        // 前面解析器已经告诉我们：这是一条 text / square / line / polygon ...
+        // 现在要决定：PDF 里该写哪些字段，是否要补 AP，要不要带边框、坐标、文字等。
         let mut dict = Self::build_base_annotation_dict(annotation);
 
         match annotation {
@@ -1051,6 +1117,8 @@ impl PdfAnnotationExporter {
                 dict = self.build_freetext_annotation(document, f)?;
             }
             Annotation::Square(sq) => {
+                // square 不只是写“这是个矩形注释”，
+                // 还会尽量补显式 AP，让阅读器直接看到我们画好的外观。
                 let line_width = sq.width.max(1.0);
                 dict.set("BS", lopdf::Dictionary::from_iter(vec![
                     ("W", lopdf::Object::Real(line_width)),
@@ -1077,6 +1145,8 @@ impl PdfAnnotationExporter {
                 }
             }
             Annotation::Circle(c) => {
+                // circle 的思路和 square 类似：
+                // 除了基础字典字段，还会补边框、填充色和显式 AP。
                 let line_width = c.width.max(1.0);
                 dict.set("BS", lopdf::Dictionary::from_iter(vec![
                     ("W", lopdf::Object::Real(line_width)),
@@ -1101,6 +1171,8 @@ impl PdfAnnotationExporter {
                 }
             }
             Annotation::Line(l) => {
+                // line 需要的关键数据是起点、终点，以及两端样式。
+                // 如果补了显式 AP，线段和箭头在不同阅读器里会更稳定。
                 let line_width = l.width.max(1.0);
                 if let (Some(start_str), Some(end_str)) = (&l.start, &l.end) {
                     if let (Some(start), Some(end)) = (Self::parse_point(start_str), Self::parse_point(end_str)) {
@@ -1130,6 +1202,8 @@ impl PdfAnnotationExporter {
                 }
             }
             Annotation::Polygon(p) => {
+                // polygon / polyline 的核心数据是顶点列表。
+                // closed=true 时按封闭图形处理，否则按折线处理。
                 if let Some(ref vertices_str) = p.vertices {
                     if let Some(verts) = Self::parse_vertices(vertices_str) {
                         dict.set("Vertices", verts);

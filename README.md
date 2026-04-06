@@ -62,6 +62,12 @@ XFDF (XML Forms Data Format) 是 Adobe 定义的一种 XML 格式，用于独立
 | `<ink>` | Ink | 手绘墨迹 |
 | `<stamp>` | Stamp | 预设图章 |
 
+## 📖 文档导航
+
+- 想直接在终端使用：看下面的 **快速开始**
+- 想把它当 Rust 库调用：看 [SDK_GUIDE.md](SDK_GUIDE.md)
+- 想快速理解公开 API：优先看 `src/lib.rs`
+
 ## 🚀 快速开始
 
 ### 安装
