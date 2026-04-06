@@ -7,7 +7,7 @@
 
 ## ✨ 功能特性
 
-- 📝 **完整支持 XFDF 格式**：解析 Adobe 标准的 XML Forms Data Format
+- 📝 **支持 XFDF/XML 批注解析与转换**：当前覆盖大部分常见批注类型，详细范围见 [ANNOTATION_SUPPORT.md](ANNOTATION_SUPPORT.md)
 - 🎨 **多种注释类型**：
   - 文本注释（Text/便签）
   - 高亮（Highlight）、下划线（Underline）、删除线（StrikeOut）
@@ -23,6 +23,7 @@
   2. 合并到现有 PDF：将注释添加到已有文档
 
 - ⚡ **高性能**：纯 Rust 实现，内存安全，速度快
+- 📋 **批注支持清单**：详见 [ANNOTATION_SUPPORT.md](ANNOTATION_SUPPORT.md)
 
 ## 📖 XFDF 格式简介
 
