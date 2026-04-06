@@ -8,7 +8,22 @@
       "Bash(grep -E \"^\\(simsun|simsunb|msyh|msyhbd|simhei|simkai|arialuni\\).*\\\\.\\(ttf|ttc|TTF|TTC\\)$\")",
       "Bash(cargo run:*)",
       "Bash(where mutool:*)",
-      "Bash(where link:*)"
+      "Bash(where link:*)",
+      "Bash(rustc:*)",
+      "Bash(cargo:*)",
+      "Bash(where cl:*)",
+      "Bash(where:*)",
+      "Bash(cmd.exe:*)",
+      "Bash(/c/Program Files \\(x86\\)/Microsoft Visual Studio/Installer/vswhere.exe:*)",
+      "Bash(git -C \"/d/code2026/pdfXml\" status --short)",
+      "Bash(rustup show:*)",
+      "Bash(ls:*)",
+      "Bash(C:/Program Files/LLVM/bin/lld-link.exe:*)",
+      "Bash(cmd:*)",
+      "Bash(D:/code2026/pdfXml/run_vs_tests.cmd:*)",
+      "Bash(\"D:/code2026/pdfXml/run_vs_all_tests.cmd\")",
+      "WebFetch(domain:opensource.adobe.com)",
+      "WebSearch"
     ]
   }
 }

@@ -37,6 +37,26 @@ pub fn load_xfdf(path: impl AsRef<Path>) -> Result<XfdfDocument> {
     XfdfDocument::parse(&content)
 }
 
+/// 从 PDF 读取注释，并转换成项目统一使用的 `XfdfDocument`。
+///
+/// 这样就能继续复用现有的数据模型、测试和后续 XFDF 序列化逻辑。
+pub fn load_annotations_from_pdf(path: impl AsRef<Path>) -> Result<XfdfDocument> {
+    let mut exporter = PdfAnnotationExporter::new();
+    exporter.load_annotations_from_pdf(path.as_ref())
+}
+
+/// 把 PDF 里的注释直接导出成标准 XFDF 文件。
+pub fn export_pdf_annotations_to_xfdf(
+    input_pdf: impl AsRef<Path>,
+    output_xfdf: impl AsRef<Path>,
+) -> Result<()> {
+    let xfdf_doc = load_annotations_from_pdf(input_pdf)?;
+    let xml = xfdf_doc.to_xfdf_string()?;
+    fs::write(output_xfdf, xml)
+        .map_err(|e| PdfXmlError::PdfProcessing(format!("写入 XFDF 文件失败: {}", e)))?;
+    Ok(())
+}
+
 /// 把解析后的注释导出成 PDF。
 ///
 /// - `xfdf_doc`：已经解析好的注释数据

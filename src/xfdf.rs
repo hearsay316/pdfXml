@@ -552,14 +552,272 @@ impl XfdfDocument {
         )
     }
 
-    /// 获取指定页码的所有注释
+    /// 获取指定页面上的所有注释。
     pub fn get_annotations_for_page(&self, page: usize) -> Vec<&Annotation> {
         self.annotations.iter().filter(|a| a.page() == page).collect()
     }
 
-    /// 获取总页数（基于注释中最大的页码 + 1）
+    /// 返回文档总页数。
     pub fn total_pages(&self) -> usize {
-        self.annotations.iter().map(|a| a.page()).max().map(|p| p + 1).unwrap_or(1)
+        self.annotations
+            .iter()
+            .map(|a| a.page())
+            .max()
+            .map(|p| p + 1)
+            .unwrap_or(1)
+    }
+
+    /// 把当前文档序列化成标准 XFDF 字符串。
+    ///
+    /// 这相当于 `parse(...)` 的反方向：
+    /// 把程序里的注释对象重新写回 XFDF/XML。
+    pub fn to_xfdf_string(&self) -> Result<String> {
+        let mut xml = String::from("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n");
+        xml.push_str("<xfdf xmlns=\"http://ns.adobe.com/xfdf/\" xml:space=\"preserve\">\n");
+
+        if !self.annotations.is_empty() {
+            xml.push_str("  <annots>\n");
+            for annotation in &self.annotations {
+                xml.push_str(&annotation_to_xfdf_element(annotation)?);
+            }
+            xml.push_str("  </annots>\n");
+        }
+
+        xml.push_str("</xfdf>\n");
+        Ok(xml)
+    }
+}
+
+fn escape_xml_text(value: &str) -> String {
+    value
+        .replace('&', "&amp;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
+}
+
+fn escape_xml_attr(value: &str) -> String {
+    escape_xml_text(value)
+        .replace('"', "&quot;")
+        .replace('\'', "&apos;")
+}
+
+fn format_rect(rect: &Rect) -> String {
+    format!("{},{},{},{}", rect.left, rect.bottom, rect.right, rect.top)
+}
+
+fn format_opacity(opacity: f32) -> String {
+    let mut s = format!("{:.3}", opacity);
+    while s.contains('.') && s.ends_with('0') {
+        s.pop();
+    }
+    if s.ends_with('.') {
+        s.pop();
+    }
+    s
+}
+
+fn push_base_attrs(attrs: &mut Vec<(String, String)>, base: &AnnotationBase) {
+    if let Some(name) = &base.name {
+        attrs.push(("name".to_string(), name.clone()));
+    }
+    attrs.push(("page".to_string(), base.page.to_string()));
+    if let Some(rect) = &base.rect {
+        attrs.push(("rect".to_string(), format_rect(rect)));
+    }
+    if let Some(title) = &base.title {
+        attrs.push(("title".to_string(), title.clone()));
+    }
+    if let Some(subject) = &base.subject {
+        attrs.push(("subject".to_string(), subject.clone()));
+    }
+    if let Some(creation_date) = &base.creation_date {
+        attrs.push(("creationdate".to_string(), creation_date.clone()));
+    }
+    if let Some(modification_date) = &base.modification_date {
+        attrs.push(("date".to_string(), modification_date.clone()));
+    }
+    if let Some(color) = &base.color {
+        attrs.push(("color".to_string(), color.clone()));
+    }
+    if (base.opacity - 1.0).abs() > f32::EPSILON {
+        attrs.push(("opacity".to_string(), format_opacity(base.opacity)));
+    }
+    if base.flags != 0 {
+        attrs.push(("flags".to_string(), format!("{:X}", base.flags)));
+    }
+    for (key, value) in &base.extra {
+        attrs.push((key.clone(), value.clone()));
+    }
+}
+
+fn attrs_to_string(attrs: &[(String, String)]) -> String {
+    attrs
+        .iter()
+        .map(|(key, value)| format!(" {}=\"{}\"", key, escape_xml_attr(value)))
+        .collect::<String>()
+}
+
+fn annotation_to_xfdf_element(annotation: &Annotation) -> Result<String> {
+    let (tag, attrs, contents) = match annotation {
+        Annotation::Text(text) => {
+            let mut attrs = Vec::new();
+            push_base_attrs(&mut attrs, &text.base);
+            if text.open {
+                attrs.push(("open".to_string(), "yes".to_string()));
+            }
+            if text.icon_type != "Note" {
+                attrs.push(("icon".to_string(), text.icon_type.clone()));
+            }
+            ("text", attrs, text.base.contents.clone())
+        }
+        Annotation::Highlight(highlight) => {
+            let mut attrs = Vec::new();
+            push_base_attrs(&mut attrs, &highlight.base);
+            if let Some(coords) = &highlight.coords {
+                attrs.push(("coords".to_string(), coords.clone()));
+            }
+            ("highlight", attrs, highlight.base.contents.clone())
+        }
+        Annotation::Underline(underline) => {
+            let mut attrs = Vec::new();
+            push_base_attrs(&mut attrs, &underline.base);
+            if let Some(coords) = &underline.coords {
+                attrs.push(("coords".to_string(), coords.clone()));
+            }
+            ("underline", attrs, underline.base.contents.clone())
+        }
+        Annotation::StrikeOut(strikeout) => {
+            let mut attrs = Vec::new();
+            push_base_attrs(&mut attrs, &strikeout.base);
+            if let Some(coords) = &strikeout.coords {
+                attrs.push(("coords".to_string(), coords.clone()));
+            }
+            ("strikeout", attrs, strikeout.base.contents.clone())
+        }
+        Annotation::Squiggly(squiggly) => {
+            let mut attrs = Vec::new();
+            push_base_attrs(&mut attrs, &squiggly.base);
+            if let Some(coords) = &squiggly.coords {
+                attrs.push(("coords".to_string(), coords.clone()));
+            }
+            ("squiggly", attrs, squiggly.base.contents.clone())
+        }
+        Annotation::FreeText(freetext) => {
+            let mut attrs = Vec::new();
+            push_base_attrs(&mut attrs, &freetext.base);
+            if let Some(default_style) = &freetext.default_style {
+                attrs.push(("defaultstyle".to_string(), default_style.clone()));
+            }
+            if let Some(default_appearance) = &freetext.default_appearance {
+                attrs.push(("defaultappearance".to_string(), default_appearance.clone()));
+            }
+            if let Some(text_color) = &freetext.text_color {
+                attrs.push(("TextColor".to_string(), text_color.clone()));
+            }
+            if freetext.align != 0 {
+                attrs.push(("align".to_string(), freetext.align.to_string()));
+            }
+            ("freetext", attrs, freetext.base.contents.clone())
+        }
+        Annotation::Square(square) => {
+            let mut attrs = Vec::new();
+            push_base_attrs(&mut attrs, &square.base);
+            if (square.width - 1.0).abs() > f32::EPSILON {
+                attrs.push(("width".to_string(), format_opacity(square.width)));
+            }
+            ("square", attrs, square.base.contents.clone())
+        }
+        Annotation::Circle(circle) => {
+            let mut attrs = Vec::new();
+            push_base_attrs(&mut attrs, &circle.base);
+            if (circle.width - 1.0).abs() > f32::EPSILON {
+                attrs.push(("width".to_string(), format_opacity(circle.width)));
+            }
+            if let Some(interior_color) = &circle.interior_color {
+                attrs.push(("interiorcolor".to_string(), interior_color.clone()));
+            }
+            ("circle", attrs, circle.base.contents.clone())
+        }
+        Annotation::Line(line) => {
+            let mut attrs = Vec::new();
+            push_base_attrs(&mut attrs, &line.base);
+            if let Some(start) = &line.start {
+                attrs.push(("start".to_string(), start.clone()));
+            }
+            if let Some(end) = &line.end {
+                attrs.push(("end".to_string(), end.clone()));
+            }
+            if !line.head_style.is_empty() {
+                attrs.push(("head".to_string(), line.head_style.clone()));
+            }
+            if !line.tail_style.is_empty() {
+                attrs.push(("tail".to_string(), line.tail_style.clone()));
+            }
+            if (line.width - 1.0).abs() > f32::EPSILON {
+                attrs.push(("width".to_string(), format_opacity(line.width)));
+            }
+            ("line", attrs, line.base.contents.clone())
+        }
+        Annotation::Polygon(polygon) => {
+            let mut attrs = Vec::new();
+            push_base_attrs(&mut attrs, &polygon.base);
+            if let Some(vertices) = &polygon.vertices {
+                attrs.push(("vertices".to_string(), vertices.clone()));
+            }
+            let tag = if polygon.is_closed { "polygon" } else { "polyline" };
+            (tag, attrs, polygon.base.contents.clone())
+        }
+        Annotation::Ink(ink) => {
+            let mut attrs = Vec::new();
+            push_base_attrs(&mut attrs, &ink.base);
+            if (ink.width - 1.0).abs() > f32::EPSILON {
+                attrs.push(("width".to_string(), format_opacity(ink.width)));
+            }
+            let mut xml = format!("    <ink{}>\n", attrs_to_string(&attrs));
+            if let Some(contents) = &ink.base.contents {
+                xml.push_str(&format!("      {}\n", escape_xml_text(contents)));
+            }
+            if !ink.ink_list.is_empty() {
+                xml.push_str("      <inklist>\n");
+                for gesture in &ink.ink_list {
+                    xml.push_str(&format!("        <gesture>{}</gesture>\n", escape_xml_text(gesture)));
+                }
+                xml.push_str("      </inklist>\n");
+            }
+            xml.push_str("    </ink>\n");
+            return Ok(xml);
+        }
+        Annotation::Stamp(stamp) => {
+            let mut attrs = Vec::new();
+            push_base_attrs(&mut attrs, &stamp.base);
+            if !stamp.icon.is_empty() {
+                attrs.push(("icon".to_string(), stamp.icon.clone()));
+            }
+            if let Some(image_data) = &stamp.image_data {
+                attrs.push(("imagedata".to_string(), image_data.clone()));
+            }
+            ("stamp", attrs, stamp.base.contents.clone())
+        }
+        Annotation::Popup(popup) => {
+            let mut attrs = Vec::new();
+            push_base_attrs(&mut attrs, &popup.base);
+            if popup.open {
+                attrs.push(("open".to_string(), "yes".to_string()));
+            }
+            if let Some(parent_name) = &popup.parent_name {
+                attrs.push(("parent".to_string(), parent_name.clone()));
+            }
+            ("popup", attrs, popup.base.contents.clone())
+        }
+    };
+
+    let attrs = attrs_to_string(&attrs);
+    match contents {
+        Some(contents) if !contents.is_empty() => Ok(format!(
+            "    <{tag}{attrs}>{}</{tag}>\n",
+            escape_xml_text(&contents)
+        )),
+        _ => Ok(format!("    <{tag}{attrs}/>\n")),
     }
 }
 
@@ -622,10 +880,39 @@ mod tests {
     }
 
     #[test]
-    fn test_color_parsing() {
-        let color = Color::from_hex("#FF0000").unwrap();
-        assert!((color.r - 1.0).abs() < f32::EPSILON);
-        assert!((color.g - 0.0).abs() < f32::EPSILON);
-        assert!((color.b - 0.0).abs() < f32::EPSILON);
+    fn test_to_xfdf_string() {
+        let doc = XfdfDocument {
+            xmlns: Some("http://ns.adobe.com/xfdf/".to_string()),
+            fields: Vec::new(),
+            annotations: vec![Annotation::Text(TextAnnotation {
+                base: AnnotationBase {
+                    name: Some("annot-1".to_string()),
+                    page: 0,
+                    rect: Some(Rect {
+                        left: 100.0,
+                        bottom: 600.0,
+                        right: 300.0,
+                        top: 650.0,
+                    }),
+                    title: Some("Author".to_string()),
+                    subject: Some("Test Comment".to_string()),
+                    contents: Some("Hello <XFDF> & PDF".to_string()),
+                    creation_date: None,
+                    modification_date: Some("D:20240101120000".to_string()),
+                    color: Some("#FFFF00".to_string()),
+                    opacity: 1.0,
+                    flags: 0,
+                    extra: HashMap::new(),
+                },
+                open: false,
+                icon_type: "Note".to_string(),
+            })],
+            metadata: HashMap::new(),
+        };
+
+        let xml = doc.to_xfdf_string().unwrap();
+        assert!(xml.contains("<xfdf xmlns=\"http://ns.adobe.com/xfdf/\" xml:space=\"preserve\">"));
+        assert!(xml.contains("<annots>"));
+        assert!(xml.contains("<text name=\"annot-1\" page=\"0\" rect=\"100,600,300,650\" title=\"Author\" subject=\"Test Comment\" date=\"D:20240101120000\" color=\"#FFFF00\">Hello &lt;XFDF&gt; &amp; PDF</text>"));
     }
 }

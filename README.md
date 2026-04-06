@@ -90,6 +90,9 @@ pdfxml -i input.xfdf -o output.pdf
 # 指定目标 PDF（合并注释到现有文档）
 pdfxml -i annotations.xfdf --target-pdf original.pdf -o annotated.pdf
 
+# 从 PDF 导出标准 XFDF
+pdfxml --from-pdf -i annotated.pdf -o exported.xfdf
+
 # 详细输出模式
 pdfxml -i input.xfdf -o output.pdf -v
 ```
@@ -98,9 +101,10 @@ pdfxml -i input.xfdf -o output.pdf -v
 
 | 参数 | 缩写 | 必填 | 说明 |
 |-----|------|------|------|
-| `--input` | `-i` | ✓ | 输入的 XFDF/XML 文件路径 |
-| `--output` | `-o` | | 输出的 PDF 文件路径（默认与输入同名） |
-| `--target-pdf` | `-t` | | 目标 PDF 文件路径（可选） |
+| `--input` | `-i` | ✓ | 输入文件路径（XFDF 或 PDF） |
+| `--output` | `-o` | | 输出文件路径 |
+| `--target-pdf` | `-t` | | 目标 PDF 文件路径（仅 XFDF -> PDF 时可选） |
+| `--from-pdf` | | | 从 PDF 导出 XFDF |
 | `--verbose` | `-v` | | 详细输出模式 |
 
 ## 📁 项目结构
@@ -139,7 +143,13 @@ pdfxml -i examples/sample.xfdf -o output/sample.pdf
 pdfxml -i comments.xfdf --target-pdf document.pdf -o annotated_document.pdf
 ```
 
-### 示例 3：在代码中作为库调用
+### 示例 3：从 PDF 导出 XFDF
+
+```bash
+pdfxml --from-pdf -i annotated_document.pdf -o exported_annotations.xfdf
+```
+
+### 示例 4：在代码中作为库调用
 
 ```rust
 use pdfxml::{PdfAnnotationExporter, XfdfDocument};
@@ -160,7 +170,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
-### 示例 4：使用顶层 SDK 包装函数
+### 示例 5：使用顶层 SDK 包装函数
 
 ```rust
 use pdfxml::{export_annotations, load_xfdf};
@@ -168,6 +178,20 @@ use pdfxml::{export_annotations, load_xfdf};
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let doc = load_xfdf("annotations.xfdf")?;
     export_annotations(&doc, Some("original.pdf"), "annotated.pdf")?;
+    Ok(())
+}
+```
+
+### 示例 6：从 PDF 读取注释并转回 XFDF
+
+```rust
+use pdfxml::{export_pdf_annotations_to_xfdf, load_annotations_from_pdf};
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let doc = load_annotations_from_pdf("annotated.pdf")?;
+    println!("注释数量: {}", doc.annotations.len());
+
+    export_pdf_annotations_to_xfdf("annotated.pdf", "annotated.xfdf")?;
     Ok(())
 }
 ```

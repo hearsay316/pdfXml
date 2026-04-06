@@ -10,9 +10,11 @@
 ---
 
 ## 1. 这个项目到底在做什么
+[out.pdf](examples/out.pdf)
+很多 PDF 标注工具可以把注释单独导出成 `XFDF` 文件。
+cargo run -- --from-pdf -i examples/out.pdf -o exported.xfdf
 
-很多 PDF 标注工具可以把注释单独导出成 `XFDF` 或 `XML` 文件。
-
+cargo run -- -i exported.xfdf -t examples/WTchbOFP.pdf -o examples/out2.pdf -v
 比如：
 - 高亮
 - 便签
@@ -24,16 +26,15 @@
 
 这些信息本身不是 PDF 页面内容，而是“注释数据”。
 
-`pdfxml` 的工作就是：
+`pdfxml` 现在支持两条方向：
 
-- **读取 XFDF/XML 注释文件**
-- **把它解析成 Rust 里的数据结构**
-- **再把这些注释写回 PDF**
+- **XFDF -> PDF**
+- **PDF -> XFDF**
 
-所以它像一个“翻译器”：
+所以它像一个“双向翻译器”：
 
-- 输入：XFDF/XML
-- 输出：PDF
+- 输入 XFDF，输出 PDF
+- 或输入 PDF，导出标准 XFDF
 
 ---
 
@@ -45,6 +46,7 @@
 
 ```bash
 pdfxml -i annotations.xfdf -o output.pdf
+pdfxml --from-pdf -i annotated.pdf -o exported.xfdf
 ```
 
 ### SDK 用法
@@ -73,8 +75,8 @@ use pdfxml::{load_xfdf, export_annotations};
 src/
 ├── lib.rs         # 对外暴露的 SDK 入口
 ├── main.rs        # 命令行入口（很薄，只负责接参数和调用库）
-├── xfdf.rs        # 解析 XFDF/XML
-├── pdf.rs         # 生成 PDF / 合并注释到 PDF
+├── xfdf.rs        # 解析 XFDF/XML，并可重新序列化为 XFDF
+├── pdf.rs         # 生成 PDF / 从 PDF 读取注释
 ├── annotation.rs  # 注释的数据结构定义
 └── error.rs       # 错误类型
 ```
@@ -96,21 +98,22 @@ use pdfxml::{XfdfDocument, PdfAnnotationExporter};
 它自己不做复杂业务，只做：
 
 1. 读取参数
-2. 调用 `load_xfdf`
-3. 调用 `export_annotations`
-4. 打印结果
+2. 调用库 API
+3. 打印结果
 
 ### `src/xfdf.rs`
 
-负责把 XML 文本解析成 Rust 结构体。
+负责两件事：
 
-你可以把它理解成“把字符串变成程序能看懂的数据”。
+1. 把 XFDF/XML 文本解析成 Rust 结构体
+2. 把内部注释模型重新写回标准 XFDF 字符串
 
 ### `src/pdf.rs`
 
-负责把注释真正写进 PDF。
+负责两件事：
 
-这里是导出逻辑最核心的地方。
+1. 把注释真正写进 PDF
+2. 从 PDF 页面的 `/Annots` 里读回注释
 
 ### `src/annotation.rs`
 
@@ -141,13 +144,9 @@ use pdfxml::{XfdfDocument, PdfAnnotationExporter};
 
 目前最重要的入口主要有这几个。
 
-## 4.1 `XfdfDocument::parse`
-
-作用：
+### 4.1 `XfdfDocument::parse`
 
 **把一段 XFDF/XML 字符串解析成 `XfdfDocument`。**
-
-示例：
 
 ```rust
 use pdfxml::XfdfDocument;
@@ -168,19 +167,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
-适合场景：
-- 你已经拿到了 XFDF 字符串
-- 内容来自网络、数据库、接口返回值，而不是本地文件
-
----
-
-## 4.2 `load_xfdf`
-
-作用：
+### 4.2 `load_xfdf`
 
 **直接从文件读取并解析 XFDF。**
-
-示例：
 
 ```rust
 use pdfxml::load_xfdf;
@@ -192,28 +181,51 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
-它本质上等于：
+### 4.3 `load_annotations_from_pdf`
 
-1. `read_to_string`
-2. `XfdfDocument::parse`
+**从 PDF 读取注释，并转换成统一的 `XfdfDocument`。**
 
-只是帮你少写两步。
+```rust
+use pdfxml::load_annotations_from_pdf;
 
-适合场景：
-- 你手里就是一个 `.xfdf` 文件
-- 想快速导入
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let doc = load_annotations_from_pdf("annotated.pdf")?;
+    println!("注释数量: {}", doc.annotations.len());
+    Ok(())
+}
+```
 
----
+### 4.4 `XfdfDocument::to_xfdf_string`
 
-## 4.3 `PdfAnnotationExporter::new`
+**把内部注释模型重新序列化成标准 XFDF。**
 
-作用：
+```rust
+use pdfxml::load_annotations_from_pdf;
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let doc = load_annotations_from_pdf("annotated.pdf")?;
+    let xml = doc.to_xfdf_string()?;
+    println!("{}", xml);
+    Ok(())
+}
+```
+
+### 4.5 `export_pdf_annotations_to_xfdf`
+
+**把 PDF 里的注释直接写成 XFDF 文件。**
+
+```rust
+use pdfxml::export_pdf_annotations_to_xfdf;
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    export_pdf_annotations_to_xfdf("annotated.pdf", "annotated.xfdf")?;
+    Ok(())
+}
+```
+
+### 4.6 `PdfAnnotationExporter::new`
 
 **创建一个导出器。**
-
-你可以把它理解成“准备一个负责写 PDF 的工具对象”。
-
-示例：
 
 ```rust
 use pdfxml::PdfAnnotationExporter;
@@ -221,19 +233,9 @@ use pdfxml::PdfAnnotationExporter;
 let mut exporter = PdfAnnotationExporter::new();
 ```
 
-通常它会和下面两个函数配合使用：
-- `export_to_new_pdf`
-- `export_to_existing_pdf`
-
----
-
-## 4.4 `export_to_new_pdf`
-
-作用：
+### 4.7 `export_to_new_pdf`
 
 **新建一个 PDF，把注释写进去。**
-
-示例：
 
 ```rust
 use pdfxml::{PdfAnnotationExporter, XfdfDocument};
@@ -256,275 +258,105 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
-适合场景：
-- 你只想把注释内容单独导出成 PDF
-- 不需要基于已有 PDF 合并
+### 4.8 `export_annotations`
 
----
-
-## 4.5 `export_to_existing_pdf`
-
-作用：
-
-**把注释合并到一个已经存在的 PDF 里。**
-
-示例：
-
-```rust
-use pdfxml::{PdfAnnotationExporter, XfdfDocument};
-use std::path::Path;
-
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let xfdf = std::fs::read_to_string("annotations.xfdf")?;
-    let doc = XfdfDocument::parse(&xfdf)?;
-
-    let mut exporter = PdfAnnotationExporter::new();
-    exporter.export_to_existing_pdf(
-        &doc,
-        Path::new("original.pdf"),
-        Path::new("annotated.pdf"),
-    )?;
-
-    Ok(())
-}
-```
-
-适合场景：
-- 你已经有原始 PDF
-- 想把 XFDF 注释覆盖/合并回去
-
----
-
-## 4.6 `export_annotations`
-
-作用：
-
-**一个更省事的顶层包装函数。**
-
-示例：
+**这是一个更省事的顶层包装函数。**
 
 ```rust
 use pdfxml::{export_annotations, load_xfdf};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let doc = load_xfdf("annotations.xfdf")?;
-
-    export_annotations(
-        &doc,
-        Some("original.pdf"),
-        "annotated.pdf",
-    )?;
-
+    export_annotations(&doc, Some("original.pdf"), "annotated.pdf")?;
     Ok(())
 }
 ```
 
-它的规则是：
+---
 
-- `Some("original.pdf")` → 合并到已有 PDF
-- `None::<&str>` → 新建 PDF
+## 5. 一个完整的 round-trip 思路
 
-新建 PDF 的写法示例：
+如果你想验证“写出去的 PDF，能不能再读回 XFDF”，可以走这个流程：
+
+1. `load_xfdf(...)`
+2. `export_annotations(...)` 生成 PDF
+3. `load_annotations_from_pdf(...)`
+4. `to_xfdf_string()` 或 `export_pdf_annotations_to_xfdf(...)`
 
 ```rust
-use pdfxml::{export_annotations, load_xfdf};
+use pdfxml::{export_annotations, load_annotations_from_pdf, load_xfdf};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let doc = load_xfdf("annotations.xfdf")?;
-    export_annotations(&doc, None::<&str>, "output.pdf")?;
+    let src = load_xfdf("annotations.xfdf")?;
+    export_annotations(&src, None::<&str>, "roundtrip.pdf")?;
+
+    let loaded = load_annotations_from_pdf("roundtrip.pdf")?;
+    let xml = loaded.to_xfdf_string()?;
+
+    std::fs::write("roundtrip.xfdf", xml)?;
     Ok(())
 }
 ```
 
-适合场景：
-- 你不想自己手动 new 一个 exporter
-- 想用最短代码完成导出
+---
+
+## 6. 当前 PDF -> XFDF 的边界
+
+第一版重点是：
+
+- 读取 `/Annots`
+- 识别当前项目已支持的常见注释类型
+- 转回现有 `Annotation` / `XfdfDocument`
+- 输出标准 XFDF
+
+当前策略是：
+
+- 已支持的类型尽量完整导出
+- 不支持的 `/Subtype` 跳过并记录 warning
+- 某些 PDF 字段不能 100% 还原成原始 XFDF 时，以“可用、可回放”为优先
+
+比如：
+
+- `Stamp` 第一版不会伪造原始 `imagedata`
+- `Popup` 会尽量找父注释名字
+- `PolyLine` 会导出成 `<polyline>` 而不是 `<polygon>`
 
 ---
 
-## 5. 两种推荐调用方式
+## 7. 如果你要继续扩展，先看哪里
 
-## 方式 A：最容易上手
+推荐阅读顺序：
 
-如果你只想“读取 xfdf 然后导出 pdf”，推荐这样写：
+1. `src/lib.rs`
+2. `src/annotation.rs`
+3. `src/xfdf.rs`
+4. `src/pdf.rs`
+5. `tests/integration_test.rs`
 
-```rust
-use pdfxml::{export_annotations, load_xfdf};
+如果你要扩展 **XFDF -> PDF**：优先看 `src/pdf.rs` 的 `build_annotation(...)`
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let doc = load_xfdf("annotations.xfdf")?;
-    export_annotations(&doc, None::<&str>, "output.pdf")?;
-    Ok(())
-}
-```
+如果你要扩展 **PDF -> XFDF**：优先看 `src/pdf.rs` 的 `load_annotations_from_pdf(...)` 和 `annotation_from_pdf_dict(...)`
 
-特点：
-- 代码最短
-- 最适合新手
-- 足够覆盖很多常见场景
+如果你要扩展 **序列化**：优先看 `src/xfdf.rs` 的 `to_xfdf_string()`
 
 ---
 
-## 方式 B：更明确、更可控
+## 8. 总结
 
-如果你希望代码更清楚地表达“先解析，再导出”，推荐这样写：
+现在这个库已经不只是“把 XFDF 写成 PDF”。
 
-```rust
-use pdfxml::{PdfAnnotationExporter, XfdfDocument};
-use std::path::Path;
+它已经具备：
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let xfdf = std::fs::read_to_string("annotations.xfdf")?;
-    let doc = XfdfDocument::parse(&xfdf)?;
+- 解析 XFDF
+- 导出 PDF
+- 从 PDF 读回注释
+- 再导出成标准 XFDF
 
-    let mut exporter = PdfAnnotationExporter::new();
-    exporter.export_to_existing_pdf(
-        &doc,
-        Path::new("original.pdf"),
-        Path::new("annotated.pdf"),
-    )?;
+所以后面不管你要做：
 
-    Ok(())
-}
-```
+- SDK 发布
+- 批量转换
+- round-trip 校验
+- 更完整的 PDF 注释兼容
 
-特点：
-- 过程更清楚
-- 更适合以后继续扩展
-- 调试时更容易看出哪一步出错
-
----
-
-## 6. 一个完整思路：程序内部是怎么流动的
-
-可以把整个过程想成下面这样：
-
-```text
-XFDF 文件 / XFDF 字符串
-        ↓
-XfdfDocument::parse / load_xfdf
-        ↓
-得到 XfdfDocument
-        ↓
-PdfAnnotationExporter / export_annotations
-        ↓
-生成新的 PDF 或合并到已有 PDF
-```
-
-如果你以后要接自己的业务系统，通常只要在这条链上接入即可。
-
-例如：
-
-- 上传接口收到 XFDF 文件
-- 后端调用 `load_xfdf` 或 `parse`
-- 然后调用导出函数
-- 最后把生成的 PDF 返回给前端或存盘
-
----
-
-## 7. 常见问题
-
-### 7.1 我该用 `parse` 还是 `load_xfdf`？
-
-看你的输入来源：
-
-- 已经是字符串 → 用 `XfdfDocument::parse`
-- 是文件路径 → 用 `load_xfdf`
-
-简单记：
-- `parse` 处理“文本”
-- `load_xfdf` 处理“文件”
-
----
-
-### 7.2 我该用 `export_annotations` 还是 `PdfAnnotationExporter`？
-
-如果你是第一次接触这个库：
-- **先用 `export_annotations`**
-
-如果你想更明确地控制导出流程：
-- **用 `PdfAnnotationExporter`**
-
-简单记：
-- `export_annotations` 更省事
-- `PdfAnnotationExporter` 更底层一点
-
----
-
-### 7.3 为什么还保留 `main.rs`？
-
-因为这个项目不只是库，还要能当命令行工具直接运行。
-
-所以现在是“双入口”结构：
-
-- `lib.rs`：给 Rust 代码调用
-- `main.rs`：给命令行调用
-
-这样复用同一套核心逻辑，不需要写两份实现。
-
----
-
-### 7.4 如果我要以后发布 SDK，这种结构有什么好处？
-
-好处主要有这些：
-
-1. **公开入口更清楚**
-   - 外部用户直接从 `lib.rs` 导入
-2. **CLI 不会和核心逻辑搅在一起**
-   - 命令行只是外壳
-3. **更容易写测试**
-   - 集成测试可以直接测库 API
-4. **以后更容易发 crates.io**
-   - 因为已经具备标准的 library crate 结构
-
----
-
-## 8. 给新接手项目的人一个建议
-
-如果你是第一次看这个项目，推荐按这个顺序读：
-
-1. 先看 `src/lib.rs`
-   - 知道对外暴露了什么
-2. 再看 `src/main.rs`
-   - 知道命令行怎么调用库
-3. 再看 `src/xfdf.rs`
-   - 知道注释怎么解析
-4. 最后看 `src/pdf.rs`
-   - 知道注释怎么写进 PDF
-
-这样会比一上来直接啃 `pdf.rs` 更容易懂。
-
----
-
-## 9. 一个最短可运行 SDK 示例
-
-```rust
-use pdfxml::{export_annotations, load_xfdf};
-
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let doc = load_xfdf("examples/sample.xfdf")?;
-    export_annotations(&doc, None::<&str>, "output.pdf")?;
-    Ok(())
-}
-```
-
-如果这段你已经看懂了，说明你已经掌握这个 SDK 最核心的用法了。
-
----
-
-## 10. 后续扩展时怎么想
-
-以后如果继续扩展 SDK，建议保持这个思路：
-
-- **对外 API 尽量简单**
-- **内部实现可以复杂，但不要把复杂度直接暴露给调用者**
-- **CLI 继续做薄壳**
-- **优先保证 `lib.rs` 的公开接口稳定**
-
-这样后面无论是：
-- 发 crate
-- 做 Web 服务
-- 做桌面工具
-- 做批处理系统
-
-都更容易复用。
+都已经有一个比较清晰的基础。

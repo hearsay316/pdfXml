@@ -18,10 +18,12 @@ use base64::Engine;
 use crate::annotation::*;
 use crate::error::{PdfXmlError, Result};
 use crate::xfdf::XfdfDocument;
-use image::GenericImageView;
+use image::{DynamicImage, GenericImageView, ImageFormat, RgbaImage};
 use log::{debug, info, warn};
 use lopdf;
+use std::collections::HashMap;
 use std::fs;
+use std::io::Cursor;
 use std::path::{Path, PathBuf};
 use ttf_parser::{Face, OutlineBuilder};
 
@@ -89,47 +91,74 @@ fn apply_text_color_to_da(da: &str, text_color: Option<&str>) -> String {
     };
 
     let trimmed = da.trim();
-    let re = regex::Regex::new(r"(?:\d*\.?\d+\s+){2}\d*\.?\d+\s+r[gG]").unwrap();
+    let fill_re = regex::Regex::new(r"(?:\d*\.?\d+\s+){2}\d*\.?\d+\s+rg").unwrap();
+    let stroke_re = regex::Regex::new(r"(?:\d*\.?\d+\s+){2}\d*\.?\d+\s+RG").unwrap();
     let replacement_rg = format!("{} {} {} rg", color.r, color.g, color.b);
     let replacement_rg_stroke = format!("{} {} {} RG", color.r, color.g, color.b);
 
-    let updated = re
-        .replace_all(trimmed, |caps: &regex::Captures| {
-            let matched = caps.get(0).map(|m| m.as_str()).unwrap_or_default();
-            if matched.ends_with("RG") {
-                replacement_rg_stroke.clone()
-            } else {
-                replacement_rg.clone()
-            }
-        })
-        .to_string();
-
-    if updated == trimmed {
-        format!("{} {} {} RG {}", color.r, color.g, color.b, replacement_rg)
+    let with_fill = if fill_re.is_match(trimmed) {
+        fill_re.replace_all(trimmed, replacement_rg.as_str()).to_string()
+    } else if trimmed.is_empty() {
+        replacement_rg.clone()
     } else {
-        updated
+        format!("{} {}", trimmed, replacement_rg)
+    };
+
+    if stroke_re.is_match(&with_fill) {
+        stroke_re.replace_all(&with_fill, replacement_rg_stroke.as_str()).to_string()
+    } else {
+        format!("{} {}", replacement_rg_stroke, with_fill)
     }
 }
 
-fn parse_font_size_from_da(da: &str) -> f32 {
-    let re = regex::Regex::new(r"/[A-Za-z][A-Za-z0-9_-]*\s+(\d+(?:\.\d+)?)\s*Tf").unwrap();
-    re.captures(da)
-        .and_then(|caps| caps.get(1))
-        .and_then(|m| m.as_str().parse::<f32>().ok())
-        .unwrap_or(12.0)
+fn parse_da_color_captures(caps: &regex::Captures) -> Option<(f32, f32, f32)> {
+    Some((
+        caps.get(1)?.as_str().parse().ok()?,
+        caps.get(2)?.as_str().parse().ok()?,
+        caps.get(3)?.as_str().parse().ok()?,
+    ))
 }
 
 fn extract_fill_color_from_da(da: &str) -> (f32, f32, f32) {
-    let re = regex::Regex::new(r"(\d*\.?\d+)\s+(\d*\.?\d+)\s+(\d*\.?\d+)\s+rg").unwrap();
-    re.captures(da)
-        .and_then(|caps| {
-            Some((
-                caps.get(1)?.as_str().parse().ok()?,
-                caps.get(2)?.as_str().parse().ok()?,
-                caps.get(3)?.as_str().parse().ok()?,
-            ))
-        })
+    let fill_re = regex::Regex::new(r"(\d*\.?\d+)\s+(\d*\.?\d+)\s+(\d*\.?\d+)\s+rg").unwrap();
+    if let Some(caps) = fill_re.captures(da) {
+        if let Some(color) = parse_da_color_captures(&caps) {
+            return color;
+        }
+    }
+
+    let stroke_re = regex::Regex::new(r"(\d*\.?\d+)\s+(\d*\.?\d+)\s+(\d*\.?\d+)\s+RG").unwrap();
+    stroke_re
+        .captures(da)
+        .and_then(|caps| parse_da_color_captures(&caps))
         .unwrap_or((0.0, 0.0, 0.0))
+}
+
+fn parse_text_color_from_da_hex(da: &str) -> Option<String> {
+    let (r, g, b) = extract_fill_color_from_da(da);
+    if r == 0.0 && g == 0.0 && b == 0.0 {
+        let fill_re = regex::Regex::new(r"(\d*\.?\d+)\s+(\d*\.?\d+)\s+(\d*\.?\d+)\s+r[gG]").unwrap();
+        if fill_re.captures(da).is_none() {
+            return None;
+        }
+    }
+
+    Some(format!(
+        "#{:02X}{:02X}{:02X}",
+        (r.clamp(0.0, 1.0) * 255.0).round() as u8,
+        (g.clamp(0.0, 1.0) * 255.0).round() as u8,
+        (b.clamp(0.0, 1.0) * 255.0).round() as u8,
+    ))
+}
+
+fn parse_font_size_from_da(da: &str) -> f32 {
+    let tf_re = regex::Regex::new(r"/[A-Za-z][A-Za-z0-9_-]*\s+(\d+(?:\.\d+)?)\s*Tf").unwrap();
+    tf_re
+        .captures(da)
+        .and_then(|caps| caps.get(1))
+        .and_then(|m| m.as_str().parse::<f32>().ok())
+        .filter(|size| *size > 0.0)
+        .unwrap_or(12.0)
 }
 
 fn parse_alignment_from_style(style: Option<&str>) -> i32 {
@@ -954,6 +983,621 @@ impl PdfAnnotationExporter {
         }));
 
         Ok(dict)
+    }
+
+    pub fn load_annotations_from_pdf(&mut self, input_path: &Path) -> Result<XfdfDocument> {
+        let document = lopdf::Document::load(input_path)
+            .map_err(|e| PdfXmlError::PdfProcessing(format!("加载PDF失败: {}", e)))?;
+
+        let mut xfdf_doc = XfdfDocument {
+            xmlns: Some("http://ns.adobe.com/xfdf/".to_string()),
+            fields: Vec::new(),
+            annotations: Vec::new(),
+            metadata: HashMap::new(),
+        };
+
+        for (page_number, page_id) in document.get_pages() {
+            let page_annotations = Self::read_annotations_from_page(&document, page_id, (page_number - 1) as usize)?;
+            xfdf_doc.annotations.extend(page_annotations);
+        }
+
+        Ok(xfdf_doc)
+    }
+
+    fn read_annotations_from_page(
+        document: &lopdf::Document,
+        page_id: lopdf::ObjectId,
+        page_index: usize,
+    ) -> Result<Vec<Annotation>> {
+        let page_obj = document.get_object(page_id)?;
+        let page_dict = page_obj.as_dict()
+            .map_err(|e| PdfXmlError::PdfProcessing(format!("无效页面对象: {}", e)))?;
+
+        let annots = match page_dict.get(b"Annots") {
+            Ok(obj) => Self::resolve_object(document, obj)?.as_array()
+                .map_err(|e| PdfXmlError::PdfProcessing(format!("Annots 不是数组: {}", e)))?,
+            Err(_) => return Ok(Vec::new()),
+        };
+
+        let mut annotations = Vec::new();
+        for annot_obj in annots {
+            let resolved = Self::resolve_object(document, annot_obj)?;
+            let annot_dict = resolved.as_dict()
+                .map_err(|e| PdfXmlError::PdfProcessing(format!("注释对象不是字典: {}", e)))?;
+
+            match Self::annotation_from_pdf_dict(document, annot_dict, page_index) {
+                Ok(Some(annotation)) => annotations.push(annotation),
+                Ok(None) => {}
+                Err(err) => warn!("跳过第 {} 页的一条注释: {}", page_index + 1, err),
+            }
+        }
+
+        Ok(annotations)
+    }
+
+    fn annotation_from_pdf_dict(
+        document: &lopdf::Document,
+        dict: &lopdf::Dictionary,
+        page: usize,
+    ) -> Result<Option<Annotation>> {
+        let subtype = match dict.get(b"Subtype") {
+            Ok(obj) => Self::object_name(Self::resolve_object(document, obj)?)
+                .ok_or_else(|| PdfXmlError::PdfProcessing("注释 Subtype 不是名称".to_string()))?,
+            Err(_) => return Ok(None),
+        };
+
+        let base = AnnotationBase {
+            name: Self::dict_string(document, dict, b"NM")?,
+            page,
+            rect: Self::dict_rect(document, dict, b"Rect")?,
+            title: Self::dict_string(document, dict, b"T")?,
+            subject: Self::dict_string(document, dict, b"Subj")?,
+            contents: Self::dict_string(document, dict, b"Contents")?,
+            creation_date: Self::dict_string(document, dict, b"CreationDate")?,
+            modification_date: Self::dict_string(document, dict, b"M")?,
+            color: Self::dict_color(document, dict, b"C")?,
+            opacity: Self::dict_number(document, dict, b"CA")?.unwrap_or(1.0) as f32,
+            flags: Self::dict_integer(document, dict, b"F")?.unwrap_or(0) as u32,
+            extra: HashMap::new(),
+        };
+
+        let annotation = match subtype.as_str() {
+            "Text" => Some(Annotation::Text(TextAnnotation {
+                base,
+                open: Self::dict_bool(document, dict, b"Open")?.unwrap_or(false),
+                icon_type: Self::dict_name_or_string(document, dict, b"Name")?
+                    .unwrap_or_else(|| "Note".to_string()),
+            })),
+            "Highlight" => Some(Annotation::Highlight(HighlightAnnotation {
+                base,
+                coords: Self::dict_number_list(document, dict, b"QuadPoints")?.map(Self::numbers_to_csv),
+            })),
+            "Underline" => Some(Annotation::Underline(UnderlineAnnotation {
+                base,
+                coords: Self::dict_number_list(document, dict, b"QuadPoints")?.map(Self::numbers_to_csv),
+            })),
+            "StrikeOut" => Some(Annotation::StrikeOut(StrikeOutAnnotation {
+                base,
+                coords: Self::dict_number_list(document, dict, b"QuadPoints")?.map(Self::numbers_to_csv),
+            })),
+            "Squiggly" => Some(Annotation::Squiggly(SquigglyAnnotation {
+                base,
+                coords: Self::dict_number_list(document, dict, b"QuadPoints")?.map(Self::numbers_to_csv),
+            })),
+            "FreeText" => {
+                let default_style = Self::dict_string(document, dict, b"DS")?;
+                let default_appearance = Self::dict_string(document, dict, b"DA")?;
+                let text_color = default_appearance
+                    .as_deref()
+                    .and_then(parse_text_color_from_da_hex)
+                    .or_else(|| base.color.clone());
+                Some(Annotation::FreeText(FreeTextAnnotation {
+                    base,
+                    default_style,
+                    default_appearance,
+                    text_color,
+                    align: Self::dict_integer(document, dict, b"Q")?.unwrap_or(0) as i32,
+                }))
+            },
+            "Square" => Some(Annotation::Square(SquareAnnotation {
+                base,
+                width: Self::annotation_width(document, dict)?.unwrap_or(1.0),
+            })),
+            "Circle" => Some(Annotation::Circle(CircleAnnotation {
+                base,
+                width: Self::annotation_width(document, dict)?.unwrap_or(1.0),
+                interior_color: Self::dict_color(document, dict, b"IC")?,
+            })),
+            "Line" => {
+                let line = Self::dict_number_list(document, dict, b"L")?;
+                let (start, end) = if let Some(values) = line {
+                    if values.len() >= 4 {
+                        (
+                            Some(format!("{},{}", values[0], values[1])),
+                            Some(format!("{},{}", values[2], values[3])),
+                        )
+                    } else {
+                        (None, None)
+                    }
+                } else {
+                    (None, None)
+                };
+                let (head_style, tail_style) = Self::line_ending_styles(document, dict)?;
+                Some(Annotation::Line(LineAnnotation {
+                    base,
+                    start,
+                    end,
+                    head_style,
+                    tail_style,
+                    width: Self::annotation_width(document, dict)?.unwrap_or(1.0),
+                }))
+            }
+            "Polygon" => Some(Annotation::Polygon(PolygonAnnotation {
+                base,
+                vertices: Self::dict_number_list(document, dict, b"Vertices")?.map(Self::numbers_to_vertices),
+                is_closed: true,
+            })),
+            "PolyLine" => Some(Annotation::Polygon(PolygonAnnotation {
+                base,
+                vertices: Self::dict_number_list(document, dict, b"Vertices")?.map(Self::numbers_to_vertices),
+                is_closed: false,
+            })),
+            "Ink" => Some(Annotation::Ink(InkAnnotation {
+                base,
+                ink_list: Self::dict_ink_list(document, dict, b"InkList")?.unwrap_or_default(),
+                width: Self::annotation_width(document, dict)?.unwrap_or(1.0),
+            })),
+            "Stamp" => Some(Annotation::Stamp(StampAnnotation {
+                base,
+                icon: Self::dict_name_or_string(document, dict, b"Name")?.unwrap_or_default(),
+                image_data: Self::stamp_image_data_from_annotation(document, dict)?,
+            })),
+            "Popup" => Some(Annotation::Popup(PopupAnnotation {
+                base,
+                open: Self::dict_bool(document, dict, b"Open")?.unwrap_or(false),
+                parent_name: Self::popup_parent_name(document, dict)?,
+            })),
+            other => {
+                warn!("跳过不支持的注释类型: {}", other);
+                None
+            }
+        };
+
+        Ok(annotation)
+    }
+
+    fn stamp_image_data_from_annotation(document: &lopdf::Document, dict: &lopdf::Dictionary) -> Result<Option<String>> {
+        let ap = match dict.get(b"AP") {
+            Ok(obj) => Self::resolve_object(document, obj)?,
+            Err(_) => return Ok(None),
+        };
+        let ap_dict = match ap.as_dict() {
+            Ok(dict) => dict,
+            Err(_) => {
+                warn!("Stamp 注释的 AP 不是字典，跳过 imagedata 导出");
+                return Ok(None);
+            }
+        };
+        let normal_ap = match ap_dict.get(b"N") {
+            Ok(obj) => obj,
+            Err(_) => return Ok(None),
+        };
+        Self::stamp_image_data_from_ap_stream(document, normal_ap)
+    }
+
+    fn stamp_image_data_from_ap_stream(document: &lopdf::Document, ap_obj: &lopdf::Object) -> Result<Option<String>> {
+        let ap_stream = match Self::resolve_object(document, ap_obj)? {
+            lopdf::Object::Stream(stream) => stream,
+            _ => {
+                warn!("Stamp 注释的 AP/N 不是流对象，跳过 imagedata 导出");
+                return Ok(None);
+            }
+        };
+        let subtype = ap_stream.dict.get(b"Subtype")
+            .ok()
+            .and_then(Self::object_name);
+        if subtype.as_deref() != Some("Form") {
+            warn!("Stamp 注释的 AP/N 不是 Form XObject，跳过 imagedata 导出");
+            return Ok(None);
+        }
+
+        let resources = match ap_stream.dict.get(b"Resources") {
+            Ok(obj) => Self::resolve_object(document, obj)?,
+            Err(_) => return Ok(None),
+        };
+        let resources_dict = match resources.as_dict() {
+            Ok(dict) => dict,
+            Err(_) => {
+                warn!("Stamp 注释的 AP Resources 不是字典，跳过 imagedata 导出");
+                return Ok(None);
+            }
+        };
+        let xobjects = match resources_dict.get(b"XObject") {
+            Ok(obj) => Self::resolve_object(document, obj)?,
+            Err(_) => return Ok(None),
+        };
+        let xobjects_dict = match xobjects.as_dict() {
+            Ok(dict) => dict,
+            Err(_) => {
+                warn!("Stamp 注释的 AP XObject 不是字典，跳过 imagedata 导出");
+                return Ok(None);
+            }
+        };
+
+        if let Ok(image_obj) = xobjects_dict.get(b"Im0") {
+            return Self::image_data_url_from_xobject(document, image_obj);
+        }
+
+        let mut image_candidates = Vec::new();
+        for (_, obj) in xobjects_dict.iter() {
+            let resolved = Self::resolve_object(document, obj)?;
+            if let lopdf::Object::Stream(stream) = resolved {
+                let subtype = stream.dict.get(b"Subtype")
+                    .ok()
+                    .and_then(Self::object_name);
+                if subtype.as_deref() == Some("Image") {
+                    image_candidates.push(obj);
+                }
+            }
+        }
+
+        if image_candidates.len() == 1 {
+            return Self::image_data_url_from_xobject(document, image_candidates[0]);
+        }
+
+        if !image_candidates.is_empty() {
+            warn!("Stamp 注释的 AP 含多个图片 XObject，暂不支持自动选择");
+        }
+        Ok(None)
+    }
+
+    fn image_data_url_from_xobject(document: &lopdf::Document, image_obj: &lopdf::Object) -> Result<Option<String>> {
+        let image_stream = match Self::resolve_object(document, image_obj)? {
+            lopdf::Object::Stream(stream) => stream,
+            _ => return Ok(None),
+        };
+        let subtype = image_stream.dict.get(b"Subtype")
+            .ok()
+            .and_then(Self::object_name);
+        if subtype.as_deref() != Some("Image") {
+            return Ok(None);
+        }
+
+        let width = match Self::dict_integer(document, &image_stream.dict, b"Width")? {
+            Some(v) if v > 0 => v as u32,
+            _ => {
+                warn!("Stamp 图片缺少有效 Width，跳过 imagedata 导出");
+                return Ok(None);
+            }
+        };
+        let height = match Self::dict_integer(document, &image_stream.dict, b"Height")? {
+            Some(v) if v > 0 => v as u32,
+            _ => {
+                warn!("Stamp 图片缺少有效 Height，跳过 imagedata 导出");
+                return Ok(None);
+            }
+        };
+        let bits_per_component = Self::dict_integer(document, &image_stream.dict, b"BitsPerComponent")?.unwrap_or(8);
+        if bits_per_component != 8 {
+            warn!("Stamp 图片 BitsPerComponent={} 暂不支持", bits_per_component);
+            return Ok(None);
+        }
+        let color_space = match image_stream.dict.get(b"ColorSpace") {
+            Ok(obj) => Self::resolve_object(document, obj).ok().and_then(Self::object_name),
+            Err(_) => None,
+        };
+        if color_space.as_deref() != Some("DeviceRGB") {
+            warn!("Stamp 图片 ColorSpace={:?} 暂不支持", color_space);
+            return Ok(None);
+        }
+
+        let rgb_bytes = if image_stream.dict.get(b"Filter").is_ok() {
+            match image_stream.decompressed_content() {
+                Ok(bytes) => bytes,
+                Err(err) => {
+                    warn!("解压 Stamp 图片流失败: {}", err);
+                    return Ok(None);
+                }
+            }
+        } else {
+            image_stream.content.clone()
+        };
+        let expected_rgb_len = (width as usize) * (height as usize) * 3;
+        if rgb_bytes.len() != expected_rgb_len {
+            warn!("Stamp 图片 RGB 数据长度不匹配: got {}, expected {}", rgb_bytes.len(), expected_rgb_len);
+            return Ok(None);
+        }
+
+        let alpha_bytes = match image_stream.dict.get(b"SMask") {
+            Ok(mask_obj) => match Self::decode_smask_alpha(document, mask_obj, width, height)? {
+                Some(bytes) => bytes,
+                None => return Ok(None),
+            },
+            Err(_) => vec![255; (width as usize) * (height as usize)],
+        };
+
+        let mut rgba_bytes = Vec::with_capacity((width as usize) * (height as usize) * 4);
+        for (rgb, alpha) in rgb_bytes.chunks_exact(3).zip(alpha_bytes.iter().copied()) {
+            rgba_bytes.extend_from_slice(&[rgb[0], rgb[1], rgb[2], alpha]);
+        }
+
+        let Some(rgba_image) = RgbaImage::from_raw(width, height, rgba_bytes) else {
+            warn!("重建 Stamp RGBA 图片失败");
+            return Ok(None);
+        };
+
+        let dynamic = DynamicImage::ImageRgba8(rgba_image);
+        let mut output = Cursor::new(Vec::new());
+        if let Err(err) = dynamic.write_to(&mut output, ImageFormat::Png) {
+            warn!("编码 Stamp PNG 失败: {}", err);
+            return Ok(None);
+        }
+        let encoded = base64::engine::general_purpose::STANDARD.encode(output.into_inner());
+        Ok(Some(format!("data:image/png;base64,{}", encoded)))
+    }
+
+
+    fn decode_smask_alpha(
+        document: &lopdf::Document,
+        smask_obj: &lopdf::Object,
+        expected_width: u32,
+        expected_height: u32,
+    ) -> Result<Option<Vec<u8>>> {
+        let smask_stream = match Self::resolve_object(document, smask_obj)? {
+            lopdf::Object::Stream(stream) => stream,
+            _ => {
+                warn!("Stamp 图片 SMask 不是流对象");
+                return Ok(None);
+            }
+        };
+        let subtype = smask_stream.dict.get(b"Subtype")
+            .ok()
+            .and_then(Self::object_name);
+        if subtype.as_deref() != Some("Image") {
+            warn!("Stamp 图片 SMask 不是 Image XObject");
+            return Ok(None);
+        }
+
+        let width = Self::dict_integer(document, &smask_stream.dict, b"Width")?.unwrap_or_default() as u32;
+        let height = Self::dict_integer(document, &smask_stream.dict, b"Height")?.unwrap_or_default() as u32;
+        if width != expected_width || height != expected_height {
+            warn!("Stamp 图片 SMask 尺寸不匹配: {}x{} vs {}x{}", width, height, expected_width, expected_height);
+            return Ok(None);
+        }
+        let bits_per_component = Self::dict_integer(document, &smask_stream.dict, b"BitsPerComponent")?.unwrap_or(8);
+        if bits_per_component != 8 {
+            warn!("Stamp 图片 SMask BitsPerComponent={} 暂不支持", bits_per_component);
+            return Ok(None);
+        }
+        let color_space = match smask_stream.dict.get(b"ColorSpace") {
+            Ok(obj) => Self::resolve_object(document, obj).ok().and_then(Self::object_name),
+            Err(_) => None,
+        };
+        if color_space.as_deref() != Some("DeviceGray") {
+            warn!("Stamp 图片 SMask ColorSpace={:?} 暂不支持", color_space);
+            return Ok(None);
+        }
+
+        let alpha = if smask_stream.dict.get(b"Filter").is_ok() {
+            match smask_stream.decompressed_content() {
+                Ok(bytes) => bytes,
+                Err(err) => {
+                    warn!("解压 Stamp SMask 流失败: {}", err);
+                    return Ok(None);
+                }
+            }
+        } else {
+            smask_stream.content.clone()
+        };
+        let expected_len = (expected_width as usize) * (expected_height as usize);
+        if alpha.len() != expected_len {
+            warn!("Stamp 图片 SMask 数据长度不匹配: got {}, expected {}", alpha.len(), expected_len);
+            return Ok(None);
+        }
+        Ok(Some(alpha))
+    }
+
+    fn resolve_object<'a>(document: &'a lopdf::Document, object: &'a lopdf::Object) -> Result<&'a lopdf::Object> {
+        match object {
+            lopdf::Object::Reference(id) => document.get_object(*id)
+                .map_err(|e| PdfXmlError::PdfProcessing(format!("读取引用对象失败: {}", e))),
+            other => Ok(other),
+        }
+    }
+
+    fn object_name(object: &lopdf::Object) -> Option<String> {
+        match object {
+            lopdf::Object::Name(name) => Some(String::from_utf8_lossy(name).to_string()),
+            _ => None,
+        }
+    }
+
+    fn object_string(object: &lopdf::Object) -> Option<String> {
+        match object {
+            lopdf::Object::String(bytes, _) => {
+                if bytes.len() >= 2 && bytes[0] == 0xFE && bytes[1] == 0xFF && bytes.len() % 2 == 0 {
+                    let utf16: Vec<u16> = bytes[2..]
+                        .chunks_exact(2)
+                        .map(|chunk| u16::from_be_bytes([chunk[0], chunk[1]]))
+                        .collect();
+                    String::from_utf16(&utf16).ok()
+                } else {
+                    Some(String::from_utf8_lossy(bytes).to_string())
+                }
+            }
+            lopdf::Object::Name(name) => Some(String::from_utf8_lossy(name).to_string()),
+            _ => None,
+        }
+    }
+
+    fn object_number(object: &lopdf::Object) -> Option<f64> {
+        match object {
+            lopdf::Object::Integer(v) => Some(*v as f64),
+            lopdf::Object::Real(v) => Some(*v as f64),
+            _ => None,
+        }
+    }
+
+    fn dict_string(document: &lopdf::Document, dict: &lopdf::Dictionary, key: &[u8]) -> Result<Option<String>> {
+        match dict.get(key) {
+            Ok(obj) => Ok(Self::object_string(Self::resolve_object(document, obj)?)),
+            Err(_) => Ok(None),
+        }
+    }
+
+    fn dict_name_or_string(document: &lopdf::Document, dict: &lopdf::Dictionary, key: &[u8]) -> Result<Option<String>> {
+        match dict.get(key) {
+            Ok(obj) => {
+                let resolved = Self::resolve_object(document, obj)?;
+                Ok(Self::object_name(resolved).or_else(|| Self::object_string(resolved)))
+            }
+            Err(_) => Ok(None),
+        }
+    }
+
+    fn dict_integer(document: &lopdf::Document, dict: &lopdf::Dictionary, key: &[u8]) -> Result<Option<i64>> {
+        match dict.get(key) {
+            Ok(obj) => Ok(Self::object_number(Self::resolve_object(document, obj)?).map(|v| v as i64)),
+            Err(_) => Ok(None),
+        }
+    }
+
+    fn dict_number(document: &lopdf::Document, dict: &lopdf::Dictionary, key: &[u8]) -> Result<Option<f64>> {
+        match dict.get(key) {
+            Ok(obj) => Ok(Self::object_number(Self::resolve_object(document, obj)?)),
+            Err(_) => Ok(None),
+        }
+    }
+
+    fn dict_bool(document: &lopdf::Document, dict: &lopdf::Dictionary, key: &[u8]) -> Result<Option<bool>> {
+        match dict.get(key) {
+            Ok(obj) => match Self::resolve_object(document, obj)? {
+                lopdf::Object::Boolean(v) => Ok(Some(*v)),
+                _ => Ok(None),
+            },
+            Err(_) => Ok(None),
+        }
+    }
+
+    fn dict_number_list(document: &lopdf::Document, dict: &lopdf::Dictionary, key: &[u8]) -> Result<Option<Vec<f64>>> {
+        match dict.get(key) {
+            Ok(obj) => {
+                let arr = Self::resolve_object(document, obj)?.as_array()
+                    .map_err(|e| PdfXmlError::PdfProcessing(format!("字段 {:?} 不是数组: {}", String::from_utf8_lossy(key), e)))?;
+                let values = arr.iter().filter_map(Self::object_number).collect::<Vec<_>>();
+                Ok(Some(values))
+            }
+            Err(_) => Ok(None),
+        }
+    }
+
+    fn dict_rect(document: &lopdf::Document, dict: &lopdf::Dictionary, key: &[u8]) -> Result<Option<Rect>> {
+        let Some(values) = Self::dict_number_list(document, dict, key)? else {
+            return Ok(None);
+        };
+        if values.len() < 4 {
+            return Ok(None);
+        }
+        Ok(Some(Rect {
+            left: values[0],
+            bottom: values[1],
+            right: values[2],
+            top: values[3],
+        }))
+    }
+
+    fn dict_color(document: &lopdf::Document, dict: &lopdf::Dictionary, key: &[u8]) -> Result<Option<String>> {
+        let Some(values) = Self::dict_number_list(document, dict, key)? else {
+            return Ok(None);
+        };
+        if values.len() < 3 {
+            return Ok(None);
+        }
+        Ok(Some(format!(
+            "#{:02X}{:02X}{:02X}",
+            (values[0].clamp(0.0, 1.0) * 255.0).round() as u8,
+            (values[1].clamp(0.0, 1.0) * 255.0).round() as u8,
+            (values[2].clamp(0.0, 1.0) * 255.0).round() as u8,
+        )))
+    }
+
+    fn dict_ink_list(document: &lopdf::Document, dict: &lopdf::Dictionary, key: &[u8]) -> Result<Option<Vec<String>>> {
+        match dict.get(key) {
+            Ok(obj) => {
+                let outer = Self::resolve_object(document, obj)?.as_array()
+                    .map_err(|e| PdfXmlError::PdfProcessing(format!("InkList 不是数组: {}", e)))?;
+                let mut gestures = Vec::new();
+                for gesture in outer {
+                    let points = Self::resolve_object(document, gesture)?.as_array()
+                        .map_err(|e| PdfXmlError::PdfProcessing(format!("InkList 子项不是数组: {}", e)))?;
+                    let values = points.iter().filter_map(Self::object_number).collect::<Vec<_>>();
+                    gestures.push(Self::numbers_to_pairs(&values, ";"));
+                }
+                Ok(Some(gestures))
+            }
+            Err(_) => Ok(None),
+        }
+    }
+
+    fn annotation_width(document: &lopdf::Document, dict: &lopdf::Dictionary) -> Result<Option<f32>> {
+        if let Ok(bs) = dict.get(b"BS") {
+            let bs_dict = Self::resolve_object(document, bs)?.as_dict()
+                .map_err(|e| PdfXmlError::PdfProcessing(format!("BS 不是字典: {}", e)))?;
+            if let Some(width) = Self::dict_number(document, bs_dict, b"W")? {
+                return Ok(Some(width as f32));
+            }
+        }
+
+        if let Ok(border) = dict.get(b"Border") {
+            let values = Self::resolve_object(document, border)?.as_array()
+                .map_err(|e| PdfXmlError::PdfProcessing(format!("Border 不是数组: {}", e)))?;
+            if values.len() >= 3 {
+                if let Some(width) = Self::object_number(&values[2]) {
+                    return Ok(Some(width as f32));
+                }
+            }
+        }
+
+        Ok(None)
+    }
+
+    fn line_ending_styles(document: &lopdf::Document, dict: &lopdf::Dictionary) -> Result<(String, String)> {
+        match dict.get(b"LE") {
+            Ok(obj) => {
+                let values = Self::resolve_object(document, obj)?.as_array()
+                    .map_err(|e| PdfXmlError::PdfProcessing(format!("LE 不是数组: {}", e)))?;
+                let head = values.first().and_then(Self::object_name).unwrap_or_default();
+                let tail = values.get(1).and_then(Self::object_name).unwrap_or_default();
+                Ok((head, tail))
+            }
+            Err(_) => Ok((String::new(), String::new())),
+        }
+    }
+
+    fn popup_parent_name(document: &lopdf::Document, dict: &lopdf::Dictionary) -> Result<Option<String>> {
+        let parent = match dict.get(b"Parent") {
+            Ok(obj) => Self::resolve_object(document, obj)?,
+            Err(_) => return Ok(None),
+        };
+        let parent_dict = parent.as_dict()
+            .map_err(|e| PdfXmlError::PdfProcessing(format!("Popup Parent 不是字典: {}", e)))?;
+        Self::dict_string(document, parent_dict, b"NM")
+    }
+
+    fn numbers_to_csv(values: Vec<f64>) -> String {
+        values.into_iter().map(|v| v.to_string()).collect::<Vec<_>>().join(",")
+    }
+
+    fn numbers_to_vertices(values: Vec<f64>) -> String {
+        Self::numbers_to_pairs(&values, " ")
+    }
+
+    fn numbers_to_pairs(values: &[f64], pair_separator: &str) -> String {
+        values.chunks(2)
+            .filter(|chunk| chunk.len() == 2)
+            .map(|chunk| format!("{},{}", chunk[0], chunk[1]))
+            .collect::<Vec<_>>()
+            .join(pair_separator)
     }
 
     pub fn export_to_new_pdf(&mut self, xfdf_doc: &XfdfDocument, output_path: &Path) -> Result<()> {
