@@ -2,7 +2,9 @@
 name = "pdfxml"
 version = "0.1.0"
 edition = "2021"
-description = "将 XFDF/XML 注释导出为 PDF 文件"
+description = "将 XFDF/XML 注释导出为 PDF 文件或作为 Rust SDK 调用"
+license = "MIT"
+readme = "README.md"
 
 [dependencies]
 # XML 解析
@@ -27,6 +29,9 @@ serde = { version = "1.0", features = ["derive"] }
 ttf-parser = "0.21"
 base64 = "0.22"
 image = { version = "0.25", default-features = false, features = ["png", "jpeg"] }
+
+[dev-dependencies]
+tempfile = "3"
 
 [[bin]]
 name = "pdfxml"

@@ -3,7 +3,7 @@
 [![Rust](https://img.shields.io/badge/Rust-1.75+-orange?logo=rust)](https://www.rust-lang.org/)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-将 XFDF/XML 格式的 PDF 注释导出为 PDF 文件的 Rust 工具。
+将 XFDF/XML 格式的 PDF 注释导出为 PDF 文件的 Rust 工具，也可以作为 Rust SDK / library 直接调用。
 
 ## ✨ 功能特性
 
@@ -104,16 +104,17 @@ pdfxml/
 ├── Cargo.toml              # 项目配置和依赖
 ├── README.md               # 项目说明
 ├── src/
-│   ├── main.rs            # 主程序入口和 CLI
-│   ├── xfdf.rs             # XFDF/XML 解析模块
-│   ├── pdf.rs              # PDF 生成模块
-│   ├── annotation.rs       # 注释数据结构定义
-│   └── error.rs            # 错误类型定义
+│   ├── lib.rs             # 对外 SDK / library 入口
+│   ├── main.rs            # CLI 薄壳入口
+│   ├── xfdf.rs            # XFDF/XML 解析模块
+│   ├── pdf.rs             # PDF 生成模块
+│   ├── annotation.rs      # 注释数据结构定义
+│   └── error.rs           # 错误类型定义
 ├── examples/
-│   ├── sample.xfdf         # 完整示例文件
-│   └── minimal.xfdf        # 最小示例文件
+│   ├── sample.xfdf        # 完整示例文件
+│   └── minimal.xfdf       # 最小示例文件
 └── tests/
-    └── integration_test.rs # 集成测试
+    └── integration_test.rs # 面向公开 API 的集成测试
 ```
 
 ## 💡 使用示例
@@ -132,23 +133,35 @@ pdfxml -i examples/sample.xfdf -o output/sample.pdf
 pdfxml -i comments.xfdf --target-pdf document.pdf -o annotated_document.pdf
 ```
 
-### 示例 3：在代码中使用库
+### 示例 3：在代码中作为库调用
 
 ```rust
-use pdfxml::{XfdfDocument, PdfAnnotationExporter};
-use std::fs;
+use pdfxml::{PdfAnnotationExporter, XfdfDocument};
+use std::path::Path;
 
-fn main() -> anyhow::Result<()> {
-    // 读取并解析 XFDF 文件
-    let xml_content = fs::read_to_string("annotations.xfdf")?;
-    let xfdf_doc = XfdfDocument::parse(&xml_content)?;
-    
-    println!("找到 {} 条注释", xfdf_doc.annotations.len());
-    
-    // 导出到新 PDF
-    let exporter = PdfAnnotationExporter::new();
-    exporter.export_to_new_pdf(&xfdf_doc, "output.pdf")?;
-    
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let xfdf = std::fs::read_to_string("annotations.xfdf")?;
+    let doc = XfdfDocument::parse(&xfdf)?;
+
+    let mut exporter = PdfAnnotationExporter::new();
+    exporter.export_to_existing_pdf(
+        &doc,
+        Path::new("original.pdf"),
+        Path::new("annotated.pdf"),
+    )?;
+
+    Ok(())
+}
+```
+
+### 示例 4：使用顶层 SDK 包装函数
+
+```rust
+use pdfxml::{export_annotations, load_xfdf};
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let doc = load_xfdf("annotations.xfdf")?;
+    export_annotations(&doc, Some("original.pdf"), "annotated.pdf")?;
     Ok(())
 }
 ```
