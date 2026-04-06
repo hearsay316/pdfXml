@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cargo test:*)",
+      "Bash(cargo check:*)",
+      "Bash(python:*)",
+      "Bash(PYTHONIOENCODING=utf-8 python:*)",
+      "Bash(grep -E \"^\\(simsun|simsunb|msyh|msyhbd|simhei|simkai|arialuni\\).*\\\\.\\(ttf|ttc|TTF|TTC\\)$\")"
+    ]
+  }
+}

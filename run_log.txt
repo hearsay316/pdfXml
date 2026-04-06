@@ -1,0 +1,326 @@
+﻿cargo :    Compiling pdfxml v0.1.0 (D:\code2026\pdfXml)
+所在位置 行:1 字符: 187
++ ... 026\pdfXml; cargo run -- -i examples/index.xml -o examples/output.pdf ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (   Compiling pd...ode2026\pdfXml):String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+error[E0603]: module `error` is private
+  --> src\error.rs:36:18
+   |
+36 | impl From<lopdf::error::Error> for PdfXmlError {
+   |                  ^^^^^ private module
+   |
+note: the module `error` is defined here
+  --> C:\Users\hearsay316\.cargo\registry\src\rsproxy.cn-e3de039b2554c837\lopdf-0.35.0\src\lib.rs:23:1
+   |
+23 | mod error;
+   | ^^^^^^^^^
+help: consider importing this enum instead
+   |
+36 - impl From<lopdf::error::Error> for PdfXmlError {
+36 + impl From<lopdf::Error> for PdfXmlError {
+   |
+
+error[E0603]: module `error` is private
+  --> src\error.rs:37:25
+   |
+37 |     fn from(err: lopdf::error::Error) -> Self {
+   |                         ^^^^^ private module
+   |
+note: the module `error` is defined here
+  --> C:\Users\hearsay316\.cargo\registry\src\rsproxy.cn-e3de039b2554c837\lopdf-0.35.0\src\lib.rs:23:1
+   |
+23 | mod error;
+   | ^^^^^^^^^
+help: consider importing this enum instead
+   |
+37 -     fn from(err: lopdf::error::Error) -> Self {
+37 +     fn from(err: lopdf::Error) -> Self {
+   |
+
+warning: unused import: `std::collections::HashMap`
+  --> src\pdf.rs:10:5
+   |
+10 | use std::collections::HashMap;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+error[E0308]: mismatched types
+   --> src\xfdf.rs:75:60
+    |
+ 75 |                     let tag_name = String::from_utf8_lossy(local_name);
+    |                                    ----------------------- ^^^^^^^^^^ expected `&[u8]`, found `LocalName<'_>`
+    |                                    |
+    |                                    arguments to this function are incorrect
+    |
+note: associated function defined here
+   --> C:\Users\hearsay316\.rustup\toolchains\stable-x86_64-pc-windows-msvc\lib/rustlib/src/rust\library\alloc\src\stri
+ng.rs:619:12
+    |
+619 |     pub fn from_utf8_lossy(v: &[u8]) -> Cow<'_, str> {
+    |            ^^^^^^^^^^^^^^^
+
+error[E0308]: mismatched types
+   --> src\xfdf.rs:83:67
+    |
+ 83 | ...                   let key = String::from_utf8_lossy(attr.key).to_string();
+    |                                 ----------------------- ^^^^^^^^ expected `&[u8]`, found `QName<'_>`
+    |                                 |
+    |                                 arguments to this function are incorrect
+    |
+note: associated function defined here
+   --> C:\Users\hearsay316\.rustup\toolchains\stable-x86_64-pc-windows-msvc\lib/rustlib/src/rust\library\alloc\src\stri
+ng.rs:619:12
+    |
+619 |     pub fn from_utf8_lossy(v: &[u8]) -> Cow<'_, str> {
+    |            ^^^^^^^^^^^^^^^
+
+error[E0308]: mismatched types
+   --> src\xfdf.rs:98:67
+    |
+ 98 | ...                   .find(|a| String::from_utf8_lossy(a.key) == "name")
+    |                                 ----------------------- ^^^^^ expected `&[u8]`, found `QName<'_>`
+    |                                 |
+    |                                 arguments to this function are incorrect
+    |
+note: associated function defined here
+   --> C:\Users\hearsay316\.rustup\toolchains\stable-x86_64-pc-windows-msvc\lib/rustlib/src/rust\library\alloc\src\stri
+ng.rs:619:12
+    |
+619 |     pub fn from_utf8_lossy(v: &[u8]) -> Cow<'_, str> {
+    |            ^^^^^^^^^^^^^^^
+
+error[E0308]: mismatched types
+   --> src\xfdf.rs:123:67
+    |
+123 | ...                   let key = String::from_utf8_lossy(attr.key).to_string();
+    |                                 ----------------------- ^^^^^^^^ expected `&[u8]`, found `QName<'_>`
+    |                                 |
+    |                                 arguments to this function are incorrect
+    |
+note: associated function defined here
+   --> C:\Users\hearsay316\.rustup\toolchains\stable-x86_64-pc-windows-msvc\lib/rustlib/src/rust\library\alloc\src\stri
+ng.rs:619:12
+    |
+619 |     pub fn from_utf8_lossy(v: &[u8]) -> Cow<'_, str> {
+    |            ^^^^^^^^^^^^^^^
+
+error[E0308]: mismatched types
+   --> src\xfdf.rs:138:71
+    |
+138 | ...                   let key = String::from_utf8_lossy(attr.key).to_string();
+    |                                 ----------------------- ^^^^^^^^ expected `&[u8]`, found `QName<'_>`
+    |                                 |
+    |                                 arguments to this function are incorrect
+    |
+note: associated function defined here
+   --> C:\Users\hearsay316\.rustup\toolchains\stable-x86_64-pc-windows-msvc\lib/rustlib/src/rust\library\alloc\src\stri
+ng.rs:619:12
+    |
+619 |     pub fn from_utf8_lossy(v: &[u8]) -> Cow<'_, str> {
+    |            ^^^^^^^^^^^^^^^
+
+error[E0308]: mismatched types
+   --> src\xfdf.rs:149:60
+    |
+149 |                     let tag_name = String::from_utf8_lossy(e.local_name());
+    |                                    ----------------------- ^^^^^^^^^^^^^^ expected `&[u8]`, found `LocalName<'_>`
+    |                                    |
+    |                                    arguments to this function are incorrect
+    |
+note: associated function defined here
+   --> C:\Users\hearsay316\.rustup\toolchains\stable-x86_64-pc-windows-msvc\lib/rustlib/src/rust\library\alloc\src\stri
+ng.rs:619:12
+    |
+619 |     pub fn from_utf8_lossy(v: &[u8]) -> Cow<'_, str> {
+    |            ^^^^^^^^^^^^^^^
+
+error[E0308]: mismatched types
+   --> src\xfdf.rs:175:60
+    |
+175 |                     let tag_name = String::from_utf8_lossy(e.local_name());
+    |                                    ----------------------- ^^^^^^^^^^^^^^ expected `&[u8]`, found `LocalName<'_>`
+    |                                    |
+    |                                    arguments to this function are incorrect
+    |
+note: associated function defined here
+   --> C:\Users\hearsay316\.rustup\toolchains\stable-x86_64-pc-windows-msvc\lib/rustlib/src/rust\library\alloc\src\stri
+ng.rs:619:12
+    |
+619 |     pub fn from_utf8_lossy(v: &[u8]) -> Cow<'_, str> {
+    |            ^^^^^^^^^^^^^^^
+
+error[E0599]: no method named `setup_document_structure` found for reference `&PdfAnnotationExporter` in the current sc
+ope
+   --> src\pdf.rs:72:14
+    |
+ 72 |         self.setup_document_structure(&mut document, &page_ids)?;
+    |              ^^^^^^^^^^^^^^^^^^^^^^^^ this is an associated function, not a method
+    |
+    = note: found the following associated functions; to be used as methods, functions must have a `self` parameter
+note: the candidate is defined in an impl for the type `PdfAnnotationExporter`
+   --> src\pdf.rs:407:5
+    |
+407 | /     fn setup_document_structure(
+408 | |         document: &mut lopdf::Document,
+409 | |         page_ids: &[lopdf::ObjectId],
+410 | |     ) -> Result<()> {
+    | |___________________^
+help: use associated function syntax instead
+    |
+ 72 -         self.setup_document_structure(&mut document, &page_ids)?;
+ 72 +         PdfAnnotationExporter::setup_document_structure(&mut document, &page_ids)?;
+    |
+
+error[E0599]: no method named `map_err` found for struct `BTreeMap<K, V, A>` in the current scope
+  --> src\pdf.rs:93:14
+   |
+92 |           let pages = document.get_pages()
+   |  _____________________-
+93 | |             .map_err(|e| PdfXmlError::PdfProcessing(format!("获取页面失败: {}", e)))?;
+   | |             -^^^^^^^ method not found in `BTreeMap<u32, (u32, u16)>`
+   | |_____________|
+   |
+
+error[E0271]: type mismatch resolving `<Vec<(&str, Dictionary)> as IntoIterator>::Item == (&str, Object)`
+   --> src\pdf.rs:165:56
+    |
+165 |               ("Resources", lopdf::Dictionary::from_iter(vec![
+    |  ___________________________----------------------------_^
+    | |                           |
+    | |                           required by a bound introduced by this call
+166 | |                 ("Font", lopdf::Dictionary::from_iter(vec![(font_name, Reference(font_id))])),
+167 | |             ])),
+    | |_____________^ expected `(&str, Object)`, found `(&str, Dictionary)`
+    |
+    = note: expected tuple `(&_, Object)`
+               found tuple `(&_, lopdf::Dictionary)`
+note: required by a bound in `std::iter::FromIterator::from_iter`
+   --> C:\Users\hearsay316\.rustup\toolchains\stable-x86_64-pc-windows-msvc\lib/rustlib/src/rust\library\core\src\iter\
+traits\collect.rs:152:34
+    |
+152 |     fn from_iter<T: IntoIterator<Item = A>>(iter: T) -> Self;
+    |                                  ^^^^^^^^ required by this bound in `FromIterator::from_iter`
+
+error[E0308]: mismatched types
+   --> src\pdf.rs:165:27
+    |
+165 |               ("Resources", lopdf::Dictionary::from_iter(vec![
+    |  ___________________________^
+166 | |                 ("Font", lopdf::Dictionary::from_iter(vec![(font_name, Reference(font_id))])),
+167 | |             ])),
+    | |______________^ expected `Object`, found `Dictionary`
+    |
+help: try wrapping the expression in `lopdf::Object::Dictionary`
+    |
+165 ~             ("Resources", lopdf::Object::Dictionary(lopdf::Dictionary::from_iter(vec![
+166 |                 ("Font", lopdf::Dictionary::from_iter(vec![(font_name, Reference(font_id))])),
+167 ~             ]))),
+    |
+
+error[E0308]: mismatched types
+   --> src\pdf.rs:202:30
+    |
+202 |                     y - 10 - (i % 3) * 12,
+    |                              ^^^^^^^^^^^^ expected `i32`, found `usize`
+
+error[E0277]: cannot subtract `usize` from `i32`
+   --> src\pdf.rs:202:28
+    |
+202 |                     y - 10 - (i % 3) * 12,
+    |                            ^ no implementation for `i32 - usize`
+    |
+    = help: the trait `std::ops::Sub<usize>` is not implemented for `i32`
+help: the following other types implement trait `std::ops::Sub<Rhs>`
+   --> C:\Users\hearsay316\.rustup\toolchains\stable-x86_64-pc-windows-msvc\lib/rustlib/src/rust\library\core\src\inter
+nal_macros.rs:22:9
+    |
+ 22 |         impl const $imp<$u> for &$t {
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ `&i32` implements `std::ops::Sub<i32>`
+...
+ 33 |         impl const $imp<&$u> for $t {
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ `i32` implements `std::ops::Sub<&i32>`
+...
+ 44 |         impl const $imp<&$u> for &$t {
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `&i32` implements `std::ops::Sub`
+    |
+   ::: C:\Users\hearsay316\.rustup\toolchains\stable-x86_64-pc-windows-msvc\lib/rustlib/src/rust\library\core\src\ops\a
+rith.rs:212:9
+    |
+212 |         impl const Sub for $t {
+    |         ^^^^^^^^^^^^^^^^^^^^^ `i32` implements `std::ops::Sub`
+...
+227 | sub_impl! { usize u8 u16 u32 u64 u128 isize i8 i16 i32 i64 i128 f16 f32 f64 f128 }
+    | ---------------------------------------------------------------------------------- in this macro invocation
+    = note: this error originates in the macro `forward_ref_binop` which comes from the expansion of the macro `sub_imp
+l` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0599]: no variant or associated item named `Polyline` found for enum `annotation::Annotation` in the current sco
+pe
+   --> src\pdf.rs:245:50
+    |
+245 |             Annotation::Polygon(_) | Annotation::Polyline(_) => "Polygon",
+    |                                                  ^^^^^^^^ variant or associated item not found in `annotation::An
+notation`
+    |
+   ::: src\annotation.rs:305:1
+    |
+305 | pub enum Annotation {
+    | ------------------- variant or associated item `Polyline` not found for this enum
+
+error[E0599]: no method named `ok_or_else` found for enum `std::result::Result<T, E>` in the current scope
+   --> src\pdf.rs:378:14
+    |
+375 |           let mut page_dict = document.get_object(page_id)?
+    |  _____________________________-
+376 | |             .as_dict()
+377 | |             .map(Clone::clone)
+378 | |             .ok_or_else(|| PdfXmlError::PdfProcessing("无效的页面对象".to_string()))?;
+    | |_____________-^^^^^^^^^^
+    |
+help: there is a method `or_else` with a similar name
+    |
+378 -             .ok_or_else(|| PdfXmlError::PdfProcessing("无效的页面对象".to_string()))?;
+378 +             .or_else(|| PdfXmlError::PdfProcessing("无效的页面对象".to_string()))?;
+    |
+
+error[E0308]: mismatched types
+    --> src\pdf.rs:398:53
+     |
+ 398 |         if let Some(obj) = document.objects.get_mut(page_id_idx) {
+     |                                             ------- ^^^^^^^^^^^ expected `&(u32, u16)`, found `(u16, u16)`
+     |                                             |
+     |                                             arguments to this method are incorrect
+     |
+     = note: expected reference `&(u32, _)`
+                    found tuple `(u16, _)`
+note: method defined here
+    --> C:\Users\hearsay316\.rustup\toolchains\stable-x86_64-pc-windows-msvc\lib/rustlib/src/rust\library\alloc\src\col
+lections\btree\map.rs:1007:12
+     |
+1007 |     pub fn get_mut<Q: ?Sized>(&mut self, key: &Q) -> Option<&mut V>
+     |            ^^^^^^^
+
+error[E0308]: mismatched types
+    --> src\pdf.rs:430:39
+     |
+ 430 |             *document.objects.get_mut(idx).unwrap() = Dictionary(page_dict);
+     |                               ------- ^^^ expected `&(u32, u16)`, found `(u16, u16)`
+     |                               |
+     |                               arguments to this method are incorrect
+     |
+     = note: expected reference `&(u32, _)`
+                    found tuple `(u16, _)`
+note: method defined here
+    --> C:\Users\hearsay316\.rustup\toolchains\stable-x86_64-pc-windows-msvc\lib/rustlib/src/rust\library\alloc\src\col
+lections\btree\map.rs:1007:12
+     |
+1007 |     pub fn get_mut<Q: ?Sized>(&mut self, key: &Q) -> Option<&mut V>
+     |            ^^^^^^^
+
+Some errors have detailed explanations: E0271, E0277, E0308, E0599, E0603.
+For more information about an error, try `rustc --explain E0271`.
+warning: `pdfxml` (bin "pdfxml") generated 1 warning
+error: could not compile `pdfxml` (bin "pdfxml") due to 19 previous errors; 1 warning emitted

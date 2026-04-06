@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<xfdf xmlns="http://ns.adobe.com/xfdf/" xml:space="preserve">
+  <annots>
+    <text subject="Hello" page="0" rect="100,700,250,730" color="#FFFF00">
+      这是一个简单的文本注释！
+    </text>
+    <highlight page="0" rect="50,600,200,620" color="#FFFF00"/>
+  </annots>
+</xfdf>

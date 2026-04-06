@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<xfdf xmlns="http://ns.adobe.com/xfdf/" xml:space="preserve">
+  <f id="pdfxml">
+    <fields>
+      <field name="Title">
+        <value>PDF XML 注释导出示例</value>
+      </field>
+      <field name="Author">
+        <value>PDFXML Tool</value>
+      </field>
+      <field name="Date">
+        <value>2024-01-01</value>
+      </field>
+    </fields>
+  </f>
+
+  <!-- 第1页的注释 -->
+  <annots>
+    <!-- 文本注释（便签） -->
+    <text 
+        subject="重要提示" 
+        page="0" 
+        rect="100,700,300,750"
+        title="张三" 
+        date="D:20240101120000+08'00'"
+        creationdate="D:20240101115800+08'00'"
+        color="#FFFF00"
+        open="yes"
+        icon="Note">
+      这是一个重要的文本注释示例。
+      
+      XFDF 格式支持多种注释类型，可以完整地描述 PDF 文档中的所有标注信息。
+
+      使用 pdfxml 工具可以将这些注释导出为 PDF 文件。
+    </text>
+
+    <!-- 高亮注释 -->
+    <highlight 
+        page="0" 
+        rect="50,600,250,620"
+        title="李四"
+        date="D:20240101120500+08'00'"
+        color="#FFFF00"
+        opacity="0.5">
+      这段文字被高亮标记
+    </highlight>
+
+    <!-- 下划线注释 -->
+    <underline 
+        page="0" 
+        rect="50,550,200,570"
+        title="王五"
+        date="D:20240101121000+08'00'"
+        color="#0000FF">
+      这段文字有下划线
+    </underline>
+
+    <!-- 删除线注释 -->
+    <strikeout 
+        page="0" 
+        rect="50,500,180,520"
+        title="赵六"
+        date="D:20240101121500+08'00'"
+        color="#FF0000">
+      删除的内容
+    </strikeout>
+
+    <!-- 自由文本注释 -->
+    <freetext
+        subject="批注说明"
+        page="0"
+        rect="320,400,550,480"
+        title="孙七"
+        date="D:20240101122000+08'00'"
+        color="#000000"
+        defaultstyle="font: bold 14px Arial;"
+        align="1">
+      这是一个自由文本注释，
+      可以包含多行内容并设置格式。
+    </freetext>
+
+    <!-- 方形注释 -->
+    <square 
+        subject="区域标记" 
+        page="0" 
+        rect="320,600,450,680" 
+        width="2"
+        title="周八"
+        date="D:20240101122500+08'00'"
+        color="#FF0000">
+      这个区域需要关注
+    </square>
+
+    <!-- 圆形注释 -->
+    <circle 
+        subject="问题点" 
+        page="0" 
+        rect="350,500,430,580" 
+        width="2"
+        interiorcolor="#FFCCCC"
+        title="吴九"
+        date="D:20240101123000+08'00'"
+        color="#FF0000">
+      发现一个问题
+    </circle>
+  </annots>
+
+  <!-- 第2页的注释 -->
+  <annots>
+    <!-- 线条注释 -->
+    <line 
+        subject="连接箭头" 
+        page="1" 
+        rect="50,650,350,700"
+        start="80,670"
+        end="330,680"
+        head="closedarrow"
+        tail="none"
+        width="1.5"
+        title="郑十"
+        date="D:20240101123500+08'00'"
+        color="#00AA00">
+      指向关系
+    </line>
+
+    <!-- 图章注释 -->
+    <stamp 
+        subject="审批通过" 
+        page="1" 
+        rect="380,720,490,760"
+        icon="Approved"
+        title="管理员"
+        date="D:20240101124000+08'00'"
+        color="#00FF00">
+      已审核通过
+    </stamp>
+
+    <!-- 多边形注释 -->
+    <polygon 
+        subject="不规则区域" 
+        page="1" 
+        rect="100,450,280,580"
+        vertices="120,500 180,460 240,480 260,550 150,570"
+        title="绘图员"
+        date="D:20240101124500+08'00'"
+        color="#9900FF">
+      标记一个多边形区域
+    </polygon>
+
+    <!-- 墨迹/手绘注释 -->
+    <ink 
+        subject="手写签名" 
+        page="1" 
+        rect="300,300,500,420"
+        width="1.0"
+        title="签名者"
+        date="D:20240101125000+08'00'"
+        color="#000000">
+      手写签名或涂鸦
+    </ink>
+
+    <!-- 弹出窗口注释 -->
+    <popup 
+        page="1" 
+        rect="0,767,112.5,842"
+        open="no"
+        parent="comment1"
+        date="D:20240101125500+08'00'">
+    </popup>
+  </annots>
+</xfdf>

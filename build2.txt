@@ -1,0 +1,238 @@
+﻿cargo :    Compiling pdfxml v0.1.0 (D:\code2026\pdfXml)
+所在位置 行:1 字符: 187
++ ... Text.Encoding]::UTF8; cd d:\code2026\pdfXml; cargo build 2>&1 | Out-F ...
++                                                  ~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (   Compiling pd...ode2026\pdfXml):String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+error[E0599]: the method `to_string` exists for struct `QName<'_>`, but its trait bounds were not satisfied
+  --> src\xfdf.rs:83:52
+   |
+83 | ...                   let key = attr.key.to_string();
+   |                                          ^^^^^^^^^ method cannot be called on `QName<'_>` due to unsatisfied trait
+ bounds
+   |
+  ::: C:\Users\hearsay316\.cargo\registry\src\rsproxy.cn-e3de039b2554c837\quick-xml-0.36.2\src\name.rs:19:1
+   |
+19 | pub struct QName<'a>(pub &'a [u8]);
+   | -------------------- doesn't satisfy `QName<'_>: ToString` or `QName<'_>: std::fmt::Display`
+   |
+   = note: the following trait bounds were not satisfied:
+           `QName<'_>: std::fmt::Display`
+           which is required by `QName<'_>: ToString`
+
+error[E0599]: the method `to_string` exists for struct `QName<'_>`, but its trait bounds were not satisfied
+  --> src\xfdf.rs:98:49
+   |
+98 | ...                   .find(|a| a.key.to_string() == "name")
+   |                                       ^^^^^^^^^ method cannot be called on `QName<'_>` due to unsatisfied trait bo
+unds
+   |
+  ::: C:\Users\hearsay316\.cargo\registry\src\rsproxy.cn-e3de039b2554c837\quick-xml-0.36.2\src\name.rs:19:1
+   |
+19 | pub struct QName<'a>(pub &'a [u8]);
+   | -------------------- doesn't satisfy `QName<'_>: ToString` or `QName<'_>: std::fmt::Display`
+   |
+   = note: the following trait bounds were not satisfied:
+           `QName<'_>: std::fmt::Display`
+           which is required by `QName<'_>: ToString`
+
+error[E0599]: the method `to_string` exists for struct `QName<'_>`, but its trait bounds were not satisfied
+   --> src\xfdf.rs:123:52
+    |
+123 | ...                   let key = attr.key.to_string();
+    |                                          ^^^^^^^^^ method cannot be called on `QName<'_>` due to unsatisfied trai
+t bounds
+    |
+   ::: C:\Users\hearsay316\.cargo\registry\src\rsproxy.cn-e3de039b2554c837\quick-xml-0.36.2\src\name.rs:19:1
+    |
+ 19 | pub struct QName<'a>(pub &'a [u8]);
+    | -------------------- doesn't satisfy `QName<'_>: ToString` or `QName<'_>: std::fmt::Display`
+    |
+    = note: the following trait bounds were not satisfied:
+            `QName<'_>: std::fmt::Display`
+            which is required by `QName<'_>: ToString`
+
+error[E0599]: the method `to_string` exists for struct `QName<'_>`, but its trait bounds were not satisfied
+   --> src\xfdf.rs:138:56
+    |
+138 | ...                   let key = attr.key.to_string();
+    |                                          ^^^^^^^^^ method cannot be called on `QName<'_>` due to unsatisfied trai
+t bounds
+    |
+   ::: C:\Users\hearsay316\.cargo\registry\src\rsproxy.cn-e3de039b2554c837\quick-xml-0.36.2\src\name.rs:19:1
+    |
+ 19 | pub struct QName<'a>(pub &'a [u8]);
+    | -------------------- doesn't satisfy `QName<'_>: ToString` or `QName<'_>: std::fmt::Display`
+    |
+    = note: the following trait bounds were not satisfied:
+            `QName<'_>: std::fmt::Display`
+            which is required by `QName<'_>: ToString`
+
+error[E0308]: mismatched types
+   --> src\xfdf.rs:149:60
+    |
+149 |                     let tag_name = String::from_utf8_lossy(e.local_name());
+    |                                    ----------------------- ^^^^^^^^^^^^^^ expected `&[u8]`, found `LocalName<'_>`
+    |                                    |
+    |                                    arguments to this function are incorrect
+    |
+note: associated function defined here
+   --> C:\Users\hearsay316\.rustup\toolchains\stable-x86_64-pc-windows-msvc\lib/rustlib/src/rust\library\alloc\src\stri
+ng.rs:619:12
+    |
+619 |     pub fn from_utf8_lossy(v: &[u8]) -> Cow<'_, str> {
+    |            ^^^^^^^^^^^^^^^
+
+error[E0308]: mismatched types
+   --> src\xfdf.rs:175:60
+    |
+175 |                     let tag_name = String::from_utf8_lossy(e.local_name());
+    |                                    ----------------------- ^^^^^^^^^^^^^^ expected `&[u8]`, found `LocalName<'_>`
+    |                                    |
+    |                                    arguments to this function are incorrect
+    |
+note: associated function defined here
+   --> C:\Users\hearsay316\.rustup\toolchains\stable-x86_64-pc-windows-msvc\lib/rustlib/src/rust\library\alloc\src\stri
+ng.rs:619:12
+    |
+619 |     pub fn from_utf8_lossy(v: &[u8]) -> Cow<'_, str> {
+    |            ^^^^^^^^^^^^^^^
+
+error[E0599]: no method named `setup_document_structure` found for reference `&PdfAnnotationExporter` in the current sc
+ope
+   --> src\pdf.rs:71:14
+    |
+ 71 |         self.setup_document_structure(&mut document, &page_ids)?;
+    |              ^^^^^^^^^^^^^^^^^^^^^^^^ this is an associated function, not a method
+    |
+    = note: found the following associated functions; to be used as methods, functions must have a `self` parameter
+note: the candidate is defined in an impl for the type `PdfAnnotationExporter`
+   --> src\pdf.rs:406:5
+    |
+406 | /     fn setup_document_structure(
+407 | |         document: &mut lopdf::Document,
+408 | |         page_ids: &[lopdf::ObjectId],
+409 | |     ) -> Result<()> {
+    | |___________________^
+help: use associated function syntax instead
+    |
+ 71 -         self.setup_document_structure(&mut document, &page_ids)?;
+ 71 +         PdfAnnotationExporter::setup_document_structure(&mut document, &page_ids)?;
+    |
+
+error[E0599]: no method named `map_err` found for struct `BTreeMap<K, V, A>` in the current scope
+  --> src\pdf.rs:92:14
+   |
+91 |           let pages = document.get_pages()
+   |  _____________________-
+92 | |             .map_err(|e| PdfXmlError::PdfProcessing(format!("获取页面失败: {}", e)))?;
+   | |             -^^^^^^^ method not found in `BTreeMap<u32, (u32, u16)>`
+   | |_____________|
+   |
+
+error[E0271]: type mismatch resolving `<Vec<(&str, Dictionary)> as IntoIterator>::Item == (&str, Object)`
+   --> src\pdf.rs:164:56
+    |
+164 |               ("Resources", lopdf::Dictionary::from_iter(vec![
+    |  ___________________________----------------------------_^
+    | |                           |
+    | |                           required by a bound introduced by this call
+165 | |                 ("Font", lopdf::Dictionary::from_iter(vec![(font_name, Reference(font_id))])),
+166 | |             ])),
+    | |_____________^ expected `(&str, Object)`, found `(&str, Dictionary)`
+    |
+    = note: expected tuple `(&_, Object)`
+               found tuple `(&_, lopdf::Dictionary)`
+note: required by a bound in `std::iter::FromIterator::from_iter`
+   --> C:\Users\hearsay316\.rustup\toolchains\stable-x86_64-pc-windows-msvc\lib/rustlib/src/rust\library\core\src\iter\
+traits\collect.rs:152:34
+    |
+152 |     fn from_iter<T: IntoIterator<Item = A>>(iter: T) -> Self;
+    |                                  ^^^^^^^^ required by this bound in `FromIterator::from_iter`
+
+error[E0308]: mismatched types
+   --> src\pdf.rs:164:27
+    |
+164 |               ("Resources", lopdf::Dictionary::from_iter(vec![
+    |  ___________________________^
+165 | |                 ("Font", lopdf::Dictionary::from_iter(vec![(font_name, Reference(font_id))])),
+166 | |             ])),
+    | |______________^ expected `Object`, found `Dictionary`
+    |
+help: try wrapping the expression in `lopdf::Object::Dictionary`
+    |
+164 ~             ("Resources", lopdf::Object::Dictionary(lopdf::Dictionary::from_iter(vec![
+165 |                 ("Font", lopdf::Dictionary::from_iter(vec![(font_name, Reference(font_id))])),
+166 ~             ]))),
+    |
+
+error[E0308]: mismatched types
+   --> src\pdf.rs:201:30
+    |
+201 |                     y - 10 - (i % 3) * 12,
+    |                              ^^^^^^^^^^^^ expected `i32`, found `usize`
+
+error[E0277]: cannot subtract `usize` from `i32`
+   --> src\pdf.rs:201:28
+    |
+201 |                     y - 10 - (i % 3) * 12,
+    |                            ^ no implementation for `i32 - usize`
+    |
+    = help: the trait `std::ops::Sub<usize>` is not implemented for `i32`
+help: the following other types implement trait `std::ops::Sub<Rhs>`
+   --> C:\Users\hearsay316\.rustup\toolchains\stable-x86_64-pc-windows-msvc\lib/rustlib/src/rust\library\core\src\ops\a
+rith.rs:212:9
+    |
+212 |         impl const Sub for $t {
+    |         ^^^^^^^^^^^^^^^^^^^^^ `i32` implements `std::ops::Sub`
+...
+227 | sub_impl! { usize u8 u16 u32 u64 u128 isize i8 i16 i32 i64 i128 f16 f32 f64 f128 }
+    | ---------------------------------------------------------------------------------- in this macro invocation
+    |
+   ::: C:\Users\hearsay316\.rustup\toolchains\stable-x86_64-pc-windows-msvc\lib/rustlib/src/rust\library\core\src\inter
+nal_macros.rs:22:9
+    |
+ 22 |         impl const $imp<$u> for &$t {
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ `&i32` implements `std::ops::Sub<i32>`
+...
+ 33 |         impl const $imp<&$u> for $t {
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ `i32` implements `std::ops::Sub<&i32>`
+...
+ 44 |         impl const $imp<&$u> for &$t {
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `&i32` implements `std::ops::Sub`
+    = note: this error originates in the macro `sub_impl` (in Nightly builds, run with -Z macro-backtrace for more info
+)
+
+error[E0599]: no variant or associated item named `Polyline` found for enum `annotation::Annotation` in the current sco
+pe
+   --> src\pdf.rs:244:50
+    |
+244 |             Annotation::Polygon(_) | Annotation::Polyline(_) => "Polygon",
+    |                                                  ^^^^^^^^ variant or associated item not found in `annotation::An
+notation`
+    |
+   ::: src\annotation.rs:305:1
+    |
+305 | pub enum Annotation {
+    | ------------------- variant or associated item `Polyline` not found for this enum
+
+error[E0599]: no method named `ok_or_else` found for enum `std::result::Result<T, E>` in the current scope
+   --> src\pdf.rs:377:14
+    |
+374 |           let mut page_dict = document.get_object(page_id)?
+    |  _____________________________-
+375 | |             .as_dict()
+376 | |             .map(Clone::clone)
+377 | |             .ok_or_else(|| PdfXmlError::PdfProcessing("无效的页面对象".to_string()))?;
+    | |_____________-^^^^^^^^^^
+    |
+help: there is a method `or_else` with a similar name
+    |
+377 -             .ok_or_else(|| PdfXmlError::PdfProcessing("无效的页面对象".to_string()))?;
+377 +             .or_else(|| PdfXmlError::PdfProcessing("无效的页面对象".to_string()))?;
+    |
+
+Some errors have detailed explanations: E0271, E0277, E0308, E0599.
+For more information about an error, try `rustc --explain E0271`.
+error: could not compile `pdfxml` (bin "pdfxml") due to 14 previous errors

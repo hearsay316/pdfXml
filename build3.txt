@@ -1,0 +1,37 @@
+﻿cargo :    Compiling pdfxml v0.1.0 (D:\code2026\pdfXml)
+所在位置 行:1 字符: 187
++ ... Text.Encoding]::UTF8; cd d:\code2026\pdfXml; cargo build 2>&1 | Out-F ...
++                                                  ~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (   Compiling pd...ode2026\pdfXml):String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+error: mismatched closing delimiter: `}`
+   --> src\pdf.rs:199:46
+    |
+199 | ...are(sq) => { d.set("BS", lopdf::Dictionary::from_iter(vec![("W", Real(sq.width)), ("S", Name(b"S".to_vec()))])
+; }
+    |               -      ^ unclosed delimiter                                                                        
+  ^ mismatched closing delimiter
+    |               |
+    |               closing delimiter possibly meant for this
+
+error: mismatched closing delimiter: `}`
+   --> src\pdf.rs:201:62
+    |
+200 |             Annotation::Circle(c) => { 
+    |                                      - closing delimiter possibly meant for this
+201 |                 d.set("BS", lopdf::Dictionary::from_iter(vec![("W", Real(c.width)), ("S", Name(b"S".to_vec())); 
+    |                                                              ^ unclosed delimiter
+202 |                 if let Some(ic) = &c.interior_color { if let Some(clr) = Color::from_hex(ic) { d.set("IC", Ar...
+203 |             }
+    |             ^ mismatched closing delimiter
+
+error: mismatched closing delimiter: `]`
+   --> src\pdf.rs:204:106
+    |
+204 | ...ictionary::from_iter(vec![("W", Real(l.width)), ("S", Name(b"S".to_vec())])); }
+    |                             -                      ^ unclosed delimiter     ^ mismatched closing delimiter
+    |                             |
+    |                             closing delimiter possibly meant for this
+
+error: could not compile `pdfxml` (bin "pdfxml") due to 3 previous errors
