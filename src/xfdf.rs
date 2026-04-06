@@ -56,6 +56,7 @@ pub struct XfdfDocument {
 /// XFDF 表单字段
 #[derive(Debug, Clone)]
 pub struct XfdfField {
+    #[allow(dead_code)]
     pub name: String,
     pub value: Option<String>,
     pub children: Vec<XfdfField>,
@@ -75,7 +76,6 @@ impl XfdfDocument {
         };
         
         let mut buf = Vec::new();
-        let mut current_path: Vec<String> = Vec::new();
         let mut in_annots = false;
         let mut in_fields = false;
         let mut current_field_stack: Vec<XfdfField> = Vec::new();
@@ -232,7 +232,7 @@ impl XfdfDocument {
                     }
                     
                     if current_annotation_type.is_some() {
-                        if let Some(ref child) = current_child_tag {
+                        if current_child_tag.is_some() {
                             // 子元素的内容单独收集
                             child_tag_content.push_str(&text);
                         } else if in_inklist {
@@ -429,6 +429,7 @@ impl XfdfDocument {
             "polygon" | "polyline" => Annotation::Polygon(PolygonAnnotation {
                 base,
                 vertices: attrs.get("vertices").cloned(),
+                is_closed: annotation_type == "polygon",
             }),
             "ink" => {
                 // 处理 inklist 数据

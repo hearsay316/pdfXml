@@ -28,6 +28,7 @@ impl Color {
         Some(Color { r, g, b })
     }
 
+    #[allow(dead_code)]
     /// 转换为 PDF 颜色数组格式
     pub fn to_pdf_array(&self) -> Vec<lopdf::Object> {
         vec![
@@ -69,6 +70,7 @@ impl Rect {
         })
     }
 
+    #[allow(dead_code)]
     /// 转换为 PDF 矩形数组格式
     pub fn to_pdf_array(&self) -> Vec<lopdf::Object> {
         vec![
@@ -272,7 +274,7 @@ pub struct LineAnnotation {
 
 fn default_line_width() -> f32 { 1.0 }
 
-/// 多边形注释
+/// 多边形/折线注释
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PolygonAnnotation {
     #[serde(flatten)]
@@ -281,7 +283,13 @@ pub struct PolygonAnnotation {
     /// 顶点坐标列表（空格分隔的 x,y 对）
     #[serde(skip_serializing_if = "Option::is_none")]
     pub vertices: Option<String>,
+
+    /// true 表示 polygon（闭合），false 表示 polyline（不闭合）
+    #[serde(default = "default_polygon_closed")]
+    pub is_closed: bool,
 }
+
+fn default_polygon_closed() -> bool { true }
 
 /// 墨水注释（手绘）
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -392,6 +400,7 @@ impl Annotation {
         self.base().page
     }
 
+    #[allow(dead_code)]
     /// 返回边界矩形
     pub fn rect(&self) -> Option<&Rect> {
         self.base().rect.as_ref()

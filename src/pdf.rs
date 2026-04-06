@@ -214,6 +214,7 @@ impl PdfAnnotationExporter {
         }
     }
 
+    #[allow(dead_code)]
     pub fn with_page_size(width: f64, height: f64) -> Self {
         Self {
             page_size: (width, height),
@@ -360,7 +361,9 @@ impl PdfAnnotationExporter {
             Annotation::Square(_) => "Square",
             Annotation::Circle(_) => "Circle",
             Annotation::Line(_) => "Line",
-            Annotation::Polygon(_) => "Polygon",
+            Annotation::Polygon(p) => {
+                if p.is_closed { "Polygon" } else { "PolyLine" }
+            }
             Annotation::Ink(_) => "Ink",
             Annotation::Stamp(_) => "Stamp",
             Annotation::Popup(_) => "Popup",
@@ -631,6 +634,229 @@ impl PdfAnnotationExporter {
         Some(lopdf::Object::Stream(lopdf::Stream::new(stream_dict, content.into_bytes())))
     }
 
+    fn build_circle_ap_stream(annotation: &CircleAnnotation) -> Option<lopdf::Object> {
+        let rect = annotation.base.rect.as_ref()?;
+        let width = ((rect.right - rect.left).abs() as f32).max(1.0);
+        let height = ((rect.top - rect.bottom).abs() as f32).max(1.0);
+        let line_width = annotation.width.max(1.0);
+        let inset = (line_width / 2.0).max(0.5);
+        let stroke = annotation.base.color.as_deref().and_then(Color::from_hex).unwrap_or(Color {
+            r: 0.894,
+            g: 0.259,
+            b: 0.204,
+        });
+        let fill = annotation.interior_color.as_deref().and_then(Color::from_hex);
+        let has_fill = fill.is_some();
+
+        let rx = ((width - line_width).max(0.0)) / 2.0;
+        let ry = ((height - line_width).max(0.0)) / 2.0;
+        let cx = inset + rx;
+        let cy = inset + ry;
+        let k = 0.552_284_8_f32;
+        let ox = rx * k;
+        let oy = ry * k;
+
+        let mut content = format!(
+            "q\n{} {} {} RG\n{} w\n",
+            stroke.r, stroke.g, stroke.b, line_width
+        );
+        if let Some(fill) = &fill {
+            content.push_str(&format!("{} {} {} rg\n", fill.r, fill.g, fill.b));
+        }
+        content.push_str(&format!(
+            "{} {} m\n{} {} {} {} {} {} c\n{} {} {} {} {} {} c\n{} {} {} {} {} {} c\n{} {} {} {} {} {} c\n{}\nQ\n",
+            cx + rx, cy,
+            cx + rx, cy + oy, cx + ox, cy + ry, cx, cy + ry,
+            cx - ox, cy + ry, cx - rx, cy + oy, cx - rx, cy,
+            cx - rx, cy - oy, cx - ox, cy - ry, cx, cy - ry,
+            cx + ox, cy - ry, cx + rx, cy - oy, cx + rx, cy,
+            if has_fill { "b" } else { "S" }
+        ));
+
+        let stream_dict = lopdf::Dictionary::from_iter(vec![
+            ("Type", lopdf::Object::Name(b"XObject".to_vec())),
+            ("Subtype", lopdf::Object::Name(b"Form".to_vec())),
+            ("FormType", lopdf::Object::Integer(1)),
+            ("BBox", lopdf::Object::Array(vec![
+                lopdf::Object::Real(0.0),
+                lopdf::Object::Real(0.0),
+                lopdf::Object::Real(width),
+                lopdf::Object::Real(height),
+            ])),
+            ("Resources", lopdf::Object::Dictionary(lopdf::Dictionary::new())),
+        ]);
+
+        Some(lopdf::Object::Stream(lopdf::Stream::new(stream_dict, content.into_bytes())))
+    }
+
+    fn build_arrowhead_path(tip_x: f32, tip_y: f32, base_x: f32, base_y: f32, size: f32, style: &str) -> Option<String> {
+        let style = style.trim();
+        if style.is_empty() || style.eq_ignore_ascii_case("None") {
+            return None;
+        }
+
+        let dx = tip_x - base_x;
+        let dy = tip_y - base_y;
+        let length = (dx * dx + dy * dy).sqrt();
+        if length <= f32::EPSILON {
+            return None;
+        }
+
+        let ux = dx / length;
+        let uy = dy / length;
+        let px = -uy;
+        let py = ux;
+        let arrow_len = size.max(6.0);
+        let arrow_half_width = (arrow_len * 0.45).max(3.0);
+        let bx = tip_x - ux * arrow_len;
+        let by = tip_y - uy * arrow_len;
+        let lx = bx + px * arrow_half_width;
+        let ly = by + py * arrow_half_width;
+        let rx = bx - px * arrow_half_width;
+        let ry = by - py * arrow_half_width;
+
+        match style {
+            "OpenArrow" => Some(format!(
+                "{} {} m\n{} {} l\n{} {} m\n{} {} l\nS\n",
+                lx, ly, tip_x, tip_y, rx, ry, tip_x, tip_y
+            )),
+            "ClosedArrow" => Some(format!(
+                "{} {} m\n{} {} l\n{} {} l\nh\nB\n",
+                lx, ly, tip_x, tip_y, rx, ry
+            )),
+            "Square" => {
+                let half = arrow_half_width.max(3.0);
+                Some(format!(
+                    "{} {} {} {} re\nB\n",
+                    tip_x - half,
+                    tip_y - half,
+                    half * 2.0,
+                    half * 2.0
+                ))
+            }
+            "Circle" => {
+                let r = arrow_half_width.max(3.0);
+                let k = 0.552_284_8_f32;
+                let ox = r * k;
+                let oy = r * k;
+                Some(format!(
+                    "{} {} m\n{} {} {} {} {} {} c\n{} {} {} {} {} {} c\n{} {} {} {} {} {} c\n{} {} {} {} {} {} c\nB\n",
+                    tip_x + r, tip_y,
+                    tip_x + r, tip_y + oy, tip_x + ox, tip_y + r, tip_x, tip_y + r,
+                    tip_x - ox, tip_y + r, tip_x - r, tip_y + oy, tip_x - r, tip_y,
+                    tip_x - r, tip_y - oy, tip_x - ox, tip_y - r, tip_x, tip_y - r,
+                    tip_x + ox, tip_y - r, tip_x + r, tip_y - oy, tip_x + r, tip_y,
+                ))
+            }
+            _ => Some(format!(
+                "{} {} m\n{} {} l\n{} {} m\n{} {} l\nS\n",
+                lx, ly, tip_x, tip_y, rx, ry, tip_x, tip_y
+            )),
+        }
+    }
+
+    fn build_line_ap_stream(annotation: &LineAnnotation) -> Option<lopdf::Object> {
+        let rect = annotation.base.rect.as_ref()?;
+        let width = ((rect.right - rect.left).abs() as f32).max(1.0);
+        let height = ((rect.top - rect.bottom).abs() as f32).max(1.0);
+        let line_width = annotation.width.max(1.0);
+        let stroke = annotation.base.color.as_deref().and_then(Color::from_hex).unwrap_or(Color {
+            r: 0.894,
+            g: 0.259,
+            b: 0.204,
+        });
+        let start = Self::parse_point(annotation.start.as_deref()?)?;
+        let end = Self::parse_point(annotation.end.as_deref()?)?;
+        let sx = (start.0 - rect.left) as f32;
+        let sy = (start.1 - rect.bottom) as f32;
+        let ex = (end.0 - rect.left) as f32;
+        let ey = (end.1 - rect.bottom) as f32;
+
+        let mut content = format!(
+            "q\n{} {} {} RG\n{} {} {} rg\n{} w\n{} {} m\n{} {} l\nS\n",
+            stroke.r, stroke.g, stroke.b, stroke.r, stroke.g, stroke.b, line_width, sx, sy, ex, ey
+        );
+
+        if let Some(path) = Self::build_arrowhead_path(sx, sy, ex, ey, line_width * 4.0, &annotation.head_style) {
+            content.push_str(&path);
+        }
+        if let Some(path) = Self::build_arrowhead_path(ex, ey, sx, sy, line_width * 4.0, &annotation.tail_style) {
+            content.push_str(&path);
+        }
+        content.push_str("Q\n");
+
+        let stream_dict = lopdf::Dictionary::from_iter(vec![
+            ("Type", lopdf::Object::Name(b"XObject".to_vec())),
+            ("Subtype", lopdf::Object::Name(b"Form".to_vec())),
+            ("FormType", lopdf::Object::Integer(1)),
+            ("BBox", lopdf::Object::Array(vec![
+                lopdf::Object::Real(0.0),
+                lopdf::Object::Real(0.0),
+                lopdf::Object::Real(width),
+                lopdf::Object::Real(height),
+            ])),
+            ("Resources", lopdf::Object::Dictionary(lopdf::Dictionary::new())),
+        ]);
+
+        Some(lopdf::Object::Stream(lopdf::Stream::new(stream_dict, content.into_bytes())))
+    }
+
+    fn build_polygon_ap_stream(annotation: &PolygonAnnotation) -> Option<lopdf::Object> {
+        let rect = annotation.base.rect.as_ref()?;
+        let width = ((rect.right - rect.left).abs() as f32).max(1.0);
+        let height = ((rect.top - rect.bottom).abs() as f32).max(1.0);
+        let stroke = annotation.base.color.as_deref().and_then(Color::from_hex).unwrap_or(Color {
+            r: 0.894,
+            g: 0.259,
+            b: 0.204,
+        });
+        let coords = annotation.vertices.as_deref()?;
+        let raw_values: Vec<f64> = coords.split_whitespace()
+            .flat_map(|pair| pair.split(','))
+            .filter_map(|s| s.trim().parse::<f64>().ok())
+            .collect();
+        if raw_values.len() < 4 || raw_values.len() % 2 != 0 {
+            return None;
+        }
+
+        let mut points = Vec::new();
+        for chunk in raw_values.chunks(2) {
+            points.push(((chunk[0] - rect.left) as f32, (chunk[1] - rect.bottom) as f32));
+        }
+        let (first_x, first_y) = points[0];
+        let mut path = format!("{} {} m\n", first_x, first_y);
+        for (x, y) in points.iter().skip(1) {
+            path.push_str(&format!("{} {} l\n", x, y));
+        }
+        if annotation.is_closed {
+            path.push_str("h\n");
+        }
+
+        let content = format!(
+            "q\n{} {} {} RG\n1 w\n{}{}\nQ\n",
+            stroke.r,
+            stroke.g,
+            stroke.b,
+            path,
+            if annotation.is_closed { "S" } else { "S" }
+        );
+
+        let stream_dict = lopdf::Dictionary::from_iter(vec![
+            ("Type", lopdf::Object::Name(b"XObject".to_vec())),
+            ("Subtype", lopdf::Object::Name(b"Form".to_vec())),
+            ("FormType", lopdf::Object::Integer(1)),
+            ("BBox", lopdf::Object::Array(vec![
+                lopdf::Object::Real(0.0),
+                lopdf::Object::Real(0.0),
+                lopdf::Object::Real(width),
+                lopdf::Object::Real(height),
+            ])),
+            ("Resources", lopdf::Object::Dictionary(lopdf::Dictionary::new())),
+        ]);
+
+        Some(lopdf::Object::Stream(lopdf::Stream::new(stream_dict, content.into_bytes())))
+    }
+
 
     fn build_freetext_annotation(
         &self,
@@ -851,8 +1077,9 @@ impl PdfAnnotationExporter {
                 }
             }
             Annotation::Circle(c) => {
+                let line_width = c.width.max(1.0);
                 dict.set("BS", lopdf::Dictionary::from_iter(vec![
-                    ("W", lopdf::Object::Real(c.width)),
+                    ("W", lopdf::Object::Real(line_width)),
                     ("S", lopdf::Object::Name(b"S".to_vec())),
                 ]));
                 if let Some(ic) = &c.interior_color {
@@ -864,8 +1091,17 @@ impl PdfAnnotationExporter {
                         ]));
                     }
                 }
+                if let Some(ap_stream) = Self::build_circle_ap_stream(c) {
+                    let ap_stream_id = document.add_object(ap_stream);
+                    dict.set("AP", lopdf::Object::Dictionary({
+                        let mut ap_dict = lopdf::Dictionary::new();
+                        ap_dict.set("N", lopdf::Object::Reference(ap_stream_id));
+                        ap_dict
+                    }));
+                }
             }
             Annotation::Line(l) => {
+                let line_width = l.width.max(1.0);
                 if let (Some(start_str), Some(end_str)) = (&l.start, &l.end) {
                     if let (Some(start), Some(end)) = (Self::parse_point(start_str), Self::parse_point(end_str)) {
                         dict.set("L", lopdf::Object::Array(vec![
@@ -875,14 +1111,22 @@ impl PdfAnnotationExporter {
                     }
                 }
                 dict.set("BS", lopdf::Dictionary::from_iter(vec![
-                    ("W", lopdf::Object::Real(l.width)),
+                    ("W", lopdf::Object::Real(line_width)),
                     ("S", lopdf::Object::Name(b"S".to_vec())),
                 ]));
-                if !l.head_style.is_empty() {
+                if !l.head_style.is_empty() || !l.tail_style.is_empty() {
                     dict.set("LE", lopdf::Object::Array(vec![
-                        lopdf::Object::Name(l.head_style.as_bytes().to_vec()),
-                        lopdf::Object::Name(l.tail_style.as_bytes().to_vec()),
+                        lopdf::Object::Name(if l.head_style.is_empty() { b"None".to_vec() } else { l.head_style.as_bytes().to_vec() }),
+                        lopdf::Object::Name(if l.tail_style.is_empty() { b"None".to_vec() } else { l.tail_style.as_bytes().to_vec() }),
                     ]));
+                }
+                if let Some(ap_stream) = Self::build_line_ap_stream(l) {
+                    let ap_stream_id = document.add_object(ap_stream);
+                    dict.set("AP", lopdf::Object::Dictionary({
+                        let mut ap_dict = lopdf::Dictionary::new();
+                        ap_dict.set("N", lopdf::Object::Reference(ap_stream_id));
+                        ap_dict
+                    }));
                 }
             }
             Annotation::Polygon(p) => {
@@ -890,6 +1134,14 @@ impl PdfAnnotationExporter {
                     if let Some(verts) = Self::parse_vertices(vertices_str) {
                         dict.set("Vertices", verts);
                     }
+                }
+                if let Some(ap_stream) = Self::build_polygon_ap_stream(p) {
+                    let ap_stream_id = document.add_object(ap_stream);
+                    dict.set("AP", lopdf::Object::Dictionary({
+                        let mut ap_dict = lopdf::Dictionary::new();
+                        ap_dict.set("N", lopdf::Object::Reference(ap_stream_id));
+                        ap_dict
+                    }));
                 }
             }
             Annotation::Ink(ink) => {
@@ -1076,8 +1328,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "pending explicit AP implementation for circle"]
-    fn test_circle_annotation_should_eventually_emit_explicit_ap() {
+    fn test_circle_annotation_should_emit_explicit_ap() {
         let circle = CircleAnnotation {
             base: AnnotationBase {
                 name: None,
@@ -1110,8 +1361,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "pending explicit AP implementation for line"]
-    fn test_line_annotation_should_eventually_emit_explicit_ap() {
+    fn test_line_annotation_should_emit_explicit_ap() {
         let line = LineAnnotation {
             base: AnnotationBase {
                 name: None,
@@ -1134,21 +1384,24 @@ mod tests {
             },
             start: Some("110,110".to_string()),
             end: Some("210,170".to_string()),
-            head_style: "None".to_string(),
+            head_style: "OpenArrow".to_string(),
             tail_style: "ClosedArrow".to_string(),
             width: 2.0,
         };
 
         let mut document = lopdf::Document::with_version("1.5");
         let exporter = PdfAnnotationExporter::new();
-        let dict = exporter.build_annotation(&mut document, &Annotation::Line(line)).unwrap();
+        let dict = exporter.build_annotation(&mut document, &Annotation::Line(line.clone())).unwrap();
 
         assert!(dict.get(b"AP").is_ok(), "line 应补显式 AP");
+        let ap = PdfAnnotationExporter::build_line_ap_stream(&line).unwrap();
+        let stream = ap.as_stream().unwrap();
+        let content = String::from_utf8_lossy(&stream.content);
+        assert!(content.contains("B\n") || content.matches("S\n").count() >= 2, "line 端点应写入 AP 图形");
     }
 
     #[test]
-    #[ignore = "pending explicit AP implementation for polygon"]
-    fn test_polygon_annotation_should_eventually_emit_explicit_ap() {
+    fn test_polygon_annotation_should_emit_explicit_ap() {
         let polygon = PolygonAnnotation {
             base: AnnotationBase {
                 name: None,
@@ -1170,6 +1423,7 @@ mod tests {
                 extra: HashMap::new(),
             },
             vertices: Some("110,110 210,120 180,210 120,200".to_string()),
+            is_closed: true,
         };
 
         let mut document = lopdf::Document::with_version("1.5");
@@ -1177,11 +1431,11 @@ mod tests {
         let dict = exporter.build_annotation(&mut document, &Annotation::Polygon(polygon)).unwrap();
 
         assert!(dict.get(b"AP").is_ok(), "polygon 应补显式 AP");
+        assert_eq!(dict.get(b"Subtype").unwrap().as_name().unwrap(), b"Polygon");
     }
 
     #[test]
-    #[ignore = "pending explicit AP implementation for polyline"]
-    fn test_polyline_xfdf_should_eventually_emit_polygon_ap() {
+    fn test_polyline_xfdf_should_emit_polyline_ap() {
         let xml = concat!(
             "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>",
             "<xfdf xmlns=\"http://ns.adobe.com/xfdf/\" xml:space=\"preserve\">",
@@ -1199,5 +1453,6 @@ mod tests {
         let dict = exporter.build_annotation(&mut document, &doc.annotations[0]).unwrap();
 
         assert!(dict.get(b"AP").is_ok(), "polyline 应补显式 AP");
+        assert_eq!(dict.get(b"Subtype").unwrap().as_name().unwrap(), b"PolyLine");
     }
 }

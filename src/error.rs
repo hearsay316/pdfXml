@@ -2,6 +2,7 @@
 
 use thiserror::Error;
 
+#[allow(dead_code)]
 #[derive(Error, Debug)]
 pub enum PdfXmlError {
     #[error("XML 解析错误: {0}")]
