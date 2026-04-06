@@ -1,19 +1,36 @@
-/// 注释的数据结构。
+//! 这个文件是整个库对外的统一入口。
+//!
+//! 别的 Rust 项目如果依赖本库，最先接触到的通常就是这里：
+//! - 这里决定哪些模块要公开
+//! - 这里决定哪些类型和函数要直接暴露给外部使用
+//! - 这里提供最常见的顶层便捷函数
+//!
+//! 阅读建议：
+//! 1. 先看下面的 `pub mod ...`，知道项目分成了哪些模块
+//! 2. 再看 `pub use ...`，知道库对外主要提供了什么
+//! 3. 最后看几个顶层函数，了解最常见的调用流程
+
+/// 注释数据结构模块。
 ///
-/// 这里定义了“文本注释、高亮、线条、圆形”等 Rust 类型。
-/// 如果你想在代码里自己查看或修改注释内容，通常会用到这里导出的类型。
+/// 这里定义了文本注释、高亮、线条、图章等 Rust 类型。
+/// 如果你想在代码里直接查看或修改注释内容，通常会用到这里导出的类型。
 pub mod annotation;
-/// 统一的错误类型。
+
+/// 统一错误类型模块。
 ///
-/// 库里读文件、解析 XML、生成 PDF 失败时，都会尽量收口到这里。
+/// 读取文件、解析 XML、处理 PDF 失败时，
+/// 最后都会尽量统一收口到这里定义的错误类型。
 pub mod error;
-/// PDF 导出模块。
+
+/// PDF 读写模块。
 ///
-/// 这里面放的是把注释真正写进 PDF 的核心逻辑。
+/// 这里放的是把注释真正写进 PDF、或者从 PDF 里读回注释的核心逻辑。
 pub mod pdf;
+
 /// XFDF/XML 解析模块。
 ///
-/// 它负责把 XFDF 字符串解析成 Rust 结构体。
+/// 它负责把 XFDF 字符串解析成 Rust 结构，
+/// 也负责把 Rust 结构重新写回 XFDF 字符串。
 pub mod xfdf;
 
 pub use annotation::*;
@@ -24,28 +41,28 @@ pub use xfdf::{XfdfDocument, XfdfField};
 use std::fs;
 use std::path::Path;
 
-/// 从磁盘读取一个 XFDF 文件，并解析成 `XfdfDocument`。
+/// 从磁盘读取一个 XFDF 文件，并解析成 [`XfdfDocument`]。
 ///
-/// 可以把它理解成两步合成一步：
+/// 可以把它理解成“两步合成一步”：
 /// 1. 先把文件内容读出来
-/// 2. 再把 XML 解析成程序能处理的数据
-///
-/// 适合“我已经有一个 `.xfdf` 文件，想直接导入”的场景。
+/// 2. 再把读到的 XML 解析成程序能直接使用的数据结构
 pub fn load_xfdf(path: impl AsRef<Path>) -> Result<XfdfDocument> {
     let content = fs::read_to_string(path)
         .map_err(|e| PdfXmlError::PdfProcessing(format!("读取 XFDF 文件失败: {}", e)))?;
     XfdfDocument::parse(&content)
 }
 
-/// 从 PDF 读取注释，并转换成项目统一使用的 `XfdfDocument`。
+/// 从 PDF 中读取注释，并转换成项目统一使用的 [`XfdfDocument`]。
 ///
-/// 这样就能继续复用现有的数据模型、测试和后续 XFDF 序列化逻辑。
+/// 这样做的好处是：
+/// - 后面可以继续复用同一套数据结构
+/// - 测试和导出 XFDF 的逻辑也都能继续复用
 pub fn load_annotations_from_pdf(path: impl AsRef<Path>) -> Result<XfdfDocument> {
     let mut exporter = PdfAnnotationExporter::new();
     exporter.load_annotations_from_pdf(path.as_ref())
 }
 
-/// 把 PDF 里的注释直接导出成标准 XFDF 文件。
+/// 把 PDF 里的注释直接导出成一个标准 XFDF 文件。
 pub fn export_pdf_annotations_to_xfdf(
     input_pdf: impl AsRef<Path>,
     output_xfdf: impl AsRef<Path>,
@@ -57,18 +74,14 @@ pub fn export_pdf_annotations_to_xfdf(
     Ok(())
 }
 
-/// 把解析后的注释导出成 PDF。
-///
-/// - `xfdf_doc`：已经解析好的注释数据
-/// - `target_pdf`：如果传入现有 PDF，就把注释合并进去
-/// - `output_path`：输出文件路径
+/// 把已经解析好的注释导出成 PDF。
 ///
 /// 规则很简单：
-/// - 有 `target_pdf` → 合并到已有 PDF
-/// - 没有 `target_pdf` → 新建一个只包含注释的 PDF
+/// - 如果给了 `target_pdf`，就把注释合并进已有 PDF
+/// - 如果没有给 `target_pdf`，就新建一个 PDF 来放这些注释
 ///
-/// 这是给 SDK 使用者准备的顶层便捷函数。
-/// 如果你想手动控制导出器，也可以直接使用 `PdfAnnotationExporter`。
+/// 这个函数适合直接给 SDK 调用方使用。
+/// 如果你需要更细的控制，也可以直接使用 [`PdfAnnotationExporter`]。
 pub fn export_annotations(
     xfdf_doc: &XfdfDocument,
     target_pdf: Option<impl AsRef<Path>>,
@@ -76,7 +89,9 @@ pub fn export_annotations(
 ) -> Result<()> {
     let mut exporter = PdfAnnotationExporter::new();
     match target_pdf {
-        Some(target_pdf) => exporter.export_to_existing_pdf(xfdf_doc, target_pdf.as_ref(), output_path.as_ref()),
+        Some(target_pdf) => {
+            exporter.export_to_existing_pdf(xfdf_doc, target_pdf.as_ref(), output_path.as_ref())
+        }
         None => exporter.export_to_new_pdf(xfdf_doc, output_path.as_ref()),
     }
 }

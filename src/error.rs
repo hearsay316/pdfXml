@@ -1,24 +1,24 @@
-//! 错误类型定义
+//! 这个文件专门放项目里统一使用的错误类型。
 //!
-//! 这个文件的作用是把项目里可能出现的失败情况，
-//! 统一收口成一个错误枚举 `PdfXmlError`。
-//!
-//! 这样无论错误来自：
-//! - XML 解析
-//! - PDF 处理
-//! - 颜色/坐标/日期解析
-//! 最后都能用一致的方式往外返回。
+//! 这样做的好处是：
+//! - 不管错误来自 XML、PDF、颜色还是日期格式
+//! - 最后都能统一变成 `PdfXmlError`
+//! - 外部调用者不用同时处理很多种完全不同的错误类型
 
 use thiserror::Error;
 
+/// 项目统一使用的错误枚举。
+///
+/// 可以把它理解成“失败原因的大分类列表”。
+/// 排查问题时，先看属于哪一类，再看里面带的详细信息。
 #[allow(dead_code)]
 #[derive(Error, Debug)]
 pub enum PdfXmlError {
-    /// XFDF/XML 文本本身解析失败。
+    /// XFDF/XML 本身解析失败。
     #[error("XML 解析错误: {0}")]
     XmlParse(#[from] quick_xml::Error),
 
-    /// PDF 读写、对象构建、保存等过程中的错误。
+    /// PDF 读取、对象构建、保存等过程中的错误。
     #[error("PDF 处理错误: {0}")]
     PdfProcessing(String),
 
@@ -26,7 +26,7 @@ pub enum PdfXmlError {
     #[error("无效的 XFDF 格式: {0}")]
     InvalidXfdfFormat(String),
 
-    /// 遇到了当前还没实现的注释类型。
+    /// 遇到了当前还没有实现的注释类型。
     #[error("不支持的注释类型: {0}")]
     UnsupportedAnnotationType(String),
 
@@ -51,16 +51,17 @@ pub enum PdfXmlError {
     UpdatePageFailed,
 }
 
-// 把 lopdf 的底层错误统一转换成我们自己的错误类型。
-// 这样项目对外只暴露 PdfXmlError，不需要让上层同时处理很多种错误枚举。
+// 把 `lopdf` 的底层错误统一转换成我们自己的错误类型。
+// 这样项目对外只暴露 `PdfXmlError`，
+// 上层就不需要同时记住一堆第三方库的错误类型。
 impl From<lopdf::Error> for PdfXmlError {
     fn from(err: lopdf::Error) -> Self {
         PdfXmlError::PdfProcessing(format!("{}", err))
     }
 }
 
-/// 项目统一使用的 Result 别名。
+/// 项目统一使用的结果类型别名。
 ///
-/// 写成 `Result<T>` 就等于：
+/// 写成 `Result<T>`，实际等于：
 /// `std::result::Result<T, PdfXmlError>`
 pub type Result<T> = std::result::Result<T, PdfXmlError>;

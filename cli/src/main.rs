@@ -1,9 +1,10 @@
-//! pdfxml 命令行工具。
+//! 这是命令行程序的入口文件。
 //!
-//! 这个文件故意保持很薄：
-//! 它只负责“接收命令行参数 → 调用库 → 打印结果”。
-//! 真正的解析和导出逻辑都放在库 crate 里，
-//! 这样以后既能继续做 CLI，也能把同一套能力当成 SDK 给别的 Rust 项目调用。
+//! 它自己不做复杂的 PDF 或 XML 处理，
+//! 主要负责三件事：
+//! 1. 读取命令行参数
+//! 2. 判断用户想走哪条流程
+//! 3. 调用库里的函数并把结果打印出来
 
 use anyhow::Result;
 use clap::Parser;
@@ -16,9 +17,10 @@ use pdfxml::{
 };
 use std::path::PathBuf;
 
-/// 命令行参数。
+/// 命令行参数定义。
 ///
-/// 可以把它理解成“用户在终端里输入的选项说明书”。
+/// 可以把它理解成：
+/// “用户在终端里能传哪些选项，都在这里说明”。
 #[derive(Parser, Debug)]
 #[command(name = "pdfxml")]
 #[command(about = "XFDF 与 PDF 注释互转工具", long_about = None)]
@@ -34,11 +36,11 @@ struct Args {
 
     /// 目标 PDF 文件路径。
     ///
-    /// 仅在“XFDF -> PDF”模式下生效。
+    /// 只在 “XFDF -> PDF” 模式下生效。
     #[arg(short, long, value_name = "FILE")]
     target_pdf: Option<PathBuf>,
 
-    /// 从 PDF 导出 XFDF。
+    /// 是否走 “PDF -> XFDF” 模式。
     #[arg(long)]
     from_pdf: bool,
 
@@ -50,6 +52,8 @@ struct Args {
 fn main() -> Result<()> {
     let args = Args::parse();
 
+    // `--verbose` 打开后，日志会更详细，适合排查问题。
+    // 不打开时，默认只输出比较简洁的信息。
     if args.verbose {
         env_logger::Builder::from_default_env()
             .filter_level(log::LevelFilter::Debug)
@@ -64,6 +68,8 @@ fn main() -> Result<()> {
         return Err(anyhow::anyhow!("输入文件不存在: {:?}", args.input));
     }
 
+    // 如果 `from_pdf = true`，表示方向反过来：
+    // 不是 “XFDF -> PDF”，而是 “PDF -> XFDF”。
     if args.from_pdf {
         info!("开始从 PDF 导出 XFDF: {:?}", args.input);
 
@@ -85,13 +91,14 @@ fn main() -> Result<()> {
 
         export_pdf_annotations_to_xfdf(&args.input, &output_path)?;
 
-        info!("导出成功！输出文件: {:?}", output_path);
-        println!("✓ XFDF 已成功导出到: {}", output_path.display());
+        info!("导出成功，输出文件: {:?}", output_path);
+        println!("XFDF 已成功导出到: {}", output_path.display());
         println!("\n导出摘要:");
-        println!("  - 总计注释数: {}", xfdf_doc.annotations.len());
+        println!("  - 注释总数: {}", xfdf_doc.annotations.len());
         return Ok(());
     }
 
+    // 走到这里，就表示当前方向是 “XFDF -> PDF”。
     info!("开始处理 XFDF 文件: {:?}", args.input);
 
     let output_path = match &args.output {
@@ -110,6 +117,8 @@ fn main() -> Result<()> {
         warn!("警告：未找到任何注释");
     }
 
+    // 如果给了 `target_pdf`，就把注释合并进已有 PDF。
+    // 如果没给，就新建一个 PDF 来放这些注释。
     if let Some(target_path) = &args.target_pdf {
         if !target_path.exists() {
             return Err(anyhow::anyhow!("目标 PDF 文件不存在: {:?}", target_path));
@@ -121,10 +130,10 @@ fn main() -> Result<()> {
 
     export_annotations(&xfdf_doc, args.target_pdf.as_ref(), &output_path)?;
 
-    info!("导出成功！输出文件: {:?}", output_path);
-    println!("✓ 注释已成功导出到: {}", output_path.display());
+    info!("导出成功，输出文件: {:?}", output_path);
+    println!("注释已成功导出到: {}", output_path.display());
     println!("\n导出摘要:");
-    println!("  - 总计注释数: {}", xfdf_doc.annotations.len());
+    println!("  - 注释总数: {}", xfdf_doc.annotations.len());
 
     let mut type_counts: std::collections::HashMap<&str, usize> = std::collections::HashMap::new();
     for annot in &xfdf_doc.annotations {

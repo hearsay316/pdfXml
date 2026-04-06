@@ -1,33 +1,15 @@
-//! XFDF (XML Forms Data Format) 解析模块
+//! 这个文件负责把 XFDF/XML 和 Rust 数据结构互相转换。
 //!
-//! 这个文件的工作可以简单理解成：
-//! “把 XFDF 这种 XML 文本，翻译成 Rust 里的注释对象”。
+//! 如果把项目想成一条流水线：
+//! 1. `xfdf.rs` 负责“读懂 XML”
+//! 2. `annotation.rs` 负责“定义数据长什么样”
+//! 3. `pdf.rs` 负责“把这些数据写进 PDF”
 //!
-//! 也就是把原本长得像这样：
-//! - `<text ...>`
-//! - `<highlight ...>`
-//! - `<line ...>`
-//! 这样的 XML 标签，
-//! 最后变成程序里能直接操作的 `Annotation`、`XfdfDocument` 等结构体。
-//!
-//! 读这个文件时，建议重点抓住两件事：
-//! 1. `parse`：负责一边读 XML，一边收集数据
-//! 2. `build_annotation`：负责把“收集到的字符串属性”组装成真正的注释对象
-//!
-//! XFDF 是 Adobe 定义的 XML 格式，用于表示 PDF 文档中的注释和表单数据。
-//!
-//! 示例 XFDF 文件结构:
-//! ```xml
-//! <?xml version="1.0" encoding="UTF-8" ?>
-//! <xfdf xmlns="http://ns.adobe.com/xfdf/" xml:space="preserve">
-//!   <annots>
-//!     <text subject="Comment" page="0" rect="100,200,300,400"
-//!           title="Author" date="D:20240101120000" color="#FF0000">
-//!       This is a comment
-//!     </text>
-//!   </annots>
-//! </xfdf>
-//! ```
+//! 阅读建议：
+//! 1. 先看 `XfdfDocument`
+//! 2. 再看 `parse`
+//! 3. 最后看 `to_xfdf_string`
+//! 这样最容易看懂“进来是什么，出去又是什么”。
 
 use crate::annotation::*;
 use crate::error::{PdfXmlError, Result};
@@ -35,6 +17,18 @@ use log::{debug, warn};
 use quick_xml::events::Event;
 use quick_xml::Reader;
 use std::collections::HashMap;
+
+// 这个文件负责把 XFDF/XML 和 Rust 数据结构互相转换。
+// 如果把项目想成一条流水线：
+// 1. `xfdf.rs` 负责“读懂 XML”
+// 2. `annotation.rs` 负责“定义数据长什么样”
+// 3. `pdf.rs` 负责“把这些数据写进 PDF”
+//
+// 阅读建议：
+// 1. 先看 `XfdfDocument`
+// 2. 再看 `parse`
+// 3. 最后看 `to_xfdf_string`
+// 这样最容易看懂“进来是什么，出去又是什么”。
 
 fn extract_plain_text_from_richtext(input: &str) -> String {
     // 有些 XFDF 会把内容放在富文本里，里面带 HTML 标签。
@@ -55,6 +49,12 @@ fn extract_plain_text_from_richtext(input: &str) -> String {
 
 /// XFDF 文档
 #[derive(Debug, Clone)]
+/// 一份完整的 XFDF 文档。
+///
+/// 它里面通常会包含：
+/// - 文档级元数据
+/// - 表单字段
+/// - 注释列表
 pub struct XfdfDocument {
     /// XML 命名空间
     pub xmlns: Option<String>,
@@ -71,6 +71,7 @@ pub struct XfdfDocument {
 
 /// XFDF 表单字段
 #[derive(Debug, Clone)]
+/// XFDF 里的表单字段。
 pub struct XfdfField {
     #[allow(dead_code)]
     pub name: String,
@@ -79,14 +80,14 @@ pub struct XfdfField {
 }
 
 impl XfdfDocument {
-    /// 解析 XFDF/XML 字符串为文档对象。
-    ///
-    /// 这整个函数可以理解成一个“小型状态机”：
-    /// - 看到开始标签，就进入某种状态
-    /// - 看到文本，就把内容暂存起来
-    /// - 看到结束标签，就把暂存的数据组装成最终对象
-    ///
-    /// 最后产出一个 `XfdfDocument`，里面包含字段、注释和元数据。
+    // 这是这个文件里最重要的入口。
+    // 它一边读 XML，一边把读到的内容整理成程序能直接使用的结构。
+    //
+    // 因为 XML 不是一次性整块读完的，
+    // 所以这里会看到很多“临时变量”。
+    // 它们的作用很像便签纸：
+    // 先把读到一半的信息记下来，等后面拼完整了再放进最终结果。
+    /// 解析 XFDF/XML 字符串，得到统一的文档对象。
     pub fn parse(xml_str: &str) -> Result<Self> {
         let mut reader = Reader::from_str(xml_str);
         reader.config_mut().trim_text(true);
@@ -266,10 +267,10 @@ impl XfdfDocument {
                             child_tag_content.push_str(&text);
                         } else if in_inklist {
                             // 在 inklist/gesture 中，文本是坐标数据
-                            current_gesture_data.push_str(&text.trim());
+                            current_gesture_data.push_str(text.trim());
                         } else {
                             // 顶层文本作为 contents（但会被 <contents> 标签覆盖）
-                            if text.trim().len() > 0 {
+                            if !text.trim().is_empty() {
                                 current_annotation_content.push_str(&text);
                             }
                         }
@@ -322,11 +323,7 @@ impl XfdfDocument {
                                     // contents 文本覆盖顶层 content
                                     current_annotation_content = child_tag_content.clone();
                                 } else if tag_name == "contents-richtext" {
-                                    if current_annotation_content.trim().is_empty() {
-                                        current_annotation_attrs.insert(tag_name.to_string(), child_tag_content.clone());
-                                    } else {
-                                        current_annotation_attrs.insert(tag_name.to_string(), child_tag_content.clone());
-                                    }
+                                    current_annotation_attrs.insert(tag_name.to_string(), child_tag_content.clone());
                                 } else {
                                     // 其他子元素存入 attrs
                                     current_annotation_attrs.insert(tag_name.to_string(), child_tag_content.clone());
@@ -504,9 +501,13 @@ impl XfdfDocument {
         // 直接复用 build_annotation，因为子元素数据已经通过 _inklist 等特殊 key 传入 attrs
         Self::build_annotation(annotation_type, attrs, content)
     }
-    
-    /// 构建基础注释属性
+    // 这里负责把“零散的字符串属性”整理成统一的基础字段。
+    // 例如 page、rect、title、color 这些，
+    // 不管最终是 Text 还是 Highlight，都会先经过这里。
     fn build_base(attrs: &HashMap<String, String>, content: &str) -> Result<AnnotationBase> {
+        // 这里负责把“零散的字符串属性”整理成统一的基础字段。
+        // 例如 page、rect、title、color 这些，
+        // 不管最终是 Text 还是 Highlight，都会先经过这里。
         let contents = if content.trim().is_empty() {
             attrs.get("contents-richtext")
                 .map(|rich| extract_plain_text_from_richtext(rich))
@@ -566,12 +567,14 @@ impl XfdfDocument {
             .map(|p| p + 1)
             .unwrap_or(1)
     }
-
-    /// 把当前文档序列化成标准 XFDF 字符串。
-    ///
-    /// 这相当于 `parse(...)` 的反方向：
-    /// 把程序里的注释对象重新写回 XFDF/XML。
+    // 这个函数和 `parse` 正好相反。
+    // `parse` 是把 XML 变成 Rust 对象；
+    // 这里则是把 Rust 对象重新拼回标准 XFDF 字符串。
+    /// 把当前文档重新序列化成 XFDF 字符串。
     pub fn to_xfdf_string(&self) -> Result<String> {
+        // 这个函数和 `parse` 正好相反。
+        // `parse` 是把 XML 变成 Rust 对象；
+        // 这里则是把 Rust 对象重新拼回标准 XFDF 字符串。
         let mut xml = String::from("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n");
         xml.push_str("<xfdf xmlns=\"http://ns.adobe.com/xfdf/\" xml:space=\"preserve\">\n");
 

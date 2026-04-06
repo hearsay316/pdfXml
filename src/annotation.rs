@@ -1,27 +1,38 @@
-//! 注释数据结构定义
+//! 这个文件专门定义“注释数据长什么样”。
 //!
-//! 这个文件主要回答一个问题：
-//! “程序内部到底用什么结构，来表示一条 PDF 注释？”
+//! 它不负责读取 XML，也不负责写 PDF。
+//! 它的任务很单纯：把项目里会用到的各种注释类型整理成统一的数据结构。
 //!
-//! 可以把它理解成项目里的“数据模型层”：
-//! - `xfdf.rs` 负责把 XML 解析出来
-//! - `annotation.rs` 负责定义解析后的数据长什么样
-//! - `pdf.rs` 再把这些数据写进 PDF
-//!
-//! 所以这里大多数内容都只是“描述数据”，
-//! 而不是“处理业务逻辑”。
-//! 读这个文件时，重点看两层：
-//! 1. `AnnotationBase`：几乎所有注释都会共享的公共字段
-//! 2. 各种具体注释结构体：表示每一种注释独有的数据
+//! 你可以把这里理解成一份“数据模型说明书”：
+//! - `Color` 和 `Rect` 是基础小零件
+//! - `AnnotationBase` 是大多数注释都会共用的公共部分
+//! - 各种具体注释类型是在公共部分上再加自己的专属字段
+//! - 最下面的 `Annotation` 则把所有注释统一收口到一个枚举里
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+
+// 这个文件只负责一件事：定义“数据长什么样”。
+// 它不负责读取 XML，也不负责写 PDF。
+//
+// 可以把这里理解成项目里所有注释对象共用的一份“表格设计图”：
+// 每种注释有哪些字段、字段各自代表什么，都在这里说明。
+//
+// 阅读建议：
+// 1. 先看 `Color` 和 `Rect` 这两个基础小零件
+// 2. 再看 `AnnotationBase`，它是大部分注释都会共用的部分
+// 3. 最后看各种具体注释，以及最下面统一收口的 `Annotation` 枚举
+
+// ===== 基础小零件：颜色和矩形 =====
 
 /// 注释颜色（RGB）。
 ///
 /// PDF 最终使用的是 0.0 ~ 1.0 的浮点数颜色值，
 /// 所以这里会把常见的十六进制颜色转换成内部可用的 RGB。
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// 颜色，使用 RGB 三个分量表示。
+///
+/// 在内部会用 0.0 到 1.0 的浮点数保存颜色。
 pub struct Color {
     pub r: f32,
     pub g: f32,
@@ -29,7 +40,7 @@ pub struct Color {
 }
 
 impl Color {
-    /// 从十六进制颜色字符串解析（如 "#FF0000"）。
+    /// 把像 `#FF0000` 这样的十六进制颜色，转换成内部的 RGB 结构。
     pub fn from_hex(hex: &str) -> Option<Self> {
         let hex = hex.trim_start_matches('#');
         if hex.len() != 6 {
@@ -65,6 +76,9 @@ impl Default for Color {
 /// 很多注释都需要一个外接矩形，告诉 PDF：
 /// “这个注释大概占据页面上的哪一块区域”。
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// 矩形范围，表示注释大概占据页面上的哪一块区域。
+///
+/// 四个值分别是：左、下、右、上。
 pub struct Rect {
     pub left: f64,
     pub bottom: f64,
@@ -73,7 +87,7 @@ pub struct Rect {
 }
 
 impl Rect {
-    /// 从 XFDF rect 字符串解析（如 "100,200,300,400"）。
+    /// 把像 `100,200,300,400` 这样的字符串解析成矩形结构。
     pub fn from_string(s: &str) -> Option<Self> {
         let parts: Vec<&str> = s.split(',').collect();
         if parts.len() != 4 {
@@ -106,7 +120,20 @@ impl Rect {
 /// 比如：页码、矩形、标题、内容、颜色、日期等。
 ///
 /// 具体到某种注释时，再在这个基础上补自己的专属字段。
+// ===== 所有注释都会共用的大框架 =====
+//
+// `AnnotationBase` 可以理解成“公共部分”。
+// 不管是文本注释、高亮、线条还是图章，
+// 它们大多都会有页码、位置、颜色、内容、日期这些共同字段。
+//
+// 这样做的好处是：
+// 公共字段只定义一次，后面的具体注释类型直接复用。
 #[derive(Debug, Clone, Serialize, Deserialize)]
+// ===== 所有注释都会共用的大框架 =====
+//
+// `AnnotationBase` 可以理解成“公共部分”。
+// 不管是什么注释，通常都会有页码、位置、内容、颜色、日期这些信息。
+/// 所有注释都会共用的基础字段。
 pub struct AnnotationBase {
     /// 唯一标识符
     #[serde(rename = "name", skip_serializing_if = "Option::is_none")]
@@ -163,7 +190,17 @@ fn default_opacity() -> f32 { 1.0 }
 ///
 /// 这是最常见的“小便签”类型，通常会有一个图标，
 /// 点开后能看到内容。
+// ===== 具体的注释种类 =====
+// 下面这些结构体分别对应一种具体注释。
+// 可以把它们理解成：
+// “先带上公共字段，再加上这类注释自己独有的字段”。
 #[derive(Debug, Clone, Serialize, Deserialize)]
+// ===== 具体的注释种类 =====
+//
+// 下面这些结构体分别对应一种具体注释。
+// 可以把它们理解成：
+// “先带上公共字段，再加上这类注释自己独有的字段”。
+/// 文本注释，也就是常见的小便签注释。
 pub struct TextAnnotation {
     #[serde(flatten)]
     pub base: AnnotationBase,
@@ -184,6 +221,7 @@ fn default_icon() -> String { "Note".to_string() }
 /// 核心数据不是一个矩形，而是一组 QuadPoints，
 /// 用来表示被高亮文字所在的四边形区域。
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// 高亮注释。
 pub struct HighlightAnnotation {
     #[serde(flatten)]
     pub base: AnnotationBase,
@@ -195,6 +233,7 @@ pub struct HighlightAnnotation {
 
 /// 下划线注释。
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// 下划线注释。
 pub struct UnderlineAnnotation {
     #[serde(flatten)]
     pub base: AnnotationBase,
@@ -206,6 +245,7 @@ pub struct UnderlineAnnotation {
 
 /// 删除线注释。
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// 删除线注释。
 pub struct StrikeOutAnnotation {
     #[serde(flatten)]
     pub base: AnnotationBase,
@@ -217,6 +257,7 @@ pub struct StrikeOutAnnotation {
 
 /// 波浪线注释。
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// 波浪线注释。
 pub struct SquigglyAnnotation {
     #[serde(flatten)]
     pub base: AnnotationBase,
@@ -231,6 +272,9 @@ pub struct SquigglyAnnotation {
 /// 和 TextAnnotation 不同，FreeText 通常是“直接显示在页面上的文字框”。
 /// 所以它除了内容，还会关心文字外观、对齐方式、字体信息等。
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// 自由文本注释。
+///
+/// 它和普通文本注释不同：内容通常直接显示在页面上。
 pub struct FreeTextAnnotation {
     #[serde(flatten)]
     pub base: AnnotationBase,
@@ -256,6 +300,7 @@ pub struct FreeTextAnnotation {
 ///
 /// 本质上是一个矩形框标记，通常最关心边框宽度和颜色。
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// 矩形注释。
 pub struct SquareAnnotation {
     #[serde(flatten)]
     pub base: AnnotationBase,
@@ -269,6 +314,7 @@ pub struct SquareAnnotation {
 ///
 /// 它的外接区域仍然由 `rect` 决定，但画出来的外观是圆/椭圆。
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// 圆形或椭圆注释。
 pub struct CircleAnnotation {
     #[serde(flatten)]
     pub base: AnnotationBase,
@@ -289,6 +335,7 @@ pub struct CircleAnnotation {
 /// - 终点
 /// - 两端样式（比如箭头、圆点、方块）
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// 线条注释。
 pub struct LineAnnotation {
     #[serde(flatten)]
     pub base: AnnotationBase,
@@ -323,6 +370,7 @@ fn default_line_width() -> f32 { 1.0 }
 ///
 /// 真正区分它们的是 `is_closed`。
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// 多边形或折线注释。
 pub struct PolygonAnnotation {
     #[serde(flatten)]
     pub base: AnnotationBase,
@@ -343,6 +391,7 @@ fn default_polygon_closed() -> bool { true }
 /// 这类注释通常不是规则图形，而是用户手绘出来的一串轨迹。
 /// 所以这里保存的是多段路径数据。
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// 手写轨迹注释，也叫墨迹注释。
 pub struct InkAnnotation {
     #[serde(flatten)]
     pub base: AnnotationBase,
@@ -361,6 +410,7 @@ pub struct InkAnnotation {
 ///
 /// 可以是预设图章，也可能直接带一段图片数据。
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// 图章注释。
 pub struct StampAnnotation {
     #[serde(flatten)]
     pub base: AnnotationBase,
@@ -378,6 +428,9 @@ pub struct StampAnnotation {
 ///
 /// 它一般不是独立内容本体，而是挂在别的注释旁边的“弹出说明框”。
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// 弹出窗口注释。
+///
+/// 它通常挂在别的注释旁边，用来显示补充说明。
 pub struct PopupAnnotation {
     #[serde(flatten)]
     pub base: AnnotationBase,
@@ -395,8 +448,25 @@ pub struct PopupAnnotation {
 ///
 /// 这是对外最常用的统一入口：
 /// 不管实际是文本、高亮、线条还是图章，最后都能先装进 `Annotation` 里。
+// ===== 统一收口的总类型 =====
+//
+// 真正对外使用时，程序不可能每次都只处理一种注释。
+// 所以这里用 `Annotation` 把所有注释包在一起，
+// 这样外层代码就能统一地做：
+// - 按页分组
+// - 判断注释类型
+// - 导出到 PDF 或 XFDF
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type")]
+// ===== 统一收口的总类型 =====
+//
+// 真正对外使用时，程序不可能每次都只处理一种注释。
+// 所以这里用 `Annotation` 把所有注释包在一起，
+// 这样外层代码就能统一地做：
+// - 按页分组
+// - 判断注释类型
+// - 导出到 PDF 或 XFDF
+/// 统一收口的注释总类型。
 pub enum Annotation {
     Text(TextAnnotation),
     Highlight(HighlightAnnotation),

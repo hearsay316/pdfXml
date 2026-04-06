@@ -1,18 +1,19 @@
-//! PDF 生成和注释导出模块
+//! 这个文件负责真正和 PDF 打交道。
 //!
-//! 这个文件负责做项目里最“落地”的那一步：
-//! 把已经解析好的注释数据，真正写进 PDF。
+//! 前面的模块主要是在整理数据：
+//! - `xfdf.rs` 负责把 XFDF 读成 Rust 结构
+//! - `annotation.rs` 负责定义这些结构长什么样
 //!
-//! 如果把整个项目想成一条流水线，那它大概是这样：
-//! 1. `xfdf.rs` 负责把 XFDF/XML 解析成 Rust 结构体
-//! 2. `pdf.rs` 负责把这些结构体变成 PDF 里的对象和外观
+//! 而这里负责的是最后一步：
+//! - 把注释写进 PDF
+//! - 从 PDF 里把注释读回来
+//! - 为某些注释补上外观流，让不同阅读器显示得更稳定
 //!
-//! 所以这里的核心关注点不是“怎么读 XML”，而是：
-//! - 注释在 PDF 里要写成什么字典
-//! - 颜色、边框、文字、坐标怎么落到 PDF 对象里
-//! - 怎样补显式 AP（Appearance Stream），让阅读器更稳定地显示图形
-//!
-//! 使用 lopdf 库创建 PDF 文件并将 XFDF 注释写入
+//! 这个文件比较长，建议按下面顺序阅读：
+//! 1. 先看最前面的字符串、颜色、字体小工具
+//! 2. 再看 FreeText 和各种图形的 AP 外观流怎么生成
+//! 3. 再看“从 PDF 读回注释”的那一段
+//! 4. 最后看“导出到新 PDF / 合并到现有 PDF”的主流程
 
 use base64::Engine;
 use crate::annotation::*;
@@ -21,11 +22,21 @@ use crate::xfdf::XfdfDocument;
 use image::{DynamicImage, GenericImageView, ImageFormat, RgbaImage};
 use log::{debug, info, warn};
 use lopdf;
-use std::collections::HashMap;
+use std::collections::{hash_map::Entry, HashMap};
 use std::fs;
 use std::io::Cursor;
 use std::path::{Path, PathBuf};
 use ttf_parser::{Face, OutlineBuilder};
+
+// 这个文件是项目里最“动手干活”的一层。
+// 前面的模块只是把数据整理好，
+// 真正把注释写进 PDF、或者从 PDF 里读回注释，都是这里负责。
+//
+// 这个文件比较长，建议按下面顺序阅读：
+// 1. 先看最前面的字符串、颜色、字体小工具
+// 2. 再看 FreeText 和各种图形的 AP 外观流怎么生成
+// 3. 再看“从 PDF 读回注释”的那一段
+// 4. 最后看“导出到新 PDF / 合并到现有 PDF”的主流程
 
 fn contains_chinese(s: &str) -> bool {
     // 这是一个很实用的小判断：
@@ -138,9 +149,7 @@ fn parse_text_color_from_da_hex(da: &str) -> Option<String> {
     let (r, g, b) = extract_fill_color_from_da(da);
     if r == 0.0 && g == 0.0 && b == 0.0 {
         let fill_re = regex::Regex::new(r"(\d*\.?\d+)\s+(\d*\.?\d+)\s+(\d*\.?\d+)\s+r[gG]").unwrap();
-        if fill_re.captures(da).is_none() {
-            return None;
-        }
+        fill_re.captures(da)?;
     }
 
     Some(format!(
@@ -159,6 +168,42 @@ fn parse_font_size_from_da(da: &str) -> f32 {
         .and_then(|m| m.as_str().parse::<f32>().ok())
         .filter(|size| *size > 0.0)
         .unwrap_or(12.0)
+}
+
+fn parse_font_resource_name_from_da(da: &str) -> Option<String> {
+    // 这一步是在 DA 字符串里找“字体的名字”。
+    // 例如 `/Courier 14 Tf` 里，我们要拿到的就是 `Courier`。
+    // 后面生成 AP 外观流时，必须用同一个名字，
+    // 不然有些 PDF 阅读器会显示成另一种默认字体。
+    let tf_re = regex::Regex::new(r"/([^\s/]+)\s+\d+(?:\.\d+)?\s*Tf").unwrap();
+    tf_re
+        .captures(da)
+        .and_then(|caps| caps.get(1))
+        .map(|m| m.as_str().to_string())
+}
+
+fn normalize_base_font_name(font_resource: &str) -> String {
+    // 有些名字是缩写。
+    // 比如 `Helv` 实际表示 `Helvetica`。
+    // PDF 里“资源名”和“真正的字体名”可以不是同一个东西，
+    // 所以这里把常见缩写翻译成正式名字。
+    match font_resource {
+        "Helv" => "Helvetica".to_string(),
+        "HeBo" => "Helvetica-Bold".to_string(),
+        "HeOb" => "Helvetica-Oblique".to_string(),
+        "HeBO" => "Helvetica-BoldOblique".to_string(),
+        "Cour" => "Courier".to_string(),
+        "CoBo" => "Courier-Bold".to_string(),
+        "CoOb" => "Courier-Oblique".to_string(),
+        "CoBO" => "Courier-BoldOblique".to_string(),
+        "TiRo" => "Times-Roman".to_string(),
+        "TiBo" => "Times-Bold".to_string(),
+        "TiIt" => "Times-Italic".to_string(),
+        "TiBI" => "Times-BoldItalic".to_string(),
+        "Symb" => "Symbol".to_string(),
+        "ZaDb" => "ZapfDingbats".to_string(),
+        other => other.to_string(),
+    }
 }
 
 fn parse_alignment_from_style(style: Option<&str>) -> i32 {
@@ -264,6 +309,12 @@ pub struct PdfAnnotationExporter {
     page_size: (f64, f64),
 }
 
+impl Default for PdfAnnotationExporter {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl PdfAnnotationExporter {
     /// 创建一个导出器。
     ///
@@ -320,6 +371,9 @@ impl PdfAnnotationExporter {
     }
 
     fn build_freetext_render_spec(annotation: &FreeTextAnnotation) -> Option<FreeTextRenderSpec> {
+        // 这个函数先把 FreeText 需要的关键信息整理好，
+        // 可以把它理解成“先准备好绘图说明书”。
+        // 后面真正生成 PDF 外观流时，就只管照着这份说明书去画。
         // 先把 FreeText 真正渲染时需要的关键信息整理出来，
         // 这样后面的“生成西文 AP / 生成中文 AP”就不用重复判断一遍。
         let base = &annotation.base;
@@ -352,13 +406,20 @@ impl PdfAnnotationExporter {
 
         Some(FreeTextRenderSpec {
             contents,
+            // 这里的 da 已经是最后要使用的版本，
+            // 里面的字体、字号、颜色都已经按规则处理过了。
             da: apply_text_color_to_da(&base_da, preferred_text_color),
             align,
             is_cjk,
         })
     }
-
+    // 这里专门负责“公共字段”。
+    // 也就是说，只要大多数注释都会有的字段，
+    // 比如位置、名字、内容、颜色、日期，就统一在这里写进 PDF。
     fn set_common_annotation_fields(dict: &mut lopdf::Dictionary, base: &AnnotationBase) {
+        // 这里专门负责“公共字段”。
+        // 也就是说，只要大多数注释都会有的字段，
+        // 比如位置、名字、内容、颜色、日期，就统一在这里写进 PDF。
         if let Some(r) = base.rect.as_ref() {
             dict.set("Rect", lopdf::Object::Array(vec![
                 lopdf::Object::Real(r.left as f32),
@@ -373,6 +434,18 @@ impl PdfAnnotationExporter {
                 lopdf::Object::Real(200.0),
                 lopdf::Object::Real(720.0),
             ]));
+        }
+
+        // `name` 是这条注释自己的名字。
+        // 在 PDF 里，它要写到 `NM` 字段里。
+        // 之后如果有 Popup 要找到它，或者我们想把 PDF 再导回 XFDF，
+        // 都要靠这个名字，所以这里不能省略。
+        if let Some(name) = &base.name {
+            if contains_chinese(name) {
+                dict.set("NM", lopdf::Object::String(to_utf16be(name), lopdf::StringFormat::Hexadecimal));
+            } else {
+                dict.set("NM", lopdf::Object::String(name.clone().into_bytes(), lopdf::StringFormat::Literal));
+            }
         }
 
         if let Some(c) = &base.contents {
@@ -419,6 +492,14 @@ impl PdfAnnotationExporter {
         if let Some(dt) = &base.creation_date {
             dict.set("CreationDate", lopdf::Object::String(dt.clone().into_bytes(), lopdf::StringFormat::Literal));
         }
+        // XFDF 的 opacity 对应 PDF 注释字典里的 CA。
+        // `opacity` 就是不透明度。
+        // 1.0 表示完全不透明，0.4 表示比较透明。
+        // PDF 里保存它的字段叫 `CA`。
+        // 如果这里不写，之后从 PDF 读回来时就只会看到默认值 1.0。
+        if (base.opacity - 1.0).abs() > f32::EPSILON {
+            dict.set("CA", lopdf::Object::Real(base.opacity.clamp(0.0, 1.0)));
+        }
         if base.flags != 0 {
             dict.set("F", lopdf::Object::Integer(base.flags as i64));
         }
@@ -449,11 +530,27 @@ impl PdfAnnotationExporter {
         Self::set_common_annotation_fields(&mut dict, annotation.base());
         dict
     }
-
+    // AP 可以理解成“这条注释真正画出来长什么样”。
+    // 对普通西文文字来说，这里做的事情就是：
+    // 1. 算出一个框
+    // 2. 选字体和颜色
+    // 3. 把文字画进这个框里
     fn build_text_ap_stream(spec: &FreeTextRenderSpec, rect: Option<&Rect>) -> lopdf::Object {
+        // AP 可以理解成“这条注释真正画出来长什么样”。
+        // 对普通西文文字来说，这里做的事情就是：
+        // 1. 算出一个框
+        // 2. 选字体和颜色
+        // 3. 把文字画进这个框里
         // 这是“普通西文文本”的 AP 生成方式。
         // 思路比较直接：算出一个框，在里面用 Helvetica 把文字写进去。
         let font_size = parse_font_size_from_da(&spec.da);
+        // 让 AP 里的字体资源名和 DA 保持一致，避免阅读器优先显示 AP 时字体跑偏。
+        // 这里故意让 AP 里使用的字体名字和 DA 里写的一样。
+        // 很多 PDF 阅读器显示 FreeText 时，会优先看 AP。
+        // 如果 AP 里的字体和 DA 不一样，最后显示出来的字就会跑偏。
+        let font_resource = parse_font_resource_name_from_da(&spec.da)
+            .unwrap_or_else(|| "Helvetica".to_string());
+        let base_font = normalize_base_font_name(&font_resource);
         let (width, height) = if let Some(rect) = rect {
             (
                 ((rect.right - rect.left).abs() as f32).max(1.0),
@@ -477,14 +574,14 @@ impl PdfAnnotationExporter {
         };
 
         let content = format!(
-            "q\n{} {} {} rg\nBT\n/Helvetica {} Tf\n1 0 0 1 {} {} Tm\n({}) Tj\nET\nQ\n",
-            r, g, b, font_size, x, (height - font_size).max(2.0), escaped
+            "q\n{} {} {} rg\nBT\n/{} {} Tf\n1 0 0 1 {} {} Tm\n({}) Tj\nET\nQ\n",
+            r, g, b, font_resource, font_size, x, (height - font_size).max(2.0), escaped
         );
 
         let mut helv = lopdf::Dictionary::new();
         helv.set("Type", lopdf::Object::Name(b"Font".to_vec()));
         helv.set("Subtype", lopdf::Object::Name(b"Type1".to_vec()));
-        helv.set("BaseFont", lopdf::Object::Name(b"Helvetica".to_vec()));
+        helv.set("BaseFont", lopdf::Object::Name(base_font.into_bytes()));
 
         let stream_dict = lopdf::Dictionary::from_iter(vec![
             ("Type", lopdf::Object::Name(b"XObject".to_vec())),
@@ -499,7 +596,7 @@ impl PdfAnnotationExporter {
                 let mut resources = lopdf::Dictionary::new();
                 resources.set("Font", lopdf::Object::Dictionary({
                     let mut fonts = lopdf::Dictionary::new();
-                    fonts.set("Helvetica", lopdf::Object::Dictionary(helv));
+                    fonts.set(font_resource.as_bytes(), lopdf::Object::Dictionary(helv));
                     fonts
                 }));
                 resources
@@ -903,7 +1000,7 @@ impl PdfAnnotationExporter {
             .flat_map(|pair| pair.split(','))
             .filter_map(|s| s.trim().parse::<f64>().ok())
             .collect();
-        if raw_values.len() < 4 || raw_values.len() % 2 != 0 {
+        if raw_values.len() < 4 || !raw_values.len().is_multiple_of(2) {
             return None;
         }
 
@@ -921,12 +1018,11 @@ impl PdfAnnotationExporter {
         }
 
         let content = format!(
-            "q\n{} {} {} RG\n1 w\n{}{}\nQ\n",
+            "q\n{} {} {} RG\n1 w\n{}S\nQ\n",
             stroke.r,
             stroke.g,
             stroke.b,
-            path,
-            if annotation.is_closed { "S" } else { "S" }
+            path
         );
 
         let stream_dict = lopdf::Dictionary::from_iter(vec![
@@ -1632,7 +1728,95 @@ impl PdfAnnotationExporter {
         Ok(())
     }
 
+    // PDF 不是简单地把页面放进一个列表里。
+    // 它会用一棵“页面树”来管理所有页面。
+    // 如果要往现有 PDF 里补新页，就得先找到这棵树的根。
+    fn pages_root_id(document: &lopdf::Document) -> Result<lopdf::ObjectId> {
+        let root_id = match document.trailer.get(b"Root") {
+            Ok(lopdf::Object::Reference(id)) => *id,
+            Ok(_) => {
+                return Err(PdfXmlError::PdfProcessing(
+                    "PDF Catalog Root 不是间接对象".to_string(),
+                ));
+            }
+            Err(e) => {
+                return Err(PdfXmlError::PdfProcessing(format!(
+                    "无法读取 PDF Catalog Root: {}",
+                    e
+                )));
+            }
+        };
+
+        let catalog = document.get_object(root_id)?.as_dict()
+            .map_err(|e| PdfXmlError::PdfProcessing(format!("PDF Catalog 不是字典: {}", e)))?;
+
+        match catalog.get(b"Pages") {
+            Ok(lopdf::Object::Reference(id)) => Ok(*id),
+            Ok(_) => Err(PdfXmlError::PdfProcessing(
+                "PDF Pages 根节点不是间接对象".to_string(),
+            )),
+            Err(e) => Err(PdfXmlError::PdfProcessing(format!(
+                "无法读取 PDF Pages 根节点: {}",
+                e
+            ))),
+        }
+    }
+
+    // 现有 PDF 补页时，需要把新页挂回原文档的 Pages 树。
+    // 补新页时，除了创建页面对象，还要把它登记进 Pages 树。
+    // 这里负责做三件事：
+    // 1. 让新页的 Parent 指向 Pages 根
+    // 2. 把新页加进 Kids 列表
+    // 3. 把总页数 Count 加 1
+    fn attach_page_to_pages_root(
+        document: &mut lopdf::Document,
+        pages_root_id: lopdf::ObjectId,
+        page_id: lopdf::ObjectId,
+    ) -> Result<()> {
+        if let Some(lopdf::Object::Dictionary(dict)) = document.objects.get_mut(&page_id) {
+            dict.set("Parent", lopdf::Object::Reference(pages_root_id));
+        } else {
+            return Err(PdfXmlError::PdfProcessing(
+                "新增页面对象不是字典".to_string(),
+            ));
+        }
+
+        if let Some(lopdf::Object::Dictionary(dict)) = document.objects.get_mut(&pages_root_id) {
+            let mut kids = match dict.get(b"Kids") {
+                Ok(obj) => obj
+                    .as_array()
+                    .map_err(|e| PdfXmlError::PdfProcessing(format!("Pages/Kids 不是数组: {}", e)))?
+                    .clone(),
+                Err(_) => Vec::new(),
+            };
+            kids.push(lopdf::Object::Reference(page_id));
+
+            let count = dict
+                .get(b"Count")
+                .ok()
+                .and_then(Self::object_number)
+                .unwrap_or(0.0) as i64;
+
+            dict.set("Kids", lopdf::Object::Array(kids));
+            dict.set("Count", lopdf::Object::Integer(count + 1));
+            Ok(())
+        } else {
+            Err(PdfXmlError::PdfProcessing(
+                "PDF Pages 根节点不是字典".to_string(),
+            ))
+        }
+    }
+    // 这个函数的目标是：
+    // “保留原来的 PDF 内容，只把新的注释加进去”。
+    //
+    // 所以它不会像 `export_to_new_pdf` 那样从零开始建整份文档，
+    // 而是先打开原 PDF，再决定每一页该追加什么。
     pub fn export_to_existing_pdf(&mut self, xfdf_doc: &XfdfDocument, input_path: &Path, output_path: &Path) -> Result<()> {
+        // 这个函数的目标是：
+        // “保留原来的 PDF 内容，只把新的注释加进去”。
+        //
+        // 所以它不会像 `export_to_new_pdf` 那样从零开始建整份文档，
+        // 而是先打开原 PDF，再决定每一页该追加什么。
         // 这种模式不是新建空白 PDF，
         // 而是在已有 PDF 基础上，把 XFDF 里的注释挂到对应页面上。
         info!("打开现有 PDF 并合并注释");
@@ -1642,22 +1826,37 @@ impl PdfAnnotationExporter {
 
         let pages = document.get_pages();
         let existing_page_count = pages.len();
+        let pages_root_id = Self::pages_root_id(&document)?;
         info!("原始 PDF 共 {} 页", existing_page_count);
 
-        let total_pages = std::cmp::max(xfdf_doc.total_pages(), existing_page_count);
         let mut font_dict = lopdf::Dictionary::new();
         font_dict.set("Type", lopdf::Object::Name(b"Font".to_vec()));
         font_dict.set("Subtype", lopdf::Object::Name(b"Type1".to_vec()));
         font_dict.set("BaseFont", lopdf::Object::Name(b"Helvetica".to_vec()));
         let font_id_ref = document.add_object(font_dict);
 
-        for page_num in 0..total_pages {
-            if page_num < existing_page_count && !xfdf_doc.get_annotations_for_page(page_num).is_empty() {
-                let page_id = pages[&((page_num + 1) as u32)];
-                let page_annotations = xfdf_doc.get_annotations_for_page(page_num);
-                self.add_annotations_to_page(&mut document, page_id, &page_annotations, font_id_ref)?;
-                debug!("向第 {} 页添加了 {} 条注释", page_num + 1, page_annotations.len());
+        // 先处理原 PDF 里已经存在的那些页。
+        // 这一段只是在原来的页面上追加注释，不会新建页面。
+        for page_num in 0..existing_page_count {
+            let page_annotations = xfdf_doc.get_annotations_for_page(page_num);
+            if page_annotations.is_empty() {
+                continue;
             }
+
+            let page_id = pages[&((page_num + 1) as u32)];
+            self.add_annotations_to_page(&mut document, page_id, &page_annotations, font_id_ref)?;
+            debug!("向第 {} 页添加了 {} 条注释", page_num + 1, page_annotations.len());
+        }
+
+        // XFDF 页码超出原 PDF 时，补建新页而不是静默丢弃注释。
+        // 再处理 XFDF 里“超出原 PDF 页数”的那部分注释。
+        // 如果原 PDF 没有对应页面，就要真的补出新页，
+        // 否则这些注释就会凭空消失。
+        for page_num in existing_page_count..xfdf_doc.total_pages() {
+            let page_annotations = xfdf_doc.get_annotations_for_page(page_num);
+            let page_id = self.create_page(&mut document, "F1", font_id_ref, &page_annotations, page_num)?;
+            Self::attach_page_to_pages_root(&mut document, pages_root_id, page_id)?;
+            debug!("为注释新增了第 {} 页", page_num + 1);
         }
 
         document.save(output_path)
@@ -1665,9 +1864,18 @@ impl PdfAnnotationExporter {
 
         Ok(())
     }
-
+    // 这个函数负责“真正新建一页”。
+    // 它会同时准备：
+    // 1. 页面本身
+    // 2. 页面里要挂的注释
+    // 3. 让这页至少有一段能被阅读器识别的内容流
     fn create_page(&self, document: &mut lopdf::Document, _font_name: &str, font_id: lopdf::ObjectId,
                      annotations: &[&Annotation], page_number: usize) -> Result<lopdf::ObjectId> {
+        // 这个函数负责“真正新建一页”。
+        // 它会同时准备：
+        // 1. 页面本身
+        // 2. 页面里要挂的注释
+        // 3. 让这页至少有一段能被阅读器识别的内容流
         let content_stream = format!(
             "BT\n/F1 12 Tf\n50 {} Td\n(Annotations - Page {}) Tj\nET\n",
             self.page_size.1 as i32 - 50, page_number + 1
@@ -1704,15 +1912,71 @@ impl PdfAnnotationExporter {
             page_dict.set("Annots", annots_array);
         }
 
-        Ok(document.add_object(page_dict))
-    }
+        let page_id = document.add_object(page_dict);
+        // 新建页面时顺手回填 P，保持注释和页面的双向关联完整。
+        // 前面创建注释时，还不知道最终页面对象的编号。
+        // 现在 page_id 已经有了，就回过头把每条注释的 `P` 字段补上，
+        // 告诉 PDF：“这条注释属于这一页”。
+        for annot_id in &annot_ids {
+            if let Some(lopdf::Object::Dictionary(dict)) = document.objects.get_mut(annot_id) {
+                dict.set("P", lopdf::Object::Reference(page_id));
+            }
+        }
 
+        Ok(page_id)
+    }
+    // 这一层负责把“内存里的注释结构体”变成“PDF 里的对象”。
+    // 先全部创建出来，再补 Popup 这种需要互相引用的关系。
     fn create_annotation_objects(&self, document: &mut lopdf::Document, annotations: &[&Annotation]) -> Result<Vec<lopdf::ObjectId>> {
+        // 这一层负责把“内存里的注释结构体”变成“PDF 里的对象”。
+        // 先全部创建出来，再补 Popup 这种需要互相引用的关系。
         let mut ids = Vec::new();
+        // 先记住“注释名字 -> 注释对象编号”。
+        // 这样后面处理 Popup 时，才能按名字找到它真正对应的父注释对象。
+        let mut named_annotations = HashMap::new();
+        let mut popup_links = Vec::new();
+
         for annotation in annotations {
             let annot_dict = self.build_annotation(document, annotation)?;
-            ids.push(document.add_object(annot_dict));
+            let annot_id = document.add_object(annot_dict);
+
+            if let Some(name) = annotation.base().name.as_ref() {
+                match named_annotations.entry(name.clone()) {
+                    Entry::Vacant(entry) => {
+                        entry.insert(annot_id);
+                    }
+                    Entry::Occupied(_) => {
+                        warn!("同一页上出现重复注释名称 {:?}，Popup 关联可能不稳定", name);
+                    }
+                }
+            }
+
+            if let Annotation::Popup(popup) = annotation {
+                if let Some(parent_name) = popup.parent_name.as_ref() {
+                    popup_links.push((annot_id, parent_name.clone()));
+                }
+            }
+
+            ids.push(annot_id);
         }
+
+        // Popup 需要靠名字回连到父注释，读回 XFDF 时才能恢复 parent。
+        // Popup 不是只保存一个父名字就够了，
+        // 在 PDF 里它真正需要的是“指向父注释对象”的引用。
+        // 所以这里第二轮再把这些对象引用补上。
+        for (popup_id, parent_name) in popup_links {
+            if let Some(parent_id) = named_annotations.get(&parent_name).copied() {
+                if let Some(lopdf::Object::Dictionary(dict)) = document.objects.get_mut(&popup_id) {
+                    dict.set("Parent", lopdf::Object::Reference(parent_id));
+                }
+                if let Some(lopdf::Object::Dictionary(dict)) = document.objects.get_mut(&parent_id) {
+                    dict.set("Popup", lopdf::Object::Reference(popup_id));
+                }
+            } else {
+                warn!("未找到 Popup 父注释 {:?}，跳过 Parent 关联", parent_name);
+            }
+        }
+
         Ok(ids)
     }
 
@@ -1904,7 +2168,7 @@ impl PdfAnnotationExporter {
 
     fn parse_quadpoints(coords: &str) -> Option<lopdf::Object> {
         let parts: Vec<&str> = coords.split(',').collect();
-        if parts.len() < 8 || parts.len() % 8 != 0 {
+        if parts.len() < 8 || !parts.len().is_multiple_of(8) {
             warn!("无效的 QuadPoints 坐标数: {} (需要是8的倍数)", parts.len());
             return None;
         }
@@ -1933,7 +2197,7 @@ impl PdfAnnotationExporter {
             .filter_map(|s| s.trim().parse::<f64>().ok())
             .map(|v| lopdf::Object::Real(v as f32))
             .collect();
-        if values.is_empty() || values.len() % 2 != 0 { return None; }
+        if values.is_empty() || !values.len().is_multiple_of(2) { return None; }
         Some(lopdf::Object::Array(values))
     }
 
@@ -1960,10 +2224,8 @@ impl PdfAnnotationExporter {
         let new_refs: Vec<lopdf::Object> = new_ids.iter().map(|id| lopdf::Object::Reference(*id)).collect();
 
         for annot_id in &new_ids {
-            if let Some(obj) = document.objects.get_mut(&(annot_id.0, annot_id.1)) {
-                if let lopdf::Object::Dictionary(ref mut dict) = obj {
-                    dict.set("P", lopdf::Object::Reference(page_id));
-                }
+            if let Some(lopdf::Object::Dictionary(dict)) = document.objects.get_mut(&(annot_id.0, annot_id.1)) {
+                dict.set("P", lopdf::Object::Reference(page_id));
             }
         }
 
@@ -1978,10 +2240,8 @@ impl PdfAnnotationExporter {
             new_refs
         };
 
-        if let Some(obj) = document.objects.get_mut(&(page_id.0, page_id.1)) {
-            if let lopdf::Object::Dictionary(ref mut dict) = obj {
-                dict.set("Annots", lopdf::Object::Array(new_annots));
-            }
+        if let Some(lopdf::Object::Dictionary(dict)) = document.objects.get_mut(&(page_id.0, page_id.1)) {
+            dict.set("Annots", lopdf::Object::Array(new_annots));
         }
 
         Ok(())
@@ -1997,10 +2257,8 @@ impl PdfAnnotationExporter {
         let pg_id = document.add_object(pg_dict);
 
         for id in page_ids {
-            if let Some(obj) = document.objects.get_mut(&(id.0, id.1)) {
-                if let lopdf::Object::Dictionary(ref mut dict) = obj {
-                    dict.set("Parent", lopdf::Object::Reference(pg_id));
-                }
+            if let Some(lopdf::Object::Dictionary(dict)) = document.objects.get_mut(&(id.0, id.1)) {
+                dict.set("Parent", lopdf::Object::Reference(pg_id));
             }
         }
 
@@ -2035,6 +2293,53 @@ mod tests {
     #[test]
     fn test_escape_pdf_literal_string() {
         assert_eq!(escape_pdf_literal_string("(a)\\b"), "\\(a\\)\\\\b");
+    }
+
+    #[test]
+    fn test_freetext_ap_should_use_requested_font() {
+        let annotation = FreeTextAnnotation {
+            base: AnnotationBase {
+                name: None,
+                page: 0,
+                rect: Some(Rect {
+                    left: 100.0,
+                    bottom: 100.0,
+                    right: 240.0,
+                    top: 160.0,
+                }),
+                title: None,
+                subject: None,
+                contents: Some("Hello font".to_string()),
+                creation_date: None,
+                modification_date: None,
+                color: None,
+                opacity: 1.0,
+                flags: 0,
+                extra: HashMap::new(),
+            },
+            default_style: None,
+            default_appearance: Some("/Courier 14 Tf".to_string()),
+            text_color: None,
+            align: 0,
+        };
+
+        let mut document = lopdf::Document::with_version("1.5");
+        let exporter = PdfAnnotationExporter::new();
+        let dict = exporter.build_freetext_annotation(&mut document, &annotation).unwrap();
+
+        let ap = dict.get(b"AP").unwrap().as_dict().unwrap();
+        let ap_id = match ap.get(b"N").unwrap() {
+            lopdf::Object::Reference(id) => *id,
+            other => panic!("Expected appearance stream reference, got {:?}", other),
+        };
+        let stream = document.get_object(ap_id).unwrap().as_stream().unwrap();
+        let content = String::from_utf8_lossy(&stream.content);
+        assert!(content.contains("/Courier 14 Tf"));
+
+        let resources = stream.dict.get(b"Resources").unwrap().as_dict().unwrap();
+        let fonts = resources.get(b"Font").unwrap().as_dict().unwrap();
+        let font = fonts.get(b"Courier").unwrap().as_dict().unwrap();
+        assert_eq!(font.get(b"BaseFont").unwrap().as_name().unwrap(), b"Courier");
     }
 
     #[test]
