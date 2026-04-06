@@ -2,9 +2,11 @@
 //!
 //! 使用 lopdf 库创建 PDF 文件并将 XFDF 注释写入
 
+use base64::Engine;
 use crate::annotation::*;
 use crate::error::{PdfXmlError, Result};
 use crate::xfdf::XfdfDocument;
+use image::GenericImageView;
 use log::{debug, info, warn};
 use lopdf;
 use std::fs;
@@ -487,6 +489,149 @@ impl PdfAnnotationExporter {
         Ok(lopdf::Object::Stream(lopdf::Stream::new(stream_dict, content.into_bytes())))
     }
 
+
+    fn decode_stamp_image_data(image_data: &str) -> Result<Vec<u8>> {
+        let encoded = image_data
+            .split(",")
+            .nth(1)
+            .ok_or_else(|| PdfXmlError::PdfProcessing("无效的 stamp imagedata 格式".to_string()))?;
+        let normalized = encoded
+            .replace("\\n", "")
+            .replace("\\r", "")
+            .replace(char::is_whitespace, "");
+        base64::engine::general_purpose::STANDARD
+            .decode(normalized)
+            .map_err(|e| PdfXmlError::PdfProcessing(format!("解码 stamp 图片失败: {}", e)))
+    }
+
+    fn build_stamp_ap_stream(
+        &self,
+        document: &mut lopdf::Document,
+        annotation: &StampAnnotation,
+    ) -> Result<Option<lopdf::Object>> {
+        let Some(image_data) = annotation.image_data.as_deref() else {
+            return Ok(None);
+        };
+        let Some(rect) = annotation.base.rect.as_ref() else {
+            return Ok(None);
+        };
+
+        let image_bytes = Self::decode_stamp_image_data(image_data)?;
+        let image = image::load_from_memory(&image_bytes)
+            .map_err(|e| PdfXmlError::PdfProcessing(format!("解析 stamp 图片失败: {}", e)))?;
+        let rgba = image.to_rgba8();
+        let (img_width, img_height) = image.dimensions();
+
+        let mut rgb_bytes = Vec::with_capacity((img_width * img_height * 3) as usize);
+        let mut alpha_bytes = Vec::with_capacity((img_width * img_height) as usize);
+        for pixel in rgba.pixels() {
+            rgb_bytes.extend_from_slice(&[pixel[0], pixel[1], pixel[2]]);
+            alpha_bytes.push(pixel[3]);
+        }
+
+        let smask_id = document.add_object(lopdf::Stream::new(
+            lopdf::Dictionary::from_iter(vec![
+                ("Type", lopdf::Object::Name(b"XObject".to_vec())),
+                ("Subtype", lopdf::Object::Name(b"Image".to_vec())),
+                ("Width", lopdf::Object::Integer(img_width as i64)),
+                ("Height", lopdf::Object::Integer(img_height as i64)),
+                ("ColorSpace", lopdf::Object::Name(b"DeviceGray".to_vec())),
+                ("BitsPerComponent", lopdf::Object::Integer(8)),
+            ]),
+            alpha_bytes,
+        ));
+
+        let image_stream = lopdf::Stream::new(
+            lopdf::Dictionary::from_iter(vec![
+                ("Type", lopdf::Object::Name(b"XObject".to_vec())),
+                ("Subtype", lopdf::Object::Name(b"Image".to_vec())),
+                ("Width", lopdf::Object::Integer(img_width as i64)),
+                ("Height", lopdf::Object::Integer(img_height as i64)),
+                ("ColorSpace", lopdf::Object::Name(b"DeviceRGB".to_vec())),
+                ("BitsPerComponent", lopdf::Object::Integer(8)),
+                ("SMask", lopdf::Object::Reference(smask_id)),
+            ]),
+            rgb_bytes,
+        );
+        let image_id = document.add_object(image_stream);
+
+        let width = ((rect.right - rect.left).abs() as f32).max(1.0);
+        let height = ((rect.top - rect.bottom).abs() as f32).max(1.0);
+        let content = format!("q\n{} 0 0 {} 0 0 cm\n/Im0 Do\nQ\n", width, height);
+
+        let stream_dict = lopdf::Dictionary::from_iter(vec![
+            ("Type", lopdf::Object::Name(b"XObject".to_vec())),
+            ("Subtype", lopdf::Object::Name(b"Form".to_vec())),
+            ("BBox", lopdf::Object::Array(vec![
+                lopdf::Object::Real(0.0),
+                lopdf::Object::Real(0.0),
+                lopdf::Object::Real(width),
+                lopdf::Object::Real(height),
+            ])),
+            ("Resources", lopdf::Object::Dictionary({
+                let mut resources = lopdf::Dictionary::new();
+                resources.set("XObject", lopdf::Object::Dictionary({
+                    let mut xobjects = lopdf::Dictionary::new();
+                    xobjects.set("Im0", lopdf::Object::Reference(image_id));
+                    xobjects
+                }));
+                resources
+            })),
+        ]);
+
+        Ok(Some(lopdf::Object::Stream(lopdf::Stream::new(stream_dict, content.into_bytes()))))
+    }
+    fn build_square_ap_stream(annotation: &SquareAnnotation) -> Option<lopdf::Object> {
+        let rect = annotation.base.rect.as_ref()?;
+        let width = ((rect.right - rect.left).abs() as f32).max(1.0);
+        let height = ((rect.top - rect.bottom).abs() as f32).max(1.0);
+        let line_width = annotation.width.max(1.0);
+        let inset = (line_width / 2.0).max(0.5);
+        let draw_width = (width - line_width).max(0.0);
+        let draw_height = (height - line_width).max(0.0);
+        let color = annotation.base.color.as_deref().and_then(Color::from_hex).unwrap_or(Color {
+            r: 0.894,
+            g: 0.259,
+            b: 0.204,
+        });
+
+        let content = format!(
+            "q\n{} {} {} RG\n{} w\n[] 0 d\n{} {} {} {} re\nS\nQ\n",
+            color.r,
+            color.g,
+            color.b,
+            line_width,
+            inset,
+            inset,
+            draw_width,
+            draw_height,
+        );
+
+        let stream_dict = lopdf::Dictionary::from_iter(vec![
+            ("Type", lopdf::Object::Name(b"XObject".to_vec())),
+            ("Subtype", lopdf::Object::Name(b"Form".to_vec())),
+            ("FormType", lopdf::Object::Integer(1)),
+            ("BBox", lopdf::Object::Array(vec![
+                lopdf::Object::Real(0.0),
+                lopdf::Object::Real(0.0),
+                lopdf::Object::Real(width),
+                lopdf::Object::Real(height),
+            ])),
+            ("Matrix", lopdf::Object::Array(vec![
+                lopdf::Object::Integer(1),
+                lopdf::Object::Integer(0),
+                lopdf::Object::Integer(0),
+                lopdf::Object::Integer(1),
+                lopdf::Object::Integer(0),
+                lopdf::Object::Integer(0),
+            ])),
+            ("Resources", lopdf::Object::Dictionary(lopdf::Dictionary::new())),
+        ]);
+
+        Some(lopdf::Object::Stream(lopdf::Stream::new(stream_dict, content.into_bytes())))
+    }
+
+
     fn build_freetext_annotation(
         &self,
         document: &mut lopdf::Document,
@@ -680,10 +825,30 @@ impl PdfAnnotationExporter {
                 dict = self.build_freetext_annotation(document, f)?;
             }
             Annotation::Square(sq) => {
+                let line_width = sq.width.max(1.0);
                 dict.set("BS", lopdf::Dictionary::from_iter(vec![
-                    ("W", lopdf::Object::Real(sq.width)),
+                    ("W", lopdf::Object::Real(line_width)),
                     ("S", lopdf::Object::Name(b"S".to_vec())),
                 ]));
+                dict.set("Border", lopdf::Object::Array(vec![
+                    lopdf::Object::Integer(0),
+                    lopdf::Object::Integer(0),
+                    lopdf::Object::Real(line_width),
+                ]));
+                dict.set("RD", lopdf::Object::Array(vec![
+                    lopdf::Object::Real(0.0),
+                    lopdf::Object::Real(0.0),
+                    lopdf::Object::Real(0.0),
+                    lopdf::Object::Real(0.0),
+                ]));
+                if let Some(ap_stream) = Self::build_square_ap_stream(sq) {
+                    let ap_stream_id = document.add_object(ap_stream);
+                    dict.set("AP", lopdf::Object::Dictionary({
+                        let mut ap_dict = lopdf::Dictionary::new();
+                        ap_dict.set("N", lopdf::Object::Reference(ap_stream_id));
+                        ap_dict
+                    }));
+                }
             }
             Annotation::Circle(c) => {
                 dict.set("BS", lopdf::Dictionary::from_iter(vec![
@@ -747,6 +912,14 @@ impl PdfAnnotationExporter {
                     dict.set("Name", lopdf::Object::Name(b"Approved".to_vec()));
                 } else {
                     dict.set("Name", lopdf::Object::Name(s.icon.clone().into_bytes()));
+                }
+                if let Some(ap_stream) = self.build_stamp_ap_stream(document, s)? {
+                    let ap_stream_id = document.add_object(ap_stream);
+                    dict.set("AP", lopdf::Object::Dictionary({
+                        let mut ap_dict = lopdf::Dictionary::new();
+                        ap_dict.set("N", lopdf::Object::Reference(ap_stream_id));
+                        ap_dict
+                    }));
                 }
             }
             Annotation::Popup(p) => {

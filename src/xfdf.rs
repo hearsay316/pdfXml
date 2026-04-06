@@ -187,16 +187,36 @@ impl XfdfDocument {
                 Ok(Event::Empty(ref e)) => {
                     let tag_name = String::from_utf8_lossy(e.local_name().as_ref()).into_owned();
                     debug!("空标签: <{}/>", tag_name);
-                    
+
                     if tag_name == "value" && !current_field_stack.is_empty() {
                         if let Some(field) = current_field_stack.last_mut() {
                             field.value = Some(String::new());
                         }
                     }
-                    
+
                     // 自闭合的 popup 标签（如 <popup ... />）
                     if tag_name == "popup" && current_annotation_type.is_some() {
                         debug!("自闭合 popup 子元素，跳过");
+                        continue;
+                    }
+
+                    if in_annots && Self::is_annotation_tag(&tag_name) {
+                        let mut attrs = HashMap::new();
+                        for attr in e.attributes().filter_map(|a| a.ok()) {
+                            let key = String::from_utf8_lossy(attr.key.as_ref()).to_string();
+                            let value = String::from_utf8_lossy(attr.value.as_ref()).to_string();
+                            attrs.insert(key, value);
+                        }
+
+                        match Self::build_annotation(&tag_name, &attrs, "") {
+                            Ok(annotation) => {
+                                doc.annotations.push(annotation);
+                                debug!("成功解析自闭合 {} 注释", tag_name);
+                            }
+                            Err(err) => {
+                                warn!("解析自闭合 {} 注解失败: {}", tag_name, err);
+                            }
+                        }
                     }
                 }
                 Ok(Event::Text(e)) => {
@@ -425,6 +445,7 @@ impl XfdfDocument {
             "stamp" => Annotation::Stamp(StampAnnotation {
                 base,
                 icon: attrs.get("icon").cloned().unwrap_or_default(),
+                image_data: attrs.get("imagedata").cloned(),
             }),
             "popup" => Annotation::Popup(PopupAnnotation {
                 base,
@@ -490,7 +511,7 @@ impl XfdfDocument {
             "open" | "icon" | "width" | "defaultstyle" | "defaultappearance" | "align" |
             "start" | "end" | "head" | "tail" | "vertices" |
             "interiorcolor" | "parent" | "coords" | "TextColor" |
-            "contents-richtext" | "_inklist"
+            "contents-richtext" | "_inklist" | "imagedata"
         )
     }
 

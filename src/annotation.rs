@@ -20,11 +20,11 @@ impl Color {
         if hex.len() != 6 {
             return None;
         }
-        
+
         let r = u8::from_str_radix(&hex[0..2], 16).ok()? as f32 / 255.0;
         let g = u8::from_str_radix(&hex[2..4], 16).ok()? as f32 / 255.0;
         let b = u8::from_str_radix(&hex[4..6], 16).ok()? as f32 / 255.0;
-        
+
         Some(Color { r, g, b })
     }
 
@@ -60,7 +60,7 @@ impl Rect {
         if parts.len() != 4 {
             return None;
         }
-        
+
         Some(Rect {
             left: parts[0].trim().parse().ok()?,
             bottom: parts[1].trim().parse().ok()?,
@@ -86,43 +86,43 @@ pub struct AnnotationBase {
     /// 唯一标识符
     #[serde(rename = "name", skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
-    
+
     /// 页码（从0开始）
     #[serde(default)]
     pub page: usize,
-    
+
     /// 边界矩形
     #[serde(skip_serializing_if = "Option::is_none")]
     pub rect: Option<Rect>,
-    
+
     /// 标题/作者
     #[serde(skip_serializing_if = "Option::is_none")]
     pub title: Option<String>,
-    
+
     /// 主题/标题
     #[serde(skip_serializing_if = "Option::is_none")]
     pub subject: Option<String>,
-    
+
     /// 内容
     #[serde(skip_serializing_if = "Option::is_none")]
     pub contents: Option<String>,
-    
+
     /// 创建日期（XFDF 格式：D:YYYYMMDDHHmmSS）
     #[serde(rename = "creationdate", skip_serializing_if = "Option::is_none")]
     pub creation_date: Option<String>,
-    
+
     /// 修改日期
     #[serde(rename = "date", skip_serializing_if = "Option::is_none")]
     pub modification_date: Option<String>,
-    
+
     /// 颜色（十六进制字符串）
     #[serde(skip_serializing_if = "Option::is_none")]
     pub color: Option<String>,
-    
+
     /// 不透明度（0.0 - 1.0）
     #[serde(default = "default_opacity")]
     pub opacity: f32,
-    
+
     /// 标志位
     #[serde(default)]
     pub flags: u32,
@@ -139,11 +139,11 @@ fn default_opacity() -> f32 { 1.0 }
 pub struct TextAnnotation {
     #[serde(flatten)]
     pub base: AnnotationBase,
-    
+
     /// 打开状态
     #[serde(default)]
     pub open: bool,
-    
+
     /// 图标类型（Comment, Help, Insert, Key, NewParagraph, Note, Paragraph）
     #[serde(rename = "icon", default = "default_icon")]
     pub icon_type: String,
@@ -200,7 +200,7 @@ pub struct SquigglyAnnotation {
 pub struct FreeTextAnnotation {
     #[serde(flatten)]
     pub base: AnnotationBase,
-    
+
     /// 默认外观字符串 (CSS-style)
     #[serde(rename = "defaultstyle", skip_serializing_if = "Option::is_none")]
     pub default_style: Option<String>,
@@ -208,11 +208,11 @@ pub struct FreeTextAnnotation {
     /// PDF DefaultAppearance 字符串 (如 "0.894 0.259 0.204 RG 0.894 0.259 0.204 rg /Helvetica 12 Tf")
     #[serde(rename = "defaultappearance", skip_serializing_if = "Option::is_none")]
     pub default_appearance: Option<String>,
-    
+
     /// 文本颜色 (TextColor 属性，优先于 color)
     #[serde(rename = "TextColor", skip_serializing_if = "Option::is_none")]
     pub text_color: Option<String>,
-    
+
     /// 对齐方式（0=左对齐, 1=居中, 2=右对齐）
     #[serde(default)]
     pub align: i32,
@@ -223,7 +223,7 @@ pub struct FreeTextAnnotation {
 pub struct SquareAnnotation {
     #[serde(flatten)]
     pub base: AnnotationBase,
-    
+
     /// 边框宽度
     #[serde(default)]
     pub width: f32,
@@ -234,7 +234,7 @@ pub struct SquareAnnotation {
 pub struct CircleAnnotation {
     #[serde(flatten)]
     pub base: AnnotationBase,
-    
+
     /// 边框宽度
     #[serde(default)]
     pub width: f32,
@@ -249,22 +249,22 @@ pub struct CircleAnnotation {
 pub struct LineAnnotation {
     #[serde(flatten)]
     pub base: AnnotationBase,
-    
+
     /// 起点坐标
     #[serde(skip_serializing_if = "Option::is_none")]
     pub start: Option<String>,  // 格式: "x,y"
-    
+
     /// 终点坐标
     #[serde(skip_serializing_if = "Option::is_none")]
     pub end: Option<String>,    // 格式: "x,y"
-    
+
     /// 线条端点样式
     #[serde(rename = "head", default)]
     pub head_style: String,
-    
+
     #[serde(rename = "tail", default)]
     pub tail_style: String,
-    
+
     /// 线宽
     #[serde(default = "default_line_width")]
     pub width: f32,
@@ -277,7 +277,7 @@ fn default_line_width() -> f32 { 1.0 }
 pub struct PolygonAnnotation {
     #[serde(flatten)]
     pub base: AnnotationBase,
-    
+
     /// 顶点坐标列表（空格分隔的 x,y 对）
     #[serde(skip_serializing_if = "Option::is_none")]
     pub vertices: Option<String>,
@@ -288,12 +288,12 @@ pub struct PolygonAnnotation {
 pub struct InkAnnotation {
     #[serde(flatten)]
     pub base: AnnotationBase,
-    
+
     /// 墨迹路径列表 - 从 <inklist><gesture> 解析
     /// 每个 gesture 是一组 "x;y;x;y;..." 坐标字符串
     #[serde(rename = "inklist", default)]
     pub ink_list: Vec<String>,
-    
+
     /// 线宽
     #[serde(default = "default_line_width")]
     pub width: f32,
@@ -304,10 +304,14 @@ pub struct InkAnnotation {
 pub struct StampAnnotation {
     #[serde(flatten)]
     pub base: AnnotationBase,
-    
+
     /// 图章名称（Approved, Draft, Final, etc.）
     #[serde(default)]
     pub icon: String,
+
+    /// XFDF 中的图章图片数据（data:image/...;base64,...）
+    #[serde(rename = "imagedata", skip_serializing_if = "Option::is_none")]
+    pub image_data: Option<String>,
 }
 
 /// 弹出窗口注释
@@ -315,11 +319,11 @@ pub struct StampAnnotation {
 pub struct PopupAnnotation {
     #[serde(flatten)]
     pub base: AnnotationBase,
-    
+
     /// 打开状态
     #[serde(default)]
     pub open: bool,
-    
+
     /// 关联的父注释名称
     #[serde(rename = "parent", skip_serializing_if = "Option::is_none")]
     pub parent_name: Option<String>,

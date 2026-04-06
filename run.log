@@ -1,0 +1,2582 @@
+warning: variable does not need to be mutable
+  --> src\xfdf.rs:78:13
+   |
+78 |         let mut current_path: Vec<String> = Vec::new();
+   |             ----^^^^^^^^^^^^
+   |             |
+   |             help: remove this `mut`
+   |
+   = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `current_path`
+  --> src\xfdf.rs:78:13
+   |
+78 |         let mut current_path: Vec<String> = Vec::new();
+   |             ^^^^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_current_path`
+   |
+   = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `child`
+   --> src\xfdf.rs:215:37
+    |
+215 |                         if let Some(ref child) = current_child_tag {
+    |                                     ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_child`
+
+warning: field `name` is never read
+  --> src\xfdf.rs:59:9
+   |
+58 | pub struct XfdfField {
+   |            --------- field in this struct
+59 |     pub name: String,
+   |         ^^^^
+   |
+   = note: `XfdfField` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: associated function `with_page_size` is never used
+   --> src\pdf.rs:217:12
+    |
+210 | impl PdfAnnotationExporter {
+    | -------------------------- associated function in this implementation
+...
+217 |     pub fn with_page_size(width: f64, height: f64) -> Self {
+    |            ^^^^^^^^^^^^^^
+
+warning: variants `InvalidXfdfFormat`, `DateParse`, `ColorParse`, `CoordinateParse`, `InvalidPageObject`, and `UpdatePageFailed` are never constructed
+  --> src\error.rs:14:5
+   |
+ 6 | pub enum PdfXmlError {
+   |          ----------- variants in this enum
+...
+14 |     InvalidXfdfFormat(String),
+   |     ^^^^^^^^^^^^^^^^^
+...
+20 |     DateParse(String),
+   |     ^^^^^^^^^
+...
+23 |     ColorParse(String),
+   |     ^^^^^^^^^^
+...
+26 |     CoordinateParse(String),
+   |     ^^^^^^^^^^^^^^^
+...
+29 |     InvalidPageObject,
+   |     ^^^^^^^^^^^^^^^^^
+...
+32 |     UpdatePageFailed,
+   |     ^^^^^^^^^^^^^^^^
+   |
+   = note: `PdfXmlError` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis
+
+warning: method `to_pdf_array` is never used
+  --> src\annotation.rs:32:12
+   |
+16 | impl Color {
+   | ---------- method in this implementation
+...
+32 |     pub fn to_pdf_array(&self) -> Vec<lopdf::Object> {
+   |            ^^^^^^^^^^^^
+
+warning: method `to_pdf_array` is never used
+  --> src\annotation.rs:73:12
+   |
+56 | impl Rect {
+   | --------- method in this implementation
+...
+73 |     pub fn to_pdf_array(&self) -> Vec<lopdf::Object> {
+   |            ^^^^^^^^^^^^
+
+warning: method `rect` is never used
+   --> src\annotation.rs:396:12
+    |
+351 | impl Annotation {
+    | --------------- method in this implementation
+...
+396 |     pub fn rect(&self) -> Option<&Rect> {
+    |            ^^^^
+
+warning: `pdfxml` (bin "pdfxml") generated 9 warnings (run `cargo fix --bin "pdfxml" -p pdfxml` to apply 3 suggestions)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.13s
+     Running `target\debug\pdfxml.exe -i examples/index.xml -t examples/WTchbOFP.pdf -o examples/out.pdf -v`
+[2026-04-06T04:47:48Z INFO  pdfxml] 开始处理 XFDF 文件: "examples/index.xml"
+[2026-04-06T04:47:48Z INFO  pdfxml] 成功读取 XML 文件，大小: 510261 字节
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <xfdf>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <annots>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 进入 annots 区域
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <ink>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: ink
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 5
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #E44234
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260214062903Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260214062903Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = 2620d4e5-08e6-4f30-af3f-7c89422774e6
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 0
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 75.6267,601.1345,119.9862,760.7204
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁小丁小丁小丁小丁小丁小丁小丁小丁小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <inklist>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 进入 inklist
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始 gesture
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [117.4862,758.2204;117.4862,758.2204;117.4862,758.2204;117.4862,758.2204;117.4862,758.2204;117.4862,7]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] gesture 数据: 57 个点
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </inklist>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] inklist 结束, 共 1 条手势
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </ink>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 ink 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <underline>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: underline
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 1.5
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #E44234
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260224023733Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260224023733Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = d41ca9ae-38e8-4634-8d65-4a7cb856f481
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 2
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: coords = 500.4,59.9941,504.96,59.9941,500.4,50.8376,504.96,50.8376
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 499.65,50.0876,505.71,59.9941
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁小丁小丁小丁小丁小丁小丁小丁小丁小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <popup/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 自闭合 popup 子元素，跳过
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [2]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </underline>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 underline 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <underline>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: underline
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 1.5
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #E44234
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260224023736Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260224023736Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = cbefd12d-28d9-4d19-b1cf-6be6e31972e3
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 2
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: coords = 500.4,59.9941,504.96,59.9941,500.4,50.8376,504.96,50.8376
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 499.65,50.0876,505.71,59.9941
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁小丁小丁小丁小丁小丁小丁小丁小丁小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <popup/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 自闭合 popup 子元素，跳过
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [2]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </underline>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 underline 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <underline>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: underline
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 1.5
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #E44234
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260224023735Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260224023735Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = 6ac42f56-bb62-474b-be3e-c6c761881763
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 2
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: coords = 500.4,59.9941,504.96,59.9941,500.4,50.8376,504.96,50.8376
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 499.65,50.0876,505.71,59.9941
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁小丁小丁小丁小丁小丁小丁小丁小丁小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <popup/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 自闭合 popup 子元素，跳过
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [2]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </underline>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 underline 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <freetext>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: freetext
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: TextColor = #E34134
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 0
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260224120747Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260224120747Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = 2937EC9A-D3B4-4CD4-A33C-7C6D5B79FD84
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 2
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: justification = left
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 134.8529,787.3998,170.9728,813.9333
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = Smalls的
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <defaultstyle>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [color:#E44234;font:Helvetica 16pt;font-style:normal;font-weight:normal;text-align:left;text-vertical]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </defaultstyle>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <trn-custom-data/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <defaultappearance>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [1 1 1 RG 1 1 1 rg /Helvetica 16 Tf]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </defaultappearance>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [测试]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <apref/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </freetext>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 freetext 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <freetext>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: freetext
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: TextColor = #E34134
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 0
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260224120752Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260224120822Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = 185B2864-E4D5-4614-B785-FDACAB557C25
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 2
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: justification = left
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: fringe = 0,0,0,0
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 417.8677,640.9676,507.4177,665.6716
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = Smalls的
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <defaultstyle>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [color:#E44234;font:Helvetica 16pt;font-style:normal;font-weight:normal;text-align:left;text-vertical]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </defaultstyle>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <trn-custom-data/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <defaultappearance>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [1 1 1 RG 1 1 1 rg /Helvetica 16 Tf]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </defaultappearance>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [测试]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <apref/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </freetext>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 freetext 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <squiggly>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: squiggly
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #4E7DE9
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260225032424Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260225032433Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = DDA1910B-2BD7-407B-BDAA-FB79C379330D
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 2
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: coords = 123.3528,721.7797,473.8212,721.7797,123.3528,709.8746,473.8212,709.8746,90,690.5797,137.3542,690.5797,90,678.6746,137.3542,678.6746
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 85,672.8375,484.3413,721.7797
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁小丁小丁小丁小丁小丁小丁小丁小丁小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <popup/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 自闭合 popup 子元素，跳过
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [Alessandro Michele took over as Gucci's creative director in 2015, Gucci ha]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <apref/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </squiggly>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 squiggly 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <strikeout>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: strikeout
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #4E7DE9
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260225032442Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260225032442Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = 5151C5F6-469A-4D40-81A4-832B7694AB53
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 2
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: coords = 159.3646,690.5797,483.1737,690.5797,159.3646,678.6746,483.1737,678.6746,90,659.3797,180.06,659.3797,90,647.4746,180.06,647.4746
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 87.2747,647.4746,492.8946,690.5797
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁小丁小丁小丁小丁小丁小丁小丁小丁小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <popup/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 自闭合 popup 子元素，跳过
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [ccessfully become the world's leading luxury brand through a new aesthetic an]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </strikeout>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 strikeout 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <freetext>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: freetext
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: TextColor = #4E7DE9
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 0
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260225032508Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260225032508Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = 1C50A998-B863-4339-94F5-5BBC7023F5A9
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 2
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: justification = left
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 289.7794,797.6995,425.4999,824.233
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁小丁小丁小丁小丁小丁小丁小丁小丁小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <defaultstyle>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [color:#4E7DE9;font:Helvetica 16pt;font-style:normal;font-weight:normal;text-align:left;text-vertical]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </defaultstyle>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <trn-custom-data/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <defaultappearance>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [1 1 1 RG 1 1 1 rg /Helvetica 16 Tf]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </defaultappearance>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [0225蓝色新做批注]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <apref/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </freetext>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 freetext 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <text>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: text
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #4E7DE9
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260225032553Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print,nozoom,norotate
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260225032605Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = 87291977-3E05-4798-8F53-FE6AD01C1FEE
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: icon = Comment
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 2
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 233.6765,566.5376,253.6765,586.5376
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁小丁小丁小丁小丁小丁小丁小丁小丁小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <popup/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 自闭合 popup 子元素，跳过
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [0225新做批注]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <apref/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </text>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 text 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <ink>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: ink
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #4E7DE9
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260225032611Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260225032611Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = CD99C923-EFDA-4B60-A85C-097E211BFFE8
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 2
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 338.1765,531.9942,359.7647,571.1031
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁小丁小丁小丁小丁小丁小丁小丁小丁小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <inklist>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 进入 inklist
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始 gesture
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [338.6765,570.6031;342.2794,563.3932;344.3382,558.2434;346.9118,553.6086;348.9706,549.4887;351.0294,5]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] gesture 数据: 12 个点
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </inklist>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] inklist 结束, 共 1 条手势
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </ink>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 ink 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <freetext>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: freetext
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: TextColor = #4E7DE9
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: callout = 319.6324,760.1174,299.6324,740.1174,279.6324,740.1174
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260225032631Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: IT = FreeTextCallout
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: head = OpenArrow
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260225032640Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = 1B7CDAE9-13C7-45BF-9DA2-0FDA1E39A744
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 2
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: fringe = 0,0,40.5,8.2932
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 213.6279,727.9106,320.1324,760.6174
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁小丁小丁小丁小丁小丁小丁小丁小丁小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <defaultstyle>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [color:#4E7DE9;font:Helvetica 16pt;font-style:normal;font-weight:normal;text-vertical-align:top;]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </defaultstyle>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <trn-custom-data/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <defaultappearance>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [0.894118 0.258824 0.203922 RG 0.894118 0.258824 0.203922 rg /Helvetica 16 Tf]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </defaultappearance>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [一样一样]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <apref/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </freetext>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 freetext 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <stamp>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: stamp
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260225032812Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260225032812Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = EE9F1A2F-E30A-4A70-917A-AF2F4FA092CE
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: icon = Unknown
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 2
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 75.2941,811.2508,85.2941,821.2508
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁小丁小丁小丁小丁小丁小丁小丁小丁小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <imagedata>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [data:image/png;base64,\niVBORw0KGgoAAAANSUhEUgAAABsAAAAbCAYAAACN1PRVAAAACXBIWXMAAB7CAAAewgFu0HU+AAAB]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </imagedata>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <trn-custom-data/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <apref/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </stamp>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 stamp 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <stamp>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: stamp
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260225032815Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260225032815Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = F90A18DA-F038-4EF5-AD5C-D94290632D71
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: icon = Unknown
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 2
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 202.9412,796.3162,212.9412,806.3162
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁小丁小丁小丁小丁小丁小丁小丁小丁小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <imagedata>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [data:image/png;base64,\niVBORw0KGgoAAAANSUhEUgAAABsAAAAbCAYAAACN1PRVAAAACXBIWXMAAB7CAAAewgFu0HU+AAAA]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </imagedata>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <trn-custom-data/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <apref/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </stamp>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 stamp 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <stamp>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: stamp
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260225032817Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260225032817Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = A37EBC22-EED0-48DB-96D2-2ACDB0CDA5EE
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: icon = Unknown
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 2
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 106.1765,779.3217,116.1765,789.3217
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁小丁小丁小丁小丁小丁小丁小丁小丁小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <imagedata>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [data:image/png;base64,\niVBORw0KGgoAAAANSUhEUgAAABsAAAAbCAYAAACN1PRVAAAACXBIWXMAAB7CAAAewgFu0HU+AAAB]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </imagedata>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <trn-custom-data/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <apref/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </stamp>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 stamp 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <freetext>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: freetext
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: TextColor = #000000
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 0
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260225032824Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260225032824Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = B869546E-B8FE-4EC8-9603-E51387CA077E
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 2
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 470.4412,795.1246,573.2922,821.6581
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁小丁小丁小丁小丁小丁小丁小丁小丁小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <defaultstyle>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [color:#000000;font:Helvetica 16pt;font-style:normal;font-weight:normal;text-vertical-align:top;]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </defaultstyle>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <trn-custom-data/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <defaultappearance>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [1 1 1 RG 1 1 1 rg /Helvetica 16 Tf]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </defaultappearance>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [二月 25, 2026]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <apref/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </freetext>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 freetext 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <ink>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: ink
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 2
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 445.710,733.819,526.790,773.669
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #4E7DE9
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = 8fb9fec5-3e5c-a5c3-d198-688a1916207c
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁小丁小丁小丁小丁小丁小丁小丁小丁小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: subject = 签名
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260225112734+08'00'
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260225112726+08'00'
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <trn-custom-data/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <inklist>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 进入 inklist
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始 gesture
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [446.1149986499866,762.3185833858338;446.47986229862306,762.3185833858338;452.31768067680684,763.4131]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] gesture 数据: 10 个点
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始 gesture
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [472.75004500045,767.4266744667447;472.75004500045,767.0618108181081;472.75004500045,766.696947169471]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] gesture 数据: 13 个点
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始 gesture
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [489.89863648636447,773.2644928449284;490.6283637836375,773.2644928449284;493.182409324093,772.899629]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] gesture 数据: 5 个点
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始 gesture
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [493.5472729727296,765.6023562235623;493.5472729727296,765.2374925749258;494.2770002700023,764.872628]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] gesture 数据: 19 个点
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始 gesture
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [501.5742732427321,762.6834470344704;502.30400054000506,762.6834470344704;502.6688641886416,763.04831]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] gesture 数据: 9 个点
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始 gesture
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [511.79045540455354,769.6158563585636;511.79045540455354,769.6158563585636;512.15531905319,767.426674]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] gesture 数据: 5 个点
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始 gesture
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [510.6958644586443,752.8321285212852;511.0607281072807,752.8321285212852;511.79045540455354,753.19699]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] gesture 数据: 8 个点
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始 gesture
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [509.9661371613711,745.5348555485555;510.3310008100077,745.5348555485555;511.0607281072807,745.899719]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] gesture 数据: 6 个点
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始 gesture
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [510.6958644586443,754.6564467644677;511.425591755917,754.6564467644677;513.2499099990996,753.5618558]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] gesture 数据: 27 个点
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始 gesture
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [516.1688191881915,757.5753559535596;516.5336828368281,757.5753559535596;517.2634101341009,757.940219]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] gesture 数据: 10 个点
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始 gesture
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [520.9120466204658,749.9132193321933;521.2769102691022,749.9132193321933;522.0066375663753,749.913219]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] gesture 数据: 6 个点
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始 gesture
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [518.722864728647,759.0348105481055;519.0877283772834,759.0348105481055;519.45259202592,758.669946899]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] gesture 数据: 9 个点
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </inklist>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] inklist 结束, 共 12 条手势
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </ink>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 ink 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <stamp>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: stamp
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 2
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 374.360,786.679,574.360,798.101
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = 6daa064d-c9bc-0866-d543-f9ae52a99ecc
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁小丁小丁小丁小丁小丁小丁小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: subject = 签名
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260225142824+08'00'
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260225142824+08'00'
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: icon = Draft
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <trn-custom-data/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <imagedata>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABpEAAABgCAYAAAD1o1rcAAAQAElEQVR4AeydCbg1RXnnD1F5RDAGQR]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </imagedata>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </stamp>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 stamp 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <freetext>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: freetext
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: TextColor = #4E7DE9
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 0
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260225095352Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260225095352Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = 73788C6B-1F63-471B-BE8B-880C275006E2
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 2
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: justification = left
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 84.9265,488.1937,153.0485,514.7272
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <defaultstyle>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [color:#4E7DE9;font:Helvetica 16pt;font-style:normal;font-weight:normal;text-align:left;text-vertical]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </defaultstyle>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <trn-custom-data/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <defaultappearance>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [1 1 1 RG 1 1 1 rg /Helvetica 16 Tf]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </defaultappearance>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [而对夫妇]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <apref/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </freetext>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 freetext 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <stamp>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: stamp
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #FF0000
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260225095406Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260225095406Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = 46E6570D-7730-4195-AF12-F203FB6A0EA9
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: icon = Unknown
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 2
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 54.5588,280.6667,79.2647,423.8324
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <imagedata>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [data:image/png;base64,\niVBORw0KGgoAAAANSUhEUgAAAEgAAAGhCAYAAADC0fK5AAAACXBIWXMAAA7EAAAOxAGVKw4bAAAg]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </imagedata>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <trn-custom-data/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <apref/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </stamp>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 stamp 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <stamp>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: stamp
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #FF0000
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260225095446Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260225095446Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = 6124DDF8-7A4E-4F6C-8972-C6360C945F8D
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: icon = Unknown
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 2
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 491.0294,191.0593,501.3235,323.9254
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <imagedata>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [data:image/png;base64,\niVBORw0KGgoAAAANSUhEUgAAAB4AAAGDCAYAAAA8v6CLAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAe]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </imagedata>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <trn-custom-data/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <apref/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </stamp>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 stamp 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <stamp>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: stamp
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #FF0000
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260225095556Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260225095556Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = E846794A-D23B-4846-8D3B-BFD13E7CB5F5
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: icon = Unknown
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 2
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 519.8529,140.5908,562.0588,331.1352
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <imagedata>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [data:image/png;base64,\niVBORw0KGgoAAAANSUhEUgAAAHsAAAIrCAYAAADP1uahAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAg]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </imagedata>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <trn-custom-data/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <apref/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </stamp>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 stamp 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <ink>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: ink
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #E44234
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260225100423Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260225100423Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = A374D895-35C9-4755-A73D-37A5EEF54ABA
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 2
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 193.5441,331.9846,365.8911,407.146
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <inklist>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 进入 inklist
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始 gesture
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [194.0441,348.1297;198.1618,351.2196;206.9118,351.2196;220.8088,348.6447;238.8235,346.0697;256.3235,3]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] gesture 数据: 13 个点
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始 gesture
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [249.5207,381.2394;245.2831,381.3135;248.7737,373.5247;258.949,359.6716;279.2225,349.8242;307.4945,35]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] gesture 数据: 25 个点
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </inklist>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] inklist 结束, 共 2 条手势
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </ink>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 ink 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <underline>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: underline
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 1.5
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #E44234
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260224023556Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260224023556Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = 9bfc4bf3-f15a-45dd-b84c-db24237ef06c
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 3
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: coords = 90,440.9797,120.672,440.9797,90,429.0746,120.672,429.0746
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 89.013,428.3246,121.659,440.9797
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁小丁小丁小丁小丁小丁小丁小丁小丁小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <popup/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 自闭合 popup 子元素，跳过
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [Gucci]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </underline>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 underline 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <underline>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: underline
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 1.5
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #E44234
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260224023611Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260224023611Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = c8db7c5b-edbc-4792-9734-b82726e67a66
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 3
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: coords = 500.4,59.9941,504.96,59.9941,500.4,50.8376,504.96,50.8376
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 499.65,50.0876,505.71,59.9941
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁小丁小丁小丁小丁小丁小丁小丁小丁小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <popup/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 自闭合 popup 子元素，跳过
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [3]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </underline>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 underline 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <underline>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: underline
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 1.5
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #E44234
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260224023734Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260224023734Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = 99baf48d-fd37-4ec7-9791-85957bf58740
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 3
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: coords = 90,755.4575,313.3532,755.4575,90,745.2552,313.3532,745.2552
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 83.2924,744.5052,320.0608,755.4575
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁小丁小丁小丁小丁小丁小丁小丁小丁小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <popup/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 自闭合 popup 子元素，跳过
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [2. SITUATIONAL ANALYSIS SUMMARY]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </underline>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 underline 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <underline>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: underline
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 1.5
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #E44234
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260224023733Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260224023733Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = 778e4aaa-583a-4f04-81c2-4bc272e5f273
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 3
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: coords = 90,755.4575,313.3532,755.4575,90,745.2552,313.3532,745.2552
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 83.2924,744.5052,320.0608,755.4575
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁小丁小丁小丁小丁小丁小丁小丁小丁小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <popup/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 自闭合 popup 子元素，跳过
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [2. SITUATIONAL ANALYSIS SUMMARY]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </underline>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 underline 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <underline>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: underline
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 1.5
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #E44234
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260224023736Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260224023736Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = 53f6d007-d4fa-4af5-b3c2-73004c2ee968
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 3
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: coords = 90,755.4575,313.3532,755.4575,90,745.2552,313.3532,745.2552
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 83.2924,744.5052,320.0608,755.4575
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁小丁小丁小丁小丁小丁小丁小丁小丁小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <popup/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 自闭合 popup 子元素，跳过
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [2. SITUATIONAL ANALYSIS SUMMARY]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </underline>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 underline 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <underline>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: underline
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 1.5
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #E44234
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260224023735Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260224023735Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = fe668736-0b09-44f9-ab19-be315c90228f
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 3
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: coords = 90,755.4575,313.3532,755.4575,90,745.2552,313.3532,745.2552
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 83.2924,744.5052,320.0608,755.4575
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁小丁小丁小丁小丁小丁小丁小丁小丁小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <popup/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 自闭合 popup 子元素，跳过
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [2. SITUATIONAL ANALYSIS SUMMARY]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </underline>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 underline 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <freetext>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: freetext
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: TextColor = #E34134
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 0
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260225032850Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260225032910Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = 908D86F6-E15C-4C96-A25A-7AF0FC39DB10
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 3
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: justification = left
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: fringe = 0,0,0,0
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 102.9279,782.2666,232.9469,808.8006
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁小丁小丁小丁小丁小丁小丁小丁小丁小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <defaultstyle>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [color:#E44234;font:Helvetica 16pt;font-style:normal;font-weight:normal;text-align:left;text-vertical]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </defaultstyle>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <trn-custom-data/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <defaultappearance>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [1 1 1 RG 1 1 1 rg /Helvetica 16 Tf]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </defaultappearance>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [第4页加批注0225]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <apref/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </freetext>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 freetext 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <stamp>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: stamp
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #FF0000
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260225033005Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260225033005Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = 3DB6E212-82D6-47EA-BC9E-68673B1F5062
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: icon = Unknown
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 3
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 337.6471,691.6245,506.4706,826.5505
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁小丁小丁小丁小丁小丁小丁小丁小丁小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <imagedata>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [data:image/png;base64,\niVBORw0KGgoAAAANSUhEUgAAAewAAAGJCAYAAABIEwCJAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAg]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </imagedata>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <trn-custom-data/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <apref/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </stamp>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 stamp 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <ink>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: ink
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #E44234
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260225033018Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260225033018Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = C64CEF68-AA69-434F-A53F-0BD32795A420
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 3
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 386.0441,405.8229,396.3088,506.215
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁小丁小丁小丁小丁小丁小丁小丁小丁小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <inklist>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 进入 inklist
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始 gesture
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [390.6618,505.715;386.5441,502.1101;386.5441,486.6606;389.1176,462.9713;392.2059,441.8569;394.2647,42]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] gesture 数据: 9 个点
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </inklist>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] inklist 结束, 共 1 条手势
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </ink>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 ink 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <line/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <circle/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <underline>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: underline
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #E44234
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260214063241Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260214063241Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = E2DB9424-36D8-4899-ADC2-EFCDB7781A3A
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: coords = 127.2345,526.5395,187.8617,526.5395,127.2345,517.0787,187.8617,517.0787
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 125.3937,516.5787,189.7025,526.5395
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁小丁小丁小丁小丁小丁小丁小丁小丁小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <popup/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 自闭合 popup 子元素，跳过
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [MARKETING]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </underline>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 underline 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <ink>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: ink
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #4E7DE9
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260225032619Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260225032619Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = A9BAF50B-1488-45D4-BB74-B8C758E18C60
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 227,0.0003,239.8382,11.3147
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁小丁小丁小丁小丁小丁小丁小丁小丁小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <inklist>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 进入 inklist
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始 gesture
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [239.3382,10.8147;234.7059,0.5003;233.6765,0.5003;231.6176,0.5003;229.5588,0.5003;228.0147,0.5003;227]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] gesture 数据: 8 个点
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </inklist>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] inklist 结束, 共 1 条手势
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </ink>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 ink 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <squiggly>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: squiggly
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 5
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 90,653.955,466.862,758.821
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #E44234
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = e9a7919a-92bf-2b23-25a7-fe66ceec3a1d
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = Smalls的
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: subject = 波浪线
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260224194213+08'00'
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260224194213+08'00'
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: coords = 211.382808,758.821015625,460.602547875,758.821015625,211.382808,747.5546093749999,460.602547875,747.5546093749999,90,727.621015625,458.87330399999996,727.621015625,90,716.354609375,458.87330399999996,716.354609375,90,696.421015625,466.86240000000004,696.421015625,90,685.154609375,466.86240000000004,685.154609375,90,665.2210156250001,288.10320000000013,665.2210156250001,90,653.954609375,288.10320000000013,653.954609375
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <trn-custom-data/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </squiggly>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 squiggly 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <ink>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: ink
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 20
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #FFFF00
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260225032232Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: IT = InkHighlight
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260225032232Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = 764e5835-7197-40fc-ab08-8efb2f54f065
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 0
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 43.989,572.282,63.989,691.9311
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁小丁小丁小丁小丁小丁小丁小丁小丁小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <inklist>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 进入 inklist
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始 gesture
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [53.989,681.9311;53.989,669.9961;53.989,663.4436;53.989,660.1673;53.989,654.4105;53.989,649.9998;53.9]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] gesture 数据: 51 个点
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </inklist>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] inklist 结束, 共 1 条手势
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <apref/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </ink>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 ink 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <stamp>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: stamp
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #FF0000
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260225032332Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260225032332Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = ECB945BA-78DA-4996-A6D0-175BBF7321E9
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: icon = Unknown
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 0
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 100.8824,557.7284,165.7353,676.1749
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁小丁小丁小丁小丁小丁小丁小丁小丁小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <imagedata>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [data:image/png;base64,\niVBORw0KGgoAAAANSUhEUgAAAL0AAAFZCAYAAADNdS4QAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAb]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </imagedata>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <trn-custom-data/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <apref/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </stamp>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 stamp 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <ink>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: ink
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #E44234
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260225032339Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260225032339Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = 3D8305DF-37DE-4C94-A86B-B9C26F804AE5
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 0
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 187.3676,547.4437,250.1324,676.6749
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁小丁小丁小丁小丁小丁小丁小丁小丁小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <inklist>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 进入 inklist
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始 gesture
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [205.3676,673.085;212.0588,676.1749;216.6912,675.6599;222.8676,673.6;228.0147,669.9951;231.6176,665.8]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] gesture 数据: 50 个点
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </inklist>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] inklist 结束, 共 1 条手势
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </ink>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 ink 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <highlight>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: highlight
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #FFFF00
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260225032344Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260225032344Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = 4C78C7F9-54F1-4AD4-8D99-B3569E10C7C5
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 0
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: coords = 175.4996,480.2262,459.4985,480.2262,175.4996,464.9966,459.4985,464.9966,114.9863,449.0262,206.0087,449.0262,114.9863,433.7966,206.0087,433.7966
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 112.2177,433.7966,468.0307,480.2262
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁小丁小丁小丁小丁小丁小丁小丁小丁小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <popup/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 自闭合 popup 子元素，跳过
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [CI SITUATIONAL ANALYSIS AND\nDEVELOPI]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <apref/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </highlight>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 highlight 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <freetext>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: freetext
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: TextColor = #E34134
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 0
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260225032353Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260225032353Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = A644CD57-5D67-4212-B530-598AC7EBF8F7
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 0
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: justification = left
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 482.7941,469.0218,495.8108,491.5529
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁小丁小丁小丁小丁小丁小丁小丁小丁小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <defaultstyle>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [color:#E44234;font:Helvetica 16pt;font-style:normal;font-weight:normal;text-align:left;text-vertical]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </defaultstyle>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <trn-custom-data/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <defaultappearance>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [1 1 1 RG 1 1 1 rg /Helvetica 16 Tf]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </defaultappearance>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [4]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <apref/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </freetext>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 freetext 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <squiggly>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: squiggly
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #E44234
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260225032407Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260225032407Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = 2437D60B-18A8-4C9D-9862-5025EBA10B47
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 0
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: coords = 148.361,135.2555,310.8958,135.2555,148.361,122.1905,310.8958,122.1905,90,104.0555,163.0438,104.0555,90,90.9905,163.0438,90.9905
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 85,85.0682,315.8958,135.2555
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁小丁小丁小丁小丁小丁小丁小丁小丁小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <popup/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 自闭合 popup 子元素，跳过
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [ion Date: 23 - Aug - 2021 Word coun]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <apref/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </squiggly>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 squiggly 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <stamp>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: stamp
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #FF0000
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260304080305Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260304080305Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = E1249D87-96DE-46D0-85E3-F9A535AF66A0
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: icon = Unknown
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 0
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 250.7233,561.3333,351.0126,675.0969
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <imagedata>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [data:image/png;base64,\niVBORw0KGgoAAAANSUhEUgAAAZIAAAHICAYAAABkl2xrAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAg]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </imagedata>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <trn-custom-data/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <apref/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </stamp>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 stamp 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <ink>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: ink
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #E44234
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260304080312Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260304080312Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = 8EBB9086-E1D3-446E-9996-9E57DDB3BD94
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 0
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 362.9294,541.9688,432.7302,670.2229
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <inklist>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 进入 inklist
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始 gesture
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [366.2106,649.6706;364.5718,649.4684;363.4762,649.4684;363.4294,649.2258;364.5157,646.9484;366.2574,6]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] gesture 数据: 27 个点
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始 gesture
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [383.3851,644.8596;381.3436,645.1022;380.8473,646.1533;382.739,647.191;387.0092,649.1315;393.5643,652]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] gesture 数据: 16 个点
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </inklist>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] inklist 结束, 共 2 条手势
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </ink>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 ink 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <highlight>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: highlight
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #FFFF00
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260304080317Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260304080317Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = CCECA1DC-E3C3-4417-AC1B-9A3AD9C5A593
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 0
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: coords = 332.0015,417.8262,344.9975,417.8262,332.0015,402.5966,344.9975,402.5966
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 331.4008,402.5966,345.5981,417.8262
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <popup/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 自闭合 popup 子元素，跳过
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [C]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <apref/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </highlight>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 highlight 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <ink>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: ink
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 20
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #FFFF00
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260304080322Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: IT = InkHighlight
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260304080322Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = 88076D09-E3A3-4B43-B898-D4B62CDE9B9F
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 0
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 81.232,417.6262,110.6058,522.8485
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <inklist>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 进入 inklist
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始 gesture
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [100.6058,512.8485;98.5737,511.757;94.9497,510.369;92.8146,505.6928;92.0186,498.4966;91.4755,492.5941]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] gesture 数据: 24 个点
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </inklist>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] inklist 结束, 共 1 条手势
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <apref/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </ink>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 ink 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <ink>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: ink
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #E44234
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260304080326Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260304080326Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = B97F9BAE-3AC4-426C-A894-928D491F64C8
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 0
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 53.1991,477.9577,146.7858,491.7599
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <inklist>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 进入 inklist
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始 gesture
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [57.9132,479.0507;57.1265,478.7542;55.4878,478.4982;54.2423,478.4577;53.6991,478.4577;53.746,478.4982]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] gesture 数据: 40 个点
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </inklist>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] inklist 结束, 共 1 条手势
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </ink>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 ink 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <freetext>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: freetext
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: TextColor = #E34134
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 0
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260304080344Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260304080344Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = 8986316C-FED2-4385-B33F-AFCB5F6EB2D0
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 0
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: justification = left
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 155.2987,498.6961,241.9155,524.0982
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <defaultstyle>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [color:#E44234;font:Helvetica 16pt;font-style:normal;font-weight:normal;text-align:left;text-vertical]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </defaultstyle>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <trn-custom-data/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <defaultappearance>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [1 1 1 RG 1 1 1 rg /Helvetica 16 Tf]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </defaultappearance>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [0304做批注]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <apref/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </freetext>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 freetext 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <ink>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: ink
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #E44234
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260304080356Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260304080356Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = B0B265B5-0D14-4E05-AA40-2CBADE99F84F
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 0
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 143.5945,272.6397,165.2993,340.5481
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <inklist>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 进入 inklist
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始 gesture
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [145.0871,338.7005;144.3473,339.7516;144.0945,340.0481;144.6938,336.1805;146.1828,328.4857;148.2149,3]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] gesture 数据: 22 个点
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </inklist>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] inklist 结束, 共 1 条手势
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </ink>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 ink 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <underline>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: underline
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 1.5
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #E44234
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260224023621Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260224023621Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = 6212f902-01ea-441c-afe7-f553098fc4dc
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 4
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: coords = 191.0472,665.8597,504.4896,665.8597,191.0472,653.9546,504.4896,653.9546,111,634.6597,454.5552,634.6597,111,622.7546,454.5552,622.7546
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 100.6872,622.0046,513.8997,665.8597
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁小丁小丁小丁小丁小丁小丁小丁小丁小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <popup/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 自闭合 popup 子元素，跳过
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [in the online store (mini-program, Tmall and Gucci.cn) from July to August in 2022. Based on the fac]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </underline>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 underline 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <underline>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: underline
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 1.5
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #E44234
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260224023633Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260224023633Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = 9cdccfd3-f25f-4979-a8cd-5512b90dd1a3
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 4
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: coords = 111,603.4597,167.0088,603.4597,111,591.5546,167.0088,591.5546
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 109.2822,590.8046,168.7266,603.4597
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁小丁小丁小丁小丁小丁小丁小丁小丁小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <popup/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 自闭合 popup 子元素，跳过
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [commerce]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </underline>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 underline 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <underline>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: underline
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 1.5
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #E44234
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260224023637Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260224023637Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = c0caa84d-7013-4b10-81cf-07015c790956
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 4
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: coords = 182.3448,603.4597,237.0432,603.4597,182.3448,591.5546,237.0432,591.5546
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 180.6654,590.8046,238.7226,603.4597
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁小丁小丁小丁小丁小丁小丁小丁小丁小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <popup/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 自闭合 popup 子元素，跳过
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [increasing]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </underline>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 underline 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <underline>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: underline
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 1.5
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #E44234
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260224023639Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260224023639Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = 2244117a-4ee3-40c1-a724-eb3e2a1a8ae5
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 4
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: coords = 267.0534,603.4597,280.3998,603.4597,267.0534,591.5546,280.3998,591.5546
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 266.3034,590.8046,281.1498,603.4597
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁小丁小丁小丁小丁小丁小丁小丁小丁小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <popup/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 自闭合 popup 子元素，跳过
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [on]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </underline>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 underline 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <underline>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: underline
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 1.5
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #E44234
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260224023647Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260224023653Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = 483de3ef-79c9-4904-b3f5-1b8cc10d576c
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 4
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: coords = 90,221.3797,463.7818,221.3797,90,209.4746,463.7818,209.4746,90,190.1797,494.6184,190.1797,90,178.2746,494.6184,178.2746,90,158.9797,482.8855,158.9797,90,147.0746,482.8855,147.0746,90,127.7797,496.9176,127.7797,90,115.8746,496.9176,115.8746
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 77.7872,115.1246,509.1304,221.3797
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁小丁小丁小丁小丁小丁小丁小丁小丁小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <popup/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 自闭合 popup 子元素，跳过
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [According]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </underline>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 underline 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <underline>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: underline
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 1.5
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #E44234
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260224023658Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260224023658Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = cb9538df-b46f-44fe-bd61-05b7397af104
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 4
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: coords = 90,96.5797,469.8692,96.5797,90,84.6746,469.8692,84.6746,500.4,59.9941,504.96,59.9941,500.4,50.8376,504.96,50.8376
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 78.5983,50.0876,505.71,96.5797
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁小丁小丁小丁小丁小丁小丁小丁小丁小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <popup/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 自闭合 popup 子元素，跳过
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [It is about continuing the brand's classics and keeping up with the latest\n4]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </underline>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 underline 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <highlight>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: highlight
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #6666FF
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260225033638Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260225033653Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = 34713D13-3808-4B76-9A58-74A75B77FF9A
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 4
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: coords = 303.3732,697.0597,344.0508,697.0597,303.3732,685.1546,344.0508,685.1546
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 302.1017,685.1546,345.3223,697.0597
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁小丁小丁小丁小丁小丁小丁小丁小丁小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <popup/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 自闭合 popup 子元素，跳过
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [Jewelry]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <apref/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </highlight>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 highlight 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <freetext>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: freetext
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: TextColor = #4E7DE9
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 0
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260225033708Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260225033711Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = 24DA4614-ABBE-4C57-B861-168D8D61FA59
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 4
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: justification = left
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: fringe = 0,0,0,0
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 340.2206,688.5227,376.3404,715.0563
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁小丁小丁小丁小丁小丁小丁小丁小丁小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <defaultstyle>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [color:#4E7DE9;font:Helvetica 16pt;font-style:normal;font-weight:normal;text-align:left;text-vertical]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </defaultstyle>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <trn-custom-data/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <defaultappearance>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [1 1 1 RG 1 1 1 rg /Helvetica 16 Tf]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </defaultappearance>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [珠宝]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <apref/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </freetext>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 freetext 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <stamp>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: stamp
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #FF0000
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260225033745Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260225033745Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = 929503F8-0C8E-475B-9771-F1F47A424D28
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: icon = Unknown
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 4
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 258.0286,553.896,391.0877,582.3438
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁小丁小丁小丁小丁小丁小丁小丁小丁小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <imagedata>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [data:image/png;base64,\niVBORw0KGgoAAAANSUhEUgAABZcAAAEyCAYAAACGbu7SAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAg]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </imagedata>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <trn-custom-data/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <apref/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </stamp>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 stamp 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <highlight>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: highlight
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #FFFF00
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260225073336Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260225073336Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = F7337B25-A828-4767-B5BA-2F83D7B21FCF
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 6
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: coords = 379.4883,260.2597,460.8699,260.2597,379.4883,248.3546,460.8699,248.3546
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 377.0209,248.3546,463.3373,260.2597
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <popup/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 自闭合 popup 子元素，跳过
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [e a new growth]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <apref/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </highlight>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 highlight 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <underline>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: underline
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 1.5
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #E44234
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260304110934Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260304110935Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = ac50aaf2-4d55-4879-ac43-8a089c2cd8ed
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 6
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: coords = 90,759.4597,495.187,759.4597,90,747.5546,495.187,747.5546,90,728.2597,146.7024,728.2597,90,716.3546,146.7024,716.3546
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 77.8391,715.6046,507.3478,759.4597
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <popup/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 自闭合 popup 子元素，跳过
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [According to Gucci's revenue share for H1 2021 (Kering, 2021b) and Boston Consulting]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </underline>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 underline 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <underline>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: underline
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 1.5
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #E44234
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260304110951Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260304110951Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = 3685282b-0128-41e4-941b-dbcf2c635fe8
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 6
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: coords = 150.0384,728.2597,488.8272,728.2597,150.0384,716.3546,488.8272,716.3546,90,697.0597,194.0592,697.0597,90,685.1546,194.0592,685.1546
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 86.8579,684.4046,498.9971,728.2597
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <popup/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 自闭合 popup 子元素，跳过
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [Group Matrix (BCG, no date) (fig.2). Gucci jewellery in Question Mark could develop]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </underline>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 underline 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <strikeout>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: strikeout
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 1.5
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #E44234
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260304110955Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260304110955Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = 96991beb-0c29-4e12-930b-e009758d2311
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 6
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: coords = 220.0776,697.0597,480.8952,697.0597,220.0776,685.1546,480.8952,685.1546,90,665.8597,259.0116,665.8597,90,653.9546,259.0116,653.9546
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 84.9171,653.9546,488.7279,697.0597
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <popup/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 自闭合 popup 子元素，跳过
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [Cash Cow or Star. On the one hand, China is the world's largest market for luxury]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </strikeout>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 strikeout 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <squiggly>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: squiggly
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 1.5
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #E44234
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260304110958Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260304110958Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = dfe2932e-8478-4cd1-87ff-53fd77c01eed
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 6
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: coords = 262.3452,665.8597,458.4732,665.8597,262.3452,653.9546,458.4732,653.9546,90,634.6597,314.7816,634.6597,90,622.7546,314.7816,622.7546
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 82.5,614.4181,465.9732,665.8597
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <popup/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 自闭合 popup 子元素，跳过
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [jewellery, having reached $6.3 billion (Statista, 2021d). And watches & jewellery]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <apref/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </squiggly>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 squiggly 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <ink>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: ink
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 5
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #E44234
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260304110946Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260304110946Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = 432e1576-c634-42b5-9800-200cbde19549
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 6
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 91.8661,765.4423,121.2054,820.4994
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <inklist>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 进入 inklist
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始 gesture
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [118.7054,817.9994;118.7054,817.9994;118.7054,817.9994;118.7054,817.9994;118.1441,816.9189;116.1159,8]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] gesture 数据: 19 个点
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </inklist>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] inklist 结束, 共 1 条手势
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </ink>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 ink 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <ink>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: ink
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 20
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #FFFF00
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260304110949Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: IT = InkHighlight
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260304110949Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = b0705dd2-0ada-40ea-9c69-8a23974221a1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 6
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 130.6021,765.5203,186.4786,838.1034
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <inklist>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 进入 inklist
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始 gesture
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [140.6021,828.1034;142.7495,823.3462;144.6444,820.0625;146.3287,817.2836;148.0131,814.5895;148.7677,8]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] gesture 数据: 39 个点
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </inklist>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] inklist 结束, 共 1 条手势
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <apref/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </ink>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 ink 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <freetext>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: freetext
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: TextColor = #E34133
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 0
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260304111028Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260304111028Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = a7552581-cad9-4e07-af93-218dbfb705fb
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 6
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: justification = left
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: fringe = 0,0,0,0
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 262.7601,780.9514,298.9738,807.0534
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <defaultstyle>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [color:#E44234;font:Roboto 16pt;text-align:left;text-vertical-align:top;]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </defaultstyle>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <defaultappearance>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [1 1 1 RG 1 1 1 rg /Roboto 16 Tf]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </defaultappearance>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [正文]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <apref/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </freetext>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 freetext 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <ink>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: ink
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 5
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #E44234
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260304111621Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260304111621Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = 832d2f27-66d0-45c7-b9c7-088a4a226bd0
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 6
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 47.1467,404.9821,59.7263,569.1624
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <inklist>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 进入 inklist
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始 gesture
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [49.6467,566.6624;49.6467,566.6624;51.8923,552.2361;54.9189,530.9514;56.5358,510.648;56.908,493.4627;]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] gesture 数据: 20 个点
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </inklist>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] inklist 结束, 共 1 条手势
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </ink>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 ink 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <squiggly>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: squiggly
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #E44234
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260304080437Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260304080437Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = 694B2018-9F6D-42E4-8003-47716FA24D73
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 7
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: coords = 145.368,665.8597,502.2024,665.8597,145.368,653.9546,502.2024,653.9546,90,634.6597,500.9256,634.6597,90,622.7546,500.9256,622.7546
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 77.6671,616.9148,513.2585,665.8597
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <popup/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 自闭合 popup 子元素，跳过
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [s differentiated aesthetics, Italian craftsmanship, relatively premium prices, strong marketing stra]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <apref/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </squiggly>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 squiggly 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <text>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: text
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #E44234
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260304080456Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print,nozoom,norotate
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260304080513Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = 2E67E9EE-36FD-4AC0-BD8C-9E67BDACBE5B
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: icon = Comment
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 7
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 305.7327,541.5849,325.7327,561.5849
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <popup/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 自闭合 popup 子元素，跳过
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [0304做批注]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <apref/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </text>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 text 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <stamp>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: stamp
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #FF0000
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260304080720Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260304080720Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = 6F790384-4F42-414B-8905-562FF34914F3
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: icon = Unknown
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 7
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 104.7799,779.8791,321.0755,829.2764
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <imagedata>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [data:image/png;base64,\niVBORw0KGgoAAAANSUhEUgAAA2MAAADGCAYAAABfCFjJAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAg]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </imagedata>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <trn-custom-data/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <apref/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </stamp>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 stamp 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <ink>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: ink
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #E44234
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260304080845Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260304080845Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = BF7E80CE-CA2E-43A8-8F84-59694EA4DC92
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 7
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 354.3602,527.7523,453.2097,583.2897
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <inklist>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 进入 inklist
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始 gesture
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [361.4154,575.5397;359.683,575.9979;358.8308,576.3348;359.1304,576.0922;360.2261,575.0006;361.3124,57]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] gesture 数据: 27 个点
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始 gesture
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [375.022,582.7897;373.8795,582.7897;372.5404,582.2911;371.7912,581.0109;371.0514,578.9221;370.1056,57]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] gesture 数据: 27 个点
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始 gesture
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [361.1719,559.4628;361.0689,559.4628;359.4301,560.0153;359.2803,560.3118;360.2729,561.2955;362.408,56]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] gesture 数据: 27 个点
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始 gesture
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [359.6268,552.1722;356.8455,551.175;354.8602,550.3799;354.8602,550.2856;356.6489,550.8246;359.5799,55]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] gesture 数据: 25 个点
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始 gesture
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [368.7103,563.1417;367.2213,562.1984;365.1424,558.8698;363.897,554.9483;362.7077,551.6198;361.612,548]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] gesture 数据: 24 个点
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始 gesture
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [366.0321,551.4311;366.0789,551.4311;366.0789,551.5254;366.6782,551.5254;368.214,550.8785;370.4521,54]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] gesture 数据: 21 个点
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始 gesture
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [387.2801,577.9788;387.3269,579.6633;387.4299,580.108;387.4299,578.2753;386.7369,573.4105;385.3978,56]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] gesture 数据: 20 个点
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始 gesture
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [381.6239,552.0645;381.6239,551.7679;381.1276,550.1913;381.0714,548.0486;381.0714,545.6229;381.3243,5]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] gesture 数据: 19 个点
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始 gesture
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [394.6312,573.7608;393.882,576.3887;393.4887,577.332;393.5824,577.8306;394.9215,578.2214;397.0098,578]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] gesture 数据: 31 个点
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始 gesture
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [387.5797,553.4659;385.8941,553.8568;384.349,555.393;385.3978,557.684;388.0292,559.6649;391.1008,561.]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] gesture 数据: 19 个点
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始 gesture
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [393.6385,569.6371;393.6385,569.7854;392.9924,570.284;392.6459,570.3784;392.6459,569.2463;392.9924,56]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] gesture 数据: 24 个点
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始 gesture
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [390.9041,558.0208;389.4152,556.6867;387.9731,554.7462;386.4373,552.7113;384.7985,550.7303;383.656,54]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] gesture 数据: 15 个点
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始 gesture
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [418.6043,570.5266;418.211,571.8742;418.2578,572.6154;419.5969,573.1679;421.4885,573.653;423.4738,573]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] gesture 数据: 14 个点
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始 gesture
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [413.6411,553.3582;410.2137,552.0645;407.0391,551.1346;407.5823,550.9729;410.6632,551.3771;414.5307,5]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] gesture 数据: 16 个点
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始 gesture
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [418.2578,560.1635;417.5648,559.9075;415.0364,558.479;414.0906,555.7434;413.8377,552.3744;413.5943,54]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] gesture 数据: 16 个点
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始 gesture
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [421.3387,557.63;421.8818,558.9642;422.528,560.0153;422.7808,559.3145;422.631,556.1881;421.6852,552.3]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] gesture 数据: 14 个点
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始 gesture
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [439.4028,571.5777;439.7025,572.0224;440.1988,573.4105;440.2549,573.6126;440.2549,572.1168;440.3018,5]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] gesture 数据: 40 个点
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始 gesture
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [443.2328,551.0807;440.1519,551.0268;438.5132,550.4877;438.0637,548.7493;437.5674,544.9221;436.6777,5]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] gesture 数据: 11 个点
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始 gesture
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [438.4102,537.5777;438.9626,537.982;441.4442,539.4105;444.9653,539.7608;448.5425,537.8337;451.4174,53]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] gesture 数据: 7 个点
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </inklist>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] inklist 结束, 共 19 条手势
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </ink>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 ink 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <freetext>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: freetext
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 0
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260304160852+08'00'
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260304160909+08'00'
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = 5950fa7c-c126-7fc6-8eb1-4f2f71ca7a2b
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 7
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 463.3,530.4,545.333,545.42
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: subject = 自由文本
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <defaultstyle>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [color:#E44234;font:Helvetica 12pt;text-align:left;text-vertical-align:top;]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </defaultstyle>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <trn-custom-data/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <contents-richtext>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <body>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 未知子元素: body
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <p>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 未知子元素: p
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <span>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 未知子元素: span
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [还可以做批注]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </span>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </p>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </body>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </contents-richtext>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <defaultappearance>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [0 0 0 rg /Helvetica 12 Tf]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </defaultappearance>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [还可以做批注]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <apref/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </freetext>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 freetext 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <freetext>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: freetext
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: TextColor = #E24134
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 0
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260304080939Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260304080939Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = D34FA148-EBF0-46E9-90A5-3BA575CCD333
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 7
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: justification = left
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 476.3742,547.345,559.396,572.7471
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <defaultstyle>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [color:#E34134;font:Helvetica 16pt;font-style:normal;font-weight:normal;text-align:left;text-vertical]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </defaultstyle>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <trn-custom-data/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <defaultappearance>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [1 1 1 RG 1 1 1 rg /Helvetica 16 Tf]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </defaultappearance>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [哥哥哥哥好]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <apref/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </freetext>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 freetext 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <ink>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: ink
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #E44234
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260304080947Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260304080947Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = 8EE47E19-9AA2-40B2-9079-B8D09A01E111
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 7
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 332.1758,740.1074,366.6351,818.0825
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <inklist>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 进入 inklist
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始 gesture
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [336.047,817.5825;335.3072,817.2455;333.9119,816.9356;333.1159,816.8952;332.7226,816.6392;332.6758,81]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] gesture 数据: 23 个点
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </inklist>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] inklist 结束, 共 1 条手势
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </ink>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 ink 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <underline>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: underline
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #E44234
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260304080951Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260304080951Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = 79607F93-B929-4F15-994A-7683307DD8A5
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 7
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: coords = 164.0424,759.4597,468.8477,759.4597,164.0424,747.5546,468.8477,747.5546,90,728.2597,168.7124,728.2597,90,716.3546,168.7124,716.3546
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 87.6118,715.8546,477.9988,759.4597
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <popup/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 自闭合 popup 子元素，跳过
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [tive approach to differentiate from its competitors (Kering, 2021a). Furthe]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </underline>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 underline 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <strikeout>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: strikeout
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #00CC63
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260304081001Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260304081133Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = 9845322F-7F57-4AC3-8F2B-4C995557E6A0
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 7
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: coords = 221.2563,697.0597,502.7172,697.0597,221.2563,685.1546,502.7172,685.1546
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 212.805,684.6546,511.1686,697.0597
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <popup/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 自闭合 popup 子元素，跳过
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [m]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </strikeout>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 strikeout 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <squiggly>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: squiggly
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #E44234
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260304081045Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260304081045Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = 3DB26745-2811-4DD7-9278-7A681AFAFF10
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 7
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: coords = 182.7068,728.2597,258.0884,728.2597,182.7068,716.3546,258.0884,716.3546
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 177.7068,710.5217,263.0884,728.2597
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <popup/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 自闭合 popup 子元素，跳过
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [ore, the Chine]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <apref/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </squiggly>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 squiggly 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <squiggly>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: squiggly
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #E44234
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260304081104Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260304081104Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = 63B917A2-B17D-4827-B8C8-3582DF7BA0FB
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 7
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: coords = 314.7836,728.2597,487.3916,728.2597,314.7836,716.3546,487.3916,716.3546,90,697.0597,337.3001,697.0597,90,685.1546,337.3001,685.1546
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 82.5724,679.3139,492.5822,728.2597
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <popup/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 自闭合 popup 子元素，跳过
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [y market is becoming "branded", "segmented", and e-commerce oriented (iiMed]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <apref/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </squiggly>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 squiggly 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <strikeout>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: strikeout
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #E44234
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260304081107Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260304081107Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = 829E0000-4CBC-4797-9EB1-3F38D665BECF
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 7
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: coords = 283.4396,728.2597,310.7852,728.2597,283.4396,716.3546,310.7852,716.3546
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 282.5449,716.3546,311.68,728.2597
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <popup/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 自闭合 popup 子元素，跳过
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [welle]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </strikeout>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 strikeout 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <ink>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: ink
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #E44234
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260304081212Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260304081212Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = 5BF0E273-0A75-4C6E-A7D4-B8C3B3F8201F
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 7
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 409.3672,753.853,509.0595,830.2513
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <inklist>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 进入 inklist
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始 gesture
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [413.3976,801.4113;413.3414,801.7616;412.7983,803.2979;412.1521,804.9285;411.4124,806.5186;410.8598,8]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] gesture 数据: 27 个点
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始 gesture
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [411.9555,790.3339;411.2625,789.4445;409.9702,787.6118;409.8672,785.523;410.6632,783.4881;411.7588,78]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] gesture 数据: 29 个点
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始 gesture
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [422.6778,809.3486;422.1815,807.8663;420.5895,803.9447;419.9996,800.0637;419.9996,798.0826;420.4959,7]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] gesture 数据: 17 个点
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始 gesture
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [424.6631,810.238;423.1741,810.831;421.9848,811.6799;421.835,812.7176;422.7808,814.1595;425.3092,816.]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] gesture 数据: 27 个点
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始 gesture
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [434.3459,810.5345;433.8496,810.1437;431.1152,807.5563;429.2798,802.395;427.7908,798.0826;426.5453,79]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] gesture 数据: 18 个点
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始 gesture
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [428.2871,789.9431;428.8865,789.7949;430.1226,788.9998;431.5647,788.0565;433.3533,787.3692;435.6383,7]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] gesture 数据: 14 个点
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始 gesture
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [447.5499,804.3894;445.6583,802.1524;443.3827,798.6352;442.5305,796.2903;442.5305,794.808;443.9727,79]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] gesture 数据: 13 个点
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始 gesture
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [452.3632,825.7759;452.0636,825.6815;450.6776,824.7382;449.9846,822.7438;449.9285,819.2805;450.1345,8]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] gesture 数据: 21 个点
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始 gesture
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [468.7511,820.116;468.7511,820.2642;468.7511,820.372;468.6481,818.8223;468.2548,814.7525;467.1591,808]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] gesture 数据: 25 个点
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始 gesture
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [481.5523,806.2761;481.056,807.9067;479.9135,809.2543;479.7169,810.0898;480.9623,811.0331;483.4908,81]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] gesture 数据: 29 个点
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始 gesture
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [493.1175,822.0026;491.9282,820.0621;489.9429,816.5987;488.9034,811.6799;488.8566,804.093;490.2426,79]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] gesture 数据: 14 个点
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始 gesture
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [503.5495,829.7513;498.5301,824.9808;495.8987,820.911;495.8987,820.1699;495.8987,820.1699]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] gesture 数据: 4 个点
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </inklist>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] inklist 结束, 共 12 条手势
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </ink>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 ink 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <line/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <stamp>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: stamp
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #FF0000
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260304082121Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260304082121Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = 87632D27-8FE6-42B0-B57C-023189D91713
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: icon = Unknown
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 7
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 9.2647,544.3388,80.2941,559.7884
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <imagedata>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [data:image/png;base64,\niVBORw0KGgoAAAANSUhEUgAAAM8AAAAtCAYAAAAJDT/WAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAG]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </imagedata>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <trn-custom-data/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <apref/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </stamp>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 stamp 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <highlight>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: highlight
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #FFFF00
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260304082147Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260304082258Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = 849CE4B5-A335-4843-9D53-4CC24EEDE906
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 8
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: coords = 110.004,476.7397,491.5234,476.7397,110.004,464.8346,491.5234,464.8346,90,445.5397,484.9248,445.5397,90,433.6346,484.9248,433.6346,90,414.3397,478.8691,414.3397,90,402.4346,478.8691,402.4346,90,383.1397,493.1436,383.1397,90,371.2346,493.1436,371.2346,90,351.9397,457.5233,351.9397,90,340.0346,457.5233,340.0346,90,320.7397,503.544,320.7397,90,308.8346,503.544,308.8346,90,289.5397,480.2156,289.5397,90,277.6346,480.2156,277.6346,90,258.3397,498.113,258.3397,90,246.4346,498.113,246.4346,90,227.1397,494.645,227.1397,90,215.2346,494.645,215.2346,90,195.9397,475.3431,195.9397,90,184.0346,475.3431,184.0346
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 77.5885,184.0346,515.9555,476.7397
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <popup/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 自闭合 popup 子元素，跳过
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [ording to the current Gucci jewellery product segmentation (tbl. 1), there are four main demographic]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <apref/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </highlight>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 highlight 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <ink>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: ink
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 20
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #FFFF00
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260304082151Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: IT = InkHighlight
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260304082151Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = 236B7405-3553-4E54-BDEC-4015CD43D1C2
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 8
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 40.9291,398.8629,71.6013,528.8114
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <inklist>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 进入 inklist
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始 gesture
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [56.0479,513.1088;54.3416,515.2415;51.8788,518.3015;51.0257,518.8114;50.9291,516.5165;50.9291,509.863]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] gesture 数据: 25 个点
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </inklist>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] inklist 结束, 共 1 条手势
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <apref/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </ink>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 ink 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <ink>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: ink
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #E44234
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260304082154Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260304082154Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = C980877D-A93C-4A68-83D3-D26A61F1013D
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 8
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 528.8095,390.2583,575.9751,522.9973
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <inklist>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 进入 inklist
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始 gesture
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [531.5308,522.4973;531.5308,522.1495;530.0016,520.7818;529.4061,519.8546;529.3095,517.7219;531.0157,5]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] gesture 数据: 24 个点
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </inklist>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] inklist 结束, 共 1 条手势
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </ink>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 ink 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <stamp>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: stamp
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #FF0000
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260304082157Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260304082157Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = BFFE3E37-6A9E-4F08-B003-EACE80780A02
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: icon = Unknown
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 8
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 70.7568,531.7217,168.5297,549.7462
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <imagedata>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [data:image/png;base64,\niVBORw0KGgoAAAANSUhEUgAAAOQAAAAqCAYAAACjtfdJAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAH]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </imagedata>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <trn-custom-data/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <apref/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </stamp>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 stamp 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <freetext>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: freetext
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: TextColor = #E34134
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 0
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260304082202Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260304082202Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = 3B41C7BD-4015-4C3F-A8EA-79EBBF3A953E
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 8
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: justification = left
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 271.4486,515.0999,324.5912,542.6652
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <defaultstyle>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [color:#E44234;font:Helvetica 16pt;font-style:normal;font-weight:normal;text-align:left;text-vertical]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </defaultstyle>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <trn-custom-data/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <defaultappearance>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [1 1 1 RG 1 1 1 rg /Helvetica 16 Tf]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </defaultappearance>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [的方法]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <apref/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </freetext>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 freetext 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <highlight>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: highlight
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #FFFF00
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260304082204Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260304082204Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = 79636574-2E1D-420C-B11C-C880F1432927
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 8
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: coords = 361.9853,564.9395,383.1651,564.9395,361.9853,555.4787,383.1651,555.4787
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 361.2894,555.4787,383.861,564.9395
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <popup/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 自闭合 popup 子元素，跳过
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [tions]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <apref/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </highlight>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 highlight 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <ink>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: ink
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #E44234
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260304082204Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260304082204Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = DF01E35C-DB83-4404-B41E-20ECADE98DFA
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 8
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 388.7836,481.4301,422.122,565.4189
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <inklist>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 进入 inklist
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始 gesture
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [392.9536,551.2651;392.519,551.4274;390.9093,551.7751;389.7021,552.4474;389.2836,553.6528;389.2836,55]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] gesture 数据: 31 个点
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </inklist>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] inklist 结束, 共 1 条手势
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </ink>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 ink 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <text>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: text
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #E44234
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260304082208Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print,nozoom,norotate
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260304082213Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = 77BB73C6-815D-4AD1-A9D1-08F689C503E8
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: icon = Comment
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 8
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 518.4541,582.8884,538.4541,602.8884
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <popup/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 自闭合 popup 子元素，跳过
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [深度挖掘企业]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <apref/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </text>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 text 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <underline>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: underline
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #00CC63
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260304082222Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260304082222Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = B45FFBD4-99B3-4903-B71B-E3269E3479B6
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 8
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: coords = 199.392,414.3397,478.8691,414.3397,199.392,402.4346,478.8691,402.4346,90,383.1397,215.01,383.1397,90,371.2346,215.01,371.2346
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 86.2327,370.7346,487.261,414.3397
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <popup/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 自闭合 popup 子元素，跳过
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [g mix needs to be differentiated and prioritised. Twothirds of Gucci's revenu]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </underline>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 underline 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <squiggly>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: squiggly
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #E44234
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260304082225Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260304082225Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = 587726E7-D59A-4B8A-87ED-3355FCACF3E3
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 8
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: coords = 237.6948,383.1397,493.1436,383.1397,237.6948,371.2346,493.1436,371.2346,90,351.9397,270.761,351.9397,90,340.0346,270.761,340.0346
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 84.5654,334.1937,500.8154,383.1397
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <popup/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 自闭合 popup 子元素，跳过
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [mes from Gen Z and Millennials, and Millennials are becoming increasingly loyal to]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <apref/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </squiggly>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 squiggly 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <strikeout>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: strikeout
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: style = solid
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #E44234
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260304082229Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260304082231Z
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = 42007464-D4D4-41C4-A8A6-CDF134C2CA57
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 8
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: coords = 300.7874,351.9397,457.5233,351.9397,300.7874,340.0346,457.5233,340.0346,90,320.7397,503.544,320.7397,90,308.8346,503.544,308.8346,90,289.5397,328.1468,289.5397,90,277.6346,328.1468,277.6346
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 77.5885,277.6346,515.9555,351.9397
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <popup/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 自闭合 popup 子元素，跳过
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [luxury market, with around 400 million people (Statista, 2020a). The average Gen Z]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </strikeout>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 strikeout 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <highlight>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: highlight
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 8
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 125.364,121.635,168.722,132.897
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #25D2D1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = fc2ab5f1-30d1-4215-ab33-09fc38376d9e
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: subject = 高亮
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260304162333+08'00'
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260304162332+08'00'
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: coords = 125.364,132.89749999999992,168.7224,132.89749999999992,125.364,121.63460937499985,168.7224,121.63460937499985
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <trn-custom-data/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </highlight>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 highlight 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <highlight>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: highlight
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 8
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 90,152.835,480.096,164.097
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #25D2D1
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = 0c0f0424-b557-b6ea-a3bb-b6f9d9db23f2
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: subject = 高亮
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260304162336+08'00'
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260304162334+08'00'
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: coords = 90,164.09749999999985,480.09645600000005,164.09749999999985,90,152.8346093749999,480.09645600000005,152.8346093749999
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <trn-custom-data/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </highlight>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 highlight 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <underline>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: underline
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 8
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 185.400,121.635,352.114,132.897
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #E44234
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = 13fd5dee-3227-8bf3-be22-f68fba04c186
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: subject = 下划线
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260304162341+08'00'
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260304162340+08'00'
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: coords = 185.39999999999998,132.89749999999992,352.11384,132.89749999999992,185.39999999999998,121.63460937499985,352.11384,121.63460937499985
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <trn-custom-data/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </underline>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 underline 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <strikeout>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: strikeout
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 8
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 381.471,121.635,480.858,132.897
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #E44234
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = 65308ea1-c541-08c7-b400-c1a7b14b23af
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: subject = 删除线
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260304162349+08'00'
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260304162348+08'00'
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: coords = 381.47064,132.89749999999992,480.85848,132.89749999999992,381.47064,121.63460937499985,480.85848,121.63460937499985
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <trn-custom-data/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </strikeout>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 strikeout 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <squiggly>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: squiggly
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 8
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 90,90.435,211.409,101.697
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #E44234
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = b480880a-b152-3db4-017d-717eeac04437
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: subject = 波浪线
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260304162354+08'00'
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260304162353+08'00'
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: coords = 90,101.69749999999988,211.4088,101.69749999999988,90,90.43460937499992,211.4088,90.43460937499992
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <trn-custom-data/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </squiggly>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 squiggly 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <text>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: text
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 8
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 51.060,91.320,82.060,122.320
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #FFCD45
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print,nozoom,norotate
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = ab1a3e3e-3b19-a7d3-01d2-a0949dca5721
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: subject = 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260304162403+08'00'
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260304162357+08'00'
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: icon = Comment
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: statemodel = Review
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <trn-custom-data/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [哈哈哈\n]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </contents>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <contents-richtext>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <body>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 未知子元素: body
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <p>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 未知子元素: p
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <span>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 未知子元素: span
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [哈哈哈\n]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </span>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </p>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </body>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </contents-richtext>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </text>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 text 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 空标签: <square/>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <ink>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: ink
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 8
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 288.330,14.340,334.090,84.420
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #E44234
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = a3e5fb2f-2946-6445-c624-ad245826086f
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: subject = 手绘
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260304162423+08'00'
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260304162420+08'00'
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <inklist>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 进入 inklist
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始 gesture
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [308.78,60.32000000000005;310,57.889999999999986;311.21,56.67999999999995;313.64,53.02999999999997;31]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] gesture 数据: 14 个点
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始 gesture
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [333.09,83.41999999999996;333.09,82.21000000000004;333.09,80.99000000000001;333.09,79.76999999999998;]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] gesture 数据: 28 个点
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </inklist>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] inklist 结束, 共 2 条手势
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </ink>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 ink 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <ink>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 发现注释类型: ink
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: page = 8
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: rect = 378.740,-7.090,451.560,100.990
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: color = #E44234
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: flags = print
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: name = b18100b6-965e-e71b-1a70-59722a050f7f
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: title = 小丁
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: subject = Free Hand Highlight
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: date = D:20260304162427+08'00'
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: width = 20
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: opacity = 0.5
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf]   属性: creationdate = D:20260304162424+08'00'
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <inklist>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 进入 inklist
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始标签: <gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 开始 gesture
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 文本内容: [415.7987096774194,80.99000000000001;415.7987096774194,78.55999999999995;415.7987096774194,78.5599999]
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </gesture>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] gesture 数据: 61 个点
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </inklist>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] inklist 结束, 共 1 条手势
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </ink>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 成功解析 ink 注释
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </annots>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 结束标签: </xfdf>
+[2026-04-06T04:47:48Z DEBUG pdfxml::xfdf] 解析完成: 0 个字段, 99 条注释
+[2026-04-06T04:47:48Z INFO  pdfxml] 解析完成，发现 99 条注释
+[2026-04-06T04:47:48Z INFO  pdfxml] 将注释合并到现有 PDF: "examples/WTchbOFP.pdf"
+[2026-04-06T04:47:48Z INFO  pdfxml::pdf] 打开现有 PDF 并合并注释
+[2026-04-06T04:47:49Z INFO  pdfxml::pdf] 原始 PDF 共 71 页
+Error: PDF 处理错误: 解码 stamp 图片失败: Invalid symbol 92, offset 0.
+
+Stack backtrace:
+   0: std::backtrace_rs::backtrace::win64::trace
+             at /rustc/e408947bfd200af42db322daf0fadfe7e26d3bd1/library\std\src\..\..\backtrace\src\backtrace\win64.rs:85
+   1: std::backtrace_rs::backtrace::trace_unsynchronized
+             at /rustc/e408947bfd200af42db322daf0fadfe7e26d3bd1/library\std\src\..\..\backtrace\src\backtrace\mod.rs:66
+   2: std::backtrace::Backtrace::create
+             at /rustc/e408947bfd200af42db322daf0fadfe7e26d3bd1/library\std\src\backtrace.rs:331
+   3: std::backtrace::Backtrace::capture
+             at /rustc/e408947bfd200af42db322daf0fadfe7e26d3bd1/library\std\src\backtrace.rs:296
+   4: anyhow::error::impl$1::from<enum2$<pdfxml::error::PdfXmlError> >
+             at C:\Users\hearsay316\.cargo\registry\src\rsproxy.cn-e3de039b2554c837\anyhow-1.0.102\src\backtrace.rs:10
+   5: core::result::impl$28::from_residual<tuple$<>,enum2$<pdfxml::error::PdfXmlError>,anyhow::Error>
+             at C:\Users\hearsay316\.rustup\toolchains\stable-x86_64-pc-windows-msvc\lib\rustlib\src\rust\library\core\src\result.rs:2189
+   6: pdfxml::main
+             at .\src\main.rs:96
+   7: core::ops::function::FnOnce::call_once<enum2$<core::result::Result<tuple$<>,anyhow::Error> > (*)(),tuple$<> >
+             at C:\Users\hearsay316\.rustup\toolchains\stable-x86_64-pc-windows-msvc\lib\rustlib\src\rust\library\core\src\ops\function.rs:250
+   8: std::sys::backtrace::__rust_begin_short_backtrace<enum2$<core::result::Result<tuple$<>,anyhow::Error> > (*)(),enum2$<core::result::Result<tuple$<>,anyhow::Error> > >
+             at C:\Users\hearsay316\.rustup\toolchains\stable-x86_64-pc-windows-msvc\lib\rustlib\src\rust\library\std\src\sys\backtrace.rs:166
+   9: std::rt::lang_start::closure$0<enum2$<core::result::Result<tuple$<>,anyhow::Error> > >
+             at C:\Users\hearsay316\.rustup\toolchains\stable-x86_64-pc-windows-msvc\lib\rustlib\src\rust\library\std\src\rt.rs:206
+  10: std::rt::lang_start_internal::closure$0
+             at /rustc/e408947bfd200af42db322daf0fadfe7e26d3bd1/library\std\src\rt.rs:175
+  11: std::panicking::catch_unwind::do_call
+             at /rustc/e408947bfd200af42db322daf0fadfe7e26d3bd1/library\std\src\panicking.rs:581
+  12: std::panicking::catch_unwind
+             at /rustc/e408947bfd200af42db322daf0fadfe7e26d3bd1/library\std\src\panicking.rs:544
+  13: std::panic::catch_unwind
+             at /rustc/e408947bfd200af42db322daf0fadfe7e26d3bd1/library\std\src\panic.rs:359
+  14: std::rt::lang_start_internal
+             at /rustc/e408947bfd200af42db322daf0fadfe7e26d3bd1/library\std\src\rt.rs:171
+  15: std::rt::lang_start<enum2$<core::result::Result<tuple$<>,anyhow::Error> > >
+             at C:\Users\hearsay316\.rustup\toolchains\stable-x86_64-pc-windows-msvc\lib\rustlib\src\rust\library\std\src\rt.rs:205
+  16: main
+  17: invoke_main
+             at D:\a\_work\1\s\src\vctools\crt\vcstartup\src\startup\exe_common.inl:78
+  18: __scrt_common_main_seh
+             at D:\a\_work\1\s\src\vctools\crt\vcstartup\src\startup\exe_common.inl:288
+  19: BaseThreadInitThunk
+  20: RtlUserThreadStart
+error: process didn't exit successfully: `target\debug\pdfxml.exe -i examples/index.xml -t examples/WTchbOFP.pdf -o examples/out.pdf -v` (exit code: 1)
