@@ -1045,6 +1045,7 @@ impl PdfAnnotationExporter {
 
 #[cfg(test)]
 mod tests {
+    use std::collections::HashMap;
     use super::*;
 
     #[test]
@@ -1072,5 +1073,131 @@ mod tests {
         builder.move_to(10.0, 20.0);
         builder.quad_to(16.0, 26.0, 30.0, 40.0);
         assert!(builder.path.contains("14 24 20.666666 30.666666 30 40 c"));
+    }
+
+    #[test]
+    #[ignore = "pending explicit AP implementation for circle"]
+    fn test_circle_annotation_should_eventually_emit_explicit_ap() {
+        let circle = CircleAnnotation {
+            base: AnnotationBase {
+                name: None,
+                page: 0,
+                rect: Some(Rect {
+                    left: 100.0,
+                    bottom: 100.0,
+                    right: 180.0,
+                    top: 160.0,
+                }),
+                title: None,
+                subject: None,
+                contents: None,
+                creation_date: None,
+                modification_date: None,
+                color: Some("#E44234".to_string()),
+                opacity: 1.0,
+                flags: 0,
+                extra: HashMap::new(),
+            },
+            width: 2.0,
+            interior_color: Some("#FFF2CC".to_string()),
+        };
+
+        let mut document = lopdf::Document::with_version("1.5");
+        let exporter = PdfAnnotationExporter::new();
+        let dict = exporter.build_annotation(&mut document, &Annotation::Circle(circle)).unwrap();
+
+        assert!(dict.get(b"AP").is_ok(), "circle 应补显式 AP");
+    }
+
+    #[test]
+    #[ignore = "pending explicit AP implementation for line"]
+    fn test_line_annotation_should_eventually_emit_explicit_ap() {
+        let line = LineAnnotation {
+            base: AnnotationBase {
+                name: None,
+                page: 0,
+                rect: Some(Rect {
+                    left: 100.0,
+                    bottom: 100.0,
+                    right: 220.0,
+                    top: 180.0,
+                }),
+                title: None,
+                subject: None,
+                contents: None,
+                creation_date: None,
+                modification_date: None,
+                color: Some("#E44234".to_string()),
+                opacity: 1.0,
+                flags: 0,
+                extra: HashMap::new(),
+            },
+            start: Some("110,110".to_string()),
+            end: Some("210,170".to_string()),
+            head_style: "None".to_string(),
+            tail_style: "ClosedArrow".to_string(),
+            width: 2.0,
+        };
+
+        let mut document = lopdf::Document::with_version("1.5");
+        let exporter = PdfAnnotationExporter::new();
+        let dict = exporter.build_annotation(&mut document, &Annotation::Line(line)).unwrap();
+
+        assert!(dict.get(b"AP").is_ok(), "line 应补显式 AP");
+    }
+
+    #[test]
+    #[ignore = "pending explicit AP implementation for polygon"]
+    fn test_polygon_annotation_should_eventually_emit_explicit_ap() {
+        let polygon = PolygonAnnotation {
+            base: AnnotationBase {
+                name: None,
+                page: 0,
+                rect: Some(Rect {
+                    left: 100.0,
+                    bottom: 100.0,
+                    right: 220.0,
+                    top: 220.0,
+                }),
+                title: None,
+                subject: None,
+                contents: None,
+                creation_date: None,
+                modification_date: None,
+                color: Some("#E44234".to_string()),
+                opacity: 1.0,
+                flags: 0,
+                extra: HashMap::new(),
+            },
+            vertices: Some("110,110 210,120 180,210 120,200".to_string()),
+        };
+
+        let mut document = lopdf::Document::with_version("1.5");
+        let exporter = PdfAnnotationExporter::new();
+        let dict = exporter.build_annotation(&mut document, &Annotation::Polygon(polygon)).unwrap();
+
+        assert!(dict.get(b"AP").is_ok(), "polygon 应补显式 AP");
+    }
+
+    #[test]
+    #[ignore = "pending explicit AP implementation for polyline"]
+    fn test_polyline_xfdf_should_eventually_emit_polygon_ap() {
+        let xml = concat!(
+            "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>",
+            "<xfdf xmlns=\"http://ns.adobe.com/xfdf/\" xml:space=\"preserve\">",
+            "  <annots>",
+            "    <polyline page=\"0\" rect=\"100,100,220,220\" color=\"#E44234\" vertices=\"110,110 210,120 180,210\"/>",
+            "  </annots>",
+            "</xfdf>"
+        );
+
+        let doc = XfdfDocument::parse(xml).unwrap();
+        assert_eq!(doc.annotations.len(), 1);
+
+        let mut document = lopdf::Document::with_version("1.5");
+        let exporter = PdfAnnotationExporter::new();
+        let dict = exporter.build_annotation(&mut document, &doc.annotations[0]).unwrap();
+
+        assert!(dict.get(b"AP").is_ok(), "polyline 应补显式 AP");
     }
 }
