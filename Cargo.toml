@@ -5,6 +5,27 @@ edition = "2021"
 description = "将 XFDF/XML 注释导出为 PDF 文件或作为 Rust SDK 调用"
 license = "MIT"
 readme = "README.md"
+repository = "https://github.com/hearsay316/pdfXml.git"
+homepage = "https://github.com/hearsay316/pdfXml.git"
+documentation = "https://docs.rs/pdfxml"
+keywords = ["pdf", "xfdf", "annotation"]
+categories = ["parser-implementations"]
+include = [
+    "Cargo.toml",
+    "Cargo.lock",
+    "README.md",
+    "SDK_GUIDE.md",
+    "ANNOTATION_SUPPORT.md",
+    "src/**/*.rs",
+    "tests/**/*.rs",
+    "examples/**/*.xfdf",
+    "examples/**/*.xml",
+    "examples/**/*.pdf",
+    ".cargo/config.toml"
+]
+
+[workspace]
+members = [".", "cli"]
 
 [dependencies]
 # XML 解析
@@ -14,13 +35,9 @@ lopdf = "0.35"
 # 日期时间处理
 chrono = { version = "0.4", features = ["serde"] }
 # 错误处理
-anyhow = "1.0"
 thiserror = "2.0"
 # 日志
 log = "0.4"
-env_logger = "0.11"
-# 命令行参数解析
-clap = { version = "4.5", features = ["derive"] }
 # 正则表达式（用于解析日期等）
 regex = "1"
 # 序列化支持（用于数据结构）
@@ -34,7 +51,3 @@ image = { version = "0.25", default-features = false, features = ["png", "jpeg"]
 tempfile = "3"
 base64 = "0.22"
 image = { version = "0.25", default-features = false, features = ["png"] }
-
-[[bin]]
-name = "pdfxml"
-path = "src/main.rs"

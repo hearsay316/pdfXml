@@ -73,14 +73,36 @@ XFDF (XML Forms Data Format) 是 Adobe 定义的一种 XML 格式，用于独立
 
 ### 安装
 
+#### 从源码构建 CLI
+
 ```bash
 # 克隆项目
-git clone https://github.com/your-repo/pdfxml.git
-cd pdfxml
+git clone https://github.com/hearsay316/pdfXml.git
+cd pdfXml
 
-# 编译
-cargo build --release
+# 编译 CLI
+cargo build --release -p pdfxml-cli
 ```
+
+#### 通过 Git 直接安装 CLI
+
+```bash
+cargo install --git https://github.com/hearsay316/pdfXml.git --package pdfxml-cli
+```
+
+#### 在 Rust 项目里通过 Git 依赖库
+
+```toml
+[dependencies]
+pdfxml = { git = "https://github.com/hearsay316/pdfXml.git" }
+```
+
+如果你是从仓库源码直接运行 workspace 内的 CLI，可以使用：
+
+```bash
+cargo run -p pdfxml-cli -- --from-pdf -i annotated.pdf -o exported.xfdf
+```
+
 
 ### 使用方法
 
@@ -108,22 +130,27 @@ pdfxml -i input.xfdf -o output.pdf -v
 | `--from-pdf` | | | 从 PDF 导出 XFDF |
 | `--verbose` | `-v` | | 详细输出模式 |
 
+> 当前更推荐通过 Git 安装或 Git 依赖使用本项目。若后续发布到 crates.io，发布顺序将是：先 `pdfxml`，再 `pdfxml-cli`。
+
 ## 📁 项目结构
 
 ```
 pdfxml/
-├── Cargo.toml              # 项目配置和依赖
+├── Cargo.toml              # 根库 crate + workspace 配置
 ├── README.md               # 项目说明
+├── cli/
+│   ├── Cargo.toml          # CLI crate 配置
+│   └── src/
+│       └── main.rs         # CLI 薄壳入口
 ├── src/
-│   ├── lib.rs             # 对外 SDK / library 入口
-│   ├── main.rs            # CLI 薄壳入口
-│   ├── xfdf.rs            # XFDF/XML 解析模块
-│   ├── pdf.rs             # PDF 生成模块
-│   ├── annotation.rs      # 注释数据结构定义
-│   └── error.rs           # 错误类型定义
+│   ├── lib.rs              # 对外 SDK / library 入口
+│   ├── xfdf.rs             # XFDF/XML 解析模块
+│   ├── pdf.rs              # PDF 生成模块
+│   ├── annotation.rs       # 注释数据结构定义
+│   └── error.rs            # 错误类型定义
 ├── examples/
-│   ├── sample.xfdf        # 完整示例文件
-│   └── minimal.xfdf       # 最小示例文件
+│   ├── sample.xfdf         # 完整示例文件
+│   └── minimal.xfdf        # 最小示例文件
 └── tests/
     └── integration_test.rs # 面向公开 API 的集成测试
 ```
@@ -201,16 +228,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ```bash
 # 运行所有测试
-cargo test
+cargo test --workspace
 
 # 显示详细输出
-cargo test -- --nocapture
+cargo test --workspace -- --nocapture
 
-# 仅运行单元测试
-cargo test lib::
+# 仅运行库测试
+cargo test -p pdfxml
 
-# 运行集成测试
-cargo test test::
+# 仅运行 CLI crate 检查/测试
+cargo test -p pdfxml-cli
 ```
 
 ## 📌 图形注释显式 AP 计划

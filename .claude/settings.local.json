@@ -23,7 +23,10 @@
       "Bash(D:/code2026/pdfXml/run_vs_tests.cmd:*)",
       "Bash(\"D:/code2026/pdfXml/run_vs_all_tests.cmd\")",
       "WebFetch(domain:opensource.adobe.com)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(git:*)",
+      "Bash(call \"C:/Program Files/Microsoft Visual Studio/18/Insiders/Common7/Tools/VsDevCmd.bat\" -arch=x64 -host_arch=x64)",
+      "Bash(D:/code2026/pdfXml/run_vs_package.cmd:*)"
     ]
   }
 }

@@ -12,9 +12,9 @@
 ## 1. 这个项目到底在做什么
 [out.pdf](examples/out.pdf)
 很多 PDF 标注工具可以把注释单独导出成 `XFDF` 文件。
-cargo run -- --from-pdf -i examples/out.pdf -o exported.xfdf
+cargo run -p pdfxml-cli -- --from-pdf -i examples/out.pdf -o exported.xfdf
 
-cargo run -- -i exported.xfdf -t examples/WTchbOFP.pdf -o examples/out2.pdf -v
+cargo run -p pdfxml-cli -- -i exported.xfdf -t examples/WTchbOFP.pdf -o examples/out2.pdf -v
 比如：
 - 高亮
 - 便签
@@ -49,6 +49,13 @@ pdfxml -i annotations.xfdf -o output.pdf
 pdfxml --from-pdf -i annotated.pdf -o exported.xfdf
 ```
 
+如果你是从仓库源码直接运行 CLI，则使用：
+
+```bash
+cargo run -p pdfxml-cli -- --from-pdf -i examples/out.pdf -o exported.xfdf
+cargo run -p pdfxml-cli -- -i exported.xfdf -t examples/WTchbOFP.pdf -o examples/out2.pdf -v
+```
+
 ### SDK 用法
 
 适合你想在自己的 Rust 程序里调用：
@@ -56,6 +63,15 @@ pdfxml --from-pdf -i annotated.pdf -o exported.xfdf
 ```rust
 use pdfxml::{load_xfdf, export_annotations};
 ```
+
+如果你是直接从 Git 仓库接入库，可以在自己的 `Cargo.toml` 里这样写：
+
+```toml
+[dependencies]
+pdfxml = { git = "https://github.com/hearsay316/pdfXml.git" }
+```
+
+如果后续发布到 crates.io，再改成版本依赖即可。
 
 比如你的系统里已经有：
 - 文件上传流程
@@ -72,13 +88,17 @@ use pdfxml::{load_xfdf, export_annotations};
 现在项目大致可以这样理解：
 
 ```text
+Cargo.toml           # 根库 crate + workspace 入口
+cli/
+├── Cargo.toml       # CLI crate 配置
+└── src/
+    └── main.rs      # 命令行入口（很薄，只负责接参数和调用库）
 src/
-├── lib.rs         # 对外暴露的 SDK 入口
-├── main.rs        # 命令行入口（很薄，只负责接参数和调用库）
-├── xfdf.rs        # 解析 XFDF/XML，并可重新序列化为 XFDF
-├── pdf.rs         # 生成 PDF / 从 PDF 读取注释
-├── annotation.rs  # 注释的数据结构定义
-└── error.rs       # 错误类型
+├── lib.rs           # 对外暴露的 SDK 入口
+├── xfdf.rs          # 解析 XFDF/XML，并可重新序列化为 XFDF
+├── pdf.rs           # 生成 PDF / 从 PDF 读取注释
+├── annotation.rs    # 注释的数据结构定义
+└── error.rs         # 错误类型
 ```
 
 ### `src/lib.rs`
@@ -91,7 +111,7 @@ src/
 use pdfxml::{XfdfDocument, PdfAnnotationExporter};
 ```
 
-### `src/main.rs`
+### `cli/src/main.rs`
 
 这是命令行入口。
 

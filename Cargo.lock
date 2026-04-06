@@ -716,11 +716,8 @@ checksum = "384b8ab6d37215f3c5301a95a4accb5d64aa607f1fcb26a11b5303878451b4fe"
 name = "pdfxml"
 version = "0.1.0"
 dependencies = [
- "anyhow",
  "base64",
  "chrono",
- "clap",
- "env_logger",
  "image",
  "log",
  "lopdf",
@@ -730,6 +727,17 @@ dependencies = [
  "tempfile",
  "thiserror",
  "ttf-parser",
+]
+
+[[package]]
+name = "pdfxml-cli"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "env_logger",
+ "log",
+ "pdfxml",
 ]
 
 [[package]]
