@@ -15,7 +15,19 @@ use pdfxml::{
     load_annotations_from_pdf,
     load_xfdf,
 };
-use std::path::PathBuf;
+use std::env;
+use std::path::{Path, PathBuf};
+
+#[cfg(windows)]
+fn enable_utf8_console() {
+    unsafe {
+        windows_sys::Win32::System::Console::SetConsoleCP(65001);
+        windows_sys::Win32::System::Console::SetConsoleOutputCP(65001);
+    }
+}
+
+#[cfg(not(windows))]
+fn enable_utf8_console() {}
 
 /// 命令行参数定义。
 ///
@@ -49,7 +61,56 @@ struct Args {
     verbose: bool,
 }
 
+fn resolve_existing_path(path: &Path) -> Option<PathBuf> {
+    if path.exists() {
+        return Some(path.to_path_buf());
+    }
+
+    if path.is_absolute() {
+        return None;
+    }
+
+    let cwd = env::current_dir().ok()?;
+    let direct = cwd.join(path);
+    if direct.exists() {
+        return Some(direct);
+    }
+
+    let parent = cwd.parent()?.join(path);
+    if parent.exists() {
+        return Some(parent);
+    }
+
+    None
+}
+
+fn resolve_output_path(path: &Path) -> PathBuf {
+    if path.is_absolute() {
+        return path.to_path_buf();
+    }
+
+    let cwd = match env::current_dir() {
+        Ok(dir) => dir,
+        Err(_) => return path.to_path_buf(),
+    };
+
+    let direct_parent = cwd.join(path).parent().map(|p| p.to_path_buf());
+    if direct_parent.as_ref().is_some_and(|p| p.exists()) {
+        return cwd.join(path);
+    }
+
+    if let Some(parent_dir) = cwd.parent() {
+        let parent_based = parent_dir.join(path);
+        if parent_based.parent().is_some_and(|p| p.exists()) {
+            return parent_based;
+        }
+    }
+
+    cwd.join(path)
+}
+
 fn main() -> Result<()> {
+    enable_utf8_console();
     let args = Args::parse();
 
     // `--verbose` 打开后，日志会更详细，适合排查问题。
@@ -64,32 +125,31 @@ fn main() -> Result<()> {
             .init();
     }
 
-    if !args.input.exists() {
-        return Err(anyhow::anyhow!("输入文件不存在: {:?}", args.input));
-    }
+    let input_path = resolve_existing_path(&args.input)
+        .ok_or_else(|| anyhow::anyhow!("输入文件不存在: {:?}（当前目录: {}）", args.input, env::current_dir().map(|p| p.display().to_string()).unwrap_or_else(|_| "<unknown>".to_string())))?;
+
+    let output_path = match &args.output {
+        Some(path) => resolve_output_path(path),
+        None => {
+            let mut default_output = input_path.clone();
+            default_output.set_extension(if args.from_pdf { "xfdf" } else { "pdf" });
+            default_output
+        }
+    };
 
     // 如果 `from_pdf = true`，表示方向反过来：
     // 不是 “XFDF -> PDF”，而是 “PDF -> XFDF”。
     if args.from_pdf {
-        info!("开始从 PDF 导出 XFDF: {:?}", args.input);
+        info!("开始从 PDF 导出 XFDF: {:?}", input_path);
 
-        let output_path = match &args.output {
-            Some(path) => path.clone(),
-            None => {
-                let mut default_output = args.input.clone();
-                default_output.set_extension("xfdf");
-                default_output
-            }
-        };
-
-        let xfdf_doc = load_annotations_from_pdf(&args.input)?;
+        let xfdf_doc = load_annotations_from_pdf(&input_path)?;
         info!("读取完成，发现 {} 条注释", xfdf_doc.annotations.len());
 
         if xfdf_doc.annotations.is_empty() {
             warn!("警告：未找到任何注释");
         }
 
-        export_pdf_annotations_to_xfdf(&args.input, &output_path)?;
+        export_pdf_annotations_to_xfdf(&input_path, &output_path)?;
 
         info!("导出成功，输出文件: {:?}", output_path);
         println!("XFDF 已成功导出到: {}", output_path.display());
@@ -99,18 +159,9 @@ fn main() -> Result<()> {
     }
 
     // 走到这里，就表示当前方向是 “XFDF -> PDF”。
-    info!("开始处理 XFDF 文件: {:?}", args.input);
+    info!("开始处理 XFDF 文件: {:?}", input_path);
 
-    let output_path = match &args.output {
-        Some(path) => path.clone(),
-        None => {
-            let mut default_output = args.input.clone();
-            default_output.set_extension("pdf");
-            default_output
-        }
-    };
-
-    let xfdf_doc = load_xfdf(&args.input)?;
+    let xfdf_doc = load_xfdf(&input_path)?;
     info!("解析完成，发现 {} 条注释", xfdf_doc.annotations.len());
 
     if xfdf_doc.annotations.is_empty() {
@@ -119,16 +170,29 @@ fn main() -> Result<()> {
 
     // 如果给了 `target_pdf`，就把注释合并进已有 PDF。
     // 如果没给，就新建一个 PDF 来放这些注释。
-    if let Some(target_path) = &args.target_pdf {
-        if !target_path.exists() {
-            return Err(anyhow::anyhow!("目标 PDF 文件不存在: {:?}", target_path));
-        }
+    let resolved_target_pdf = args
+        .target_pdf
+        .as_ref()
+        .map(|path| {
+            resolve_existing_path(path).ok_or_else(|| {
+                anyhow::anyhow!(
+                    "目标 PDF 文件不存在: {:?}（当前目录: {}）",
+                    path,
+                    env::current_dir()
+                        .map(|p| p.display().to_string())
+                        .unwrap_or_else(|_| "<unknown>".to_string())
+                )
+            })
+        })
+        .transpose()?;
+
+    if let Some(target_path) = &resolved_target_pdf {
         info!("将注释合并到现有 PDF: {:?}", target_path);
     } else {
         info!("创建新的 PDF 文件: {:?}", output_path);
     }
 
-    export_annotations(&xfdf_doc, args.target_pdf.as_ref(), &output_path)?;
+    export_annotations(&xfdf_doc, resolved_target_pdf.as_ref(), &output_path)?;
 
     info!("导出成功，输出文件: {:?}", output_path);
     println!("注释已成功导出到: {}", output_path.display());

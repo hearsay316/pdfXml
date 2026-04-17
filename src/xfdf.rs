@@ -32,19 +32,36 @@ use std::collections::HashMap;
 
 fn extract_plain_text_from_richtext(input: &str) -> String {
     // 有些 XFDF 会把内容放在富文本里，里面带 HTML 标签。
-    // 这里先做一个“够用”的清洗：去标签、还原常见实体、压缩空白。
-    let no_tags = regex::Regex::new(r"<[^>]+>")
+    // 这里尽量保留换行/段落语义，再做基础实体解码。
+    let normalized_breaks = regex::Regex::new(r"(?is)<\s*br\s*/?\s*>")
         .unwrap()
-        .replace_all(input, " ")
+        .replace_all(input, "\n")
+        .to_string();
+    let normalized_blocks = regex::Regex::new(r"(?is)</\s*(p|div|li|tr|h[1-6])\s*>")
+        .unwrap()
+        .replace_all(&normalized_breaks, "\n")
+        .to_string();
+    let no_tags = regex::Regex::new(r"(?is)<[^>]+>")
+        .unwrap()
+        .replace_all(&normalized_blocks, "")
         .to_string();
     let decoded = no_tags
         .replace("&nbsp;", " ")
+        .replace("&#160;", " ")
         .replace("&lt;", "<")
         .replace("&gt;", ">")
         .replace("&amp;", "&")
         .replace("&quot;", "\"")
-        .replace("&#39;", "'");
-    decoded.split_whitespace().collect::<Vec<_>>().join(" ")
+        .replace("&#34;", "\"")
+        .replace("&#39;", "'")
+        .replace("&apos;", "'");
+
+    decoded
+        .lines()
+        .map(|line| line.split_whitespace().collect::<Vec<_>>().join(" "))
+        .filter(|line| !line.is_empty())
+        .collect::<Vec<_>>()
+        .join("\n")
 }
 
 /// XFDF 文档
@@ -917,5 +934,12 @@ mod tests {
         assert!(xml.contains("<xfdf xmlns=\"http://ns.adobe.com/xfdf/\" xml:space=\"preserve\">"));
         assert!(xml.contains("<annots>"));
         assert!(xml.contains("<text name=\"annot-1\" page=\"0\" rect=\"100,600,300,650\" title=\"Author\" subject=\"Test Comment\" date=\"D:20240101120000\" color=\"#FFFF00\">Hello &lt;XFDF&gt; &amp; PDF</text>"));
+    }
+
+    #[test]
+    fn test_extract_plain_text_from_richtext_preserves_line_breaks() {
+        let rich = "<body><p>Hello&nbsp;world</p><div>Second<br/>line &amp; more</div></body>";
+        let text = extract_plain_text_from_richtext(rich);
+        assert_eq!(text, "Hello world\nSecond\nline & more");
     }
 }

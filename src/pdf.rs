@@ -208,14 +208,22 @@ fn normalize_base_font_name(font_resource: &str) -> String {
 
 fn parse_alignment_from_style(style: Option<&str>) -> i32 {
     let Some(style) = style else { return 0; };
-    let lower = style.to_ascii_lowercase();
-    if lower.contains("text-align:center") {
-        1
-    } else if lower.contains("text-align:right") {
-        2
-    } else {
-        0
+
+    for segment in style.split(';') {
+        let mut parts = segment.splitn(2, ':');
+        let property = parts.next().map(|s| s.trim().to_ascii_lowercase());
+        let value = parts.next().map(|s| s.trim().to_ascii_lowercase());
+
+        if property.as_deref() == Some("text-align") {
+            return match value.as_deref() {
+                Some("center") => 1,
+                Some("right") => 2,
+                _ => 0,
+            };
+        }
     }
+
+    0
 }
 
 #[derive(Debug, Clone)]
@@ -337,37 +345,84 @@ impl PdfAnnotationExporter {
     }
 
     fn candidate_chinese_font_paths() -> Vec<PathBuf> {
-        // 按顺序尝试几个常见中文字体。
-        // 这里只是“候选列表”，真正能不能用还要看文件是否存在。
-        vec![
+        // 先尊重外部显式指定的字体路径，再回退到各平台常见位置。
+        let mut paths = Vec::new();
+
+        if let Ok(path) = std::env::var("PDFXML_CJK_FONT") {
+            let trimmed = path.trim();
+            if !trimmed.is_empty() {
+                paths.push(PathBuf::from(trimmed));
+            }
+        }
+
+        paths.extend([
             PathBuf::from("C:/Windows/Fonts/simsun.ttc"),
             PathBuf::from("C:/Windows/Fonts/msyh.ttc"),
             PathBuf::from("C:/Windows/Fonts/simhei.ttf"),
             PathBuf::from("C:/Windows/Fonts/simkai.ttf"),
             PathBuf::from("C:/Windows/Fonts/simsunb.ttf"),
-        ]
+            PathBuf::from("/System/Library/Fonts/PingFang.ttc"),
+            PathBuf::from("/System/Library/Fonts/Hiragino Sans GB.ttc"),
+            PathBuf::from("/System/Library/Fonts/STHeiti Light.ttc"),
+            PathBuf::from("/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc"),
+            PathBuf::from("/usr/share/fonts/opentype/noto/NotoSerifCJK-Regular.ttc"),
+            PathBuf::from("/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc"),
+            PathBuf::from("/usr/share/fonts/truetype/wqy/wqy-zenhei.ttf"),
+            PathBuf::from("/usr/share/fonts/truetype/arphic/ukai.ttc"),
+            PathBuf::from("/usr/share/fonts/truetype/arphic/uming.ttc"),
+        ]);
+
+        paths
     }
 
-    fn load_chinese_font_bytes() -> Result<Vec<u8>> {
+    fn load_chinese_font_bytes() -> Result<(PathBuf, Vec<u8>)> {
         // 找到第一份可用中文字体后就直接读取。
         // 后面的中文 FreeText 外观流会拿它的字形轮廓来画字。
         for path in Self::candidate_chinese_font_paths() {
             if path.exists() {
                 info!("使用中文字体轮廓: {:?}", path);
-                return fs::read(&path)
-                    .map_err(|e| PdfXmlError::PdfProcessing(format!("读取字体失败 {:?}: {}", path, e)));
+                let bytes = fs::read(&path)
+                    .map_err(|e| PdfXmlError::PdfProcessing(format!("读取字体失败 {:?}: {}", path, e)))?;
+                return Ok((path, bytes));
             }
         }
-        Err(PdfXmlError::PdfProcessing("未找到可用的中文字体文件".to_string()))
+        Err(PdfXmlError::PdfProcessing(
+            "未找到可用的中文字体文件；可通过环境变量 PDFXML_CJK_FONT 指定字体路径".to_string(),
+        ))
     }
 
-    fn load_chinese_face() -> Result<Face<'static>> {
-        // 把字体字节解析成 ttf-parser 能理解的 Face 对象。
-        // 后面可以通过它拿到每个字的轮廓。
-        let bytes = Self::load_chinese_font_bytes()?;
-        let leaked: &'static [u8] = Box::leak(bytes.into_boxed_slice());
-        Face::parse(leaked, 0)
-            .map_err(|e| PdfXmlError::PdfProcessing(format!("解析中文字体失败: {}", e)))
+    fn parse_chinese_face<'a>(font_path: &Path, bytes: &'a [u8]) -> Result<Face<'a>> {
+        // TTC/OTC 这类集合字体不能假设目标字库永远在 face 0。
+        // 这里会依次尝试多个索引，提高跨平台兼容性。
+        let max_faces = if font_path
+            .extension()
+            .and_then(|ext| ext.to_str())
+            .map(|ext| matches!(ext.to_ascii_lowercase().as_str(), "ttc" | "otc"))
+            .unwrap_or(false)
+        {
+            8
+        } else {
+            1
+        };
+
+        let mut last_error = None;
+        for index in 0..max_faces {
+            match Face::parse(bytes, index) {
+                Ok(face) => return Ok(face),
+                Err(err) => last_error = Some((index, err)),
+            }
+        }
+
+        match last_error {
+            Some((index, err)) => Err(PdfXmlError::PdfProcessing(format!(
+                "解析中文字体失败 {:?} (face index {}): {}",
+                font_path, index, err
+            ))),
+            None => Err(PdfXmlError::PdfProcessing(format!(
+                "解析中文字体失败 {:?}",
+                font_path
+            ))),
+        }
     }
 
     fn build_freetext_render_spec(annotation: &FreeTextAnnotation) -> Option<FreeTextRenderSpec> {
@@ -609,7 +664,8 @@ impl PdfAnnotationExporter {
     fn build_cjk_ap_stream(spec: &FreeTextRenderSpec, rect: Option<&Rect>) -> Result<lopdf::Object> {
         // 中文这条路不能简单依赖 Helvetica 直接写字，
         // 所以这里改成“拿到字体字形轮廓，然后把每个字真正画出来”。
-        let face = Self::load_chinese_face()?;
+        let (font_path, font_bytes) = Self::load_chinese_font_bytes()?;
+        let face = Self::parse_chinese_face(&font_path, &font_bytes)?;
         let font_size = parse_font_size_from_da(&spec.da);
         let (width, height) = if let Some(rect) = rect {
             (
@@ -2293,6 +2349,13 @@ mod tests {
     #[test]
     fn test_escape_pdf_literal_string() {
         assert_eq!(escape_pdf_literal_string("(a)\\b"), "\\(a\\)\\\\b");
+    }
+
+    #[test]
+    fn test_parse_alignment_from_style_with_spaces() {
+        assert_eq!(parse_alignment_from_style(Some("font:12px; text-align: center; color:#000")), 1);
+        assert_eq!(parse_alignment_from_style(Some("text-align : right")), 2);
+        assert_eq!(parse_alignment_from_style(Some("font-weight:bold")), 0);
     }
 
     #[test]
