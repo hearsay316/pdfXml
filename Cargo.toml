@@ -12,16 +12,13 @@ keywords = ["pdf", "xfdf", "annotation"]
 categories = ["parser-implementations"]
 include = [
     "Cargo.toml",
-    "Cargo.lock",
     "README.md",
     "SDK_GUIDE.md",
     "ANNOTATION_SUPPORT.md",
     "src/**/*.rs",
     "tests/**/*.rs",
     "examples/**/*.xfdf",
-    "examples/**/*.xml",
-    "examples/**/*.pdf",
-    ".cargo/config.toml"
+    "examples/**/*.xml"
 ]
 
 [workspace]
