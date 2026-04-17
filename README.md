@@ -1,204 +1,43 @@
-# pdfxml - PDF XML 注释导出工具
+# pdfxml
 
-[![Rust](https://img.shields.io/badge/Rust-1.75+-orange?logo=rust)](https://www.rust-lang.org/)
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[English](#english) | [中文](#中文)
 
-将 XFDF/XML 格式的 PDF 注释导出为 PDF 文件的 Rust 工具，也可以作为 Rust SDK / library 直接调用。
+---
 
-## ✨ 功能特性
+## 中文
 
-- 📝 **支持 XFDF/XML 批注解析与转换**：当前覆盖大部分常见批注类型，详细范围见 [ANNOTATION_SUPPORT.md](ANNOTATION_SUPPORT.md)
-- 🎨 **多种注释类型**：
-  - 文本注释（Text/便签）
-  - 高亮（Highlight）、下划线（Underline）、删除线（StrikeOut）
-  - 自由文本（FreeText）
-  - 方形（Square）、圆形（Circle）
-  - 线条（Line）、多边形（Polygon）
-  - 墨迹/手绘（Ink）
-  - 图章（Stamp）
-  - 弹出窗口（Popup）
-  
-- 🔧 **两种导出模式**：
-  1. 创建新 PDF：仅包含注释信息
-  2. 合并到现有 PDF：将注释添加到已有文档
+`pdfxml` 是一个 **Rust 库 crate**，用于在 XFDF/XML 与 PDF 注释之间进行转换。
 
-- ⚡ **高性能**：纯 Rust 实现，内存安全，速度快
-- 📋 **批注支持清单**：详见 [ANNOTATION_SUPPORT.md](ANNOTATION_SUPPORT.md)
+注意：
+- `pdfxml` **只提供库能力，不提供 CLI 可执行程序**
+- 命令行工具请安装 **`pdfxml-cli`**
 
-## 📖 XFDF 格式简介
+### 功能概览
 
-XFDF (XML Forms Data Format) 是 Adobe 定义的一种 XML 格式，用于独立存储 PDF 文档中的表单数据和注释。它是 FDF 的 XML 版本。
-
-### 基本结构示例
-
-```xml
-<?xml version="1.0" encoding="UTF-8" ?>
-<xfdf xmlns="http://ns.adobe.com/xfdf/" xml:space="preserve">
-  <annots>
-    <text subject="注释标题"
-          page="0"
-          rect="100,700,300,750"
-          title="作者名称"
-          date="D:20240101120000+08'00'"
-          color="#FFFF00">
-      注释内容...
-    </text>
-  </annots>
-</xfdf>
-```
-
-### 支持的注释类型
-
-| XML 元素 | PDF 子类型 | 说明 |
-|---------|-----------|------|
-| `<text>` | Text | 文本便签 |
-| `<highlight>` | Highlight | 高亮文本 |
-| `<underline>` | Underline | 下划线 |
-| `<strikeout>` | StrikeOut | 删除线 |
-| `<freetext>` | FreeText | 自由文本框 |
-| `<square>` | Square | 矩形标记 |
-| `<circle>` | Circle | 圆形/椭圆标记 |
-| `<line>` | Line | 箭头/线条 |
-| `<polygon>` | Polygon | 多边形区域 |
-| `<ink>` | Ink | 手绘墨迹 |
-| `<stamp>` | Stamp | 预设图章 |
-
-## 📖 文档导航
-
-- 想直接在终端使用：看下面的 **快速开始**
-- 想把它当 Rust 库调用：看 [SDK_GUIDE.md](SDK_GUIDE.md)
-- 想快速理解公开 API：优先看 `src/lib.rs`
-
-## 🚀 快速开始
+- 解析 XFDF/XML 注释
+- 将 XFDF/XML 注释导出到新 PDF
+- 将 XFDF/XML 注释合并到现有 PDF
+- 从 PDF 中提取注释并导出为 XFDF
+- 支持常见注释类型：Text、Highlight、Underline、StrikeOut、FreeText、Square、Circle、Line、Polygon、Ink、Stamp、Popup
 
 ### 安装
 
-#### 从源码构建 CLI
-
-```bash
-# 克隆项目
-git clone https://github.com/hearsay316/pdfXml.git
-cd pdfXml
-
-# 编译 CLI
-cargo build --release -p pdfxml-cli
-```
-
-#### 通过 Git 直接安装 CLI
-
-```bash
-cargo install --git https://github.com/hearsay316/pdfXml.git --package pdfxml-cli
-```
-
-#### 在 Rust 项目里通过 Git 依赖库
+#### 作为库使用
 
 ```toml
 [dependencies]
-pdfxml = { git = "https://github.com/hearsay316/pdfXml.git" }
+pdfxml = "0.1.1"
 ```
 
-如果你是从仓库源码直接运行 workspace 内的 CLI，可以使用：
+#### 安装 CLI
 
 ```bash
-cargo run -p pdfxml-cli -- --from-pdf -i annotated.pdf -o exported.xfdf
+cargo install pdfxml-cli
 ```
 
+### 库示例
 
-### 使用方法
-
-```bash
-# 基本用法：创建新 PDF
-pdfxml -i input.xfdf -o output.pdf
-
-# 指定目标 PDF（合并注释到现有文档）
-pdfxml -i annotations.xfdf --target-pdf original.pdf -o annotated.pdf
-
-# 从 PDF 导出标准 XFDF
-pdfxml --from-pdf -i annotated.pdf -o exported.xfdf
-
-# 详细输出模式
-pdfxml -i input.xfdf -o output.pdf -v
-```
-
-### 命令行参数
-
-| 参数 | 缩写 | 必填 | 说明 |
-|-----|------|------|------|
-| `--input` | `-i` | ✓ | 输入文件路径（XFDF 或 PDF） |
-| `--output` | `-o` | | 输出文件路径 |
-| `--target-pdf` | `-t` | | 目标 PDF 文件路径（仅 XFDF -> PDF 时可选） |
-| `--from-pdf` | | | 从 PDF 导出 XFDF |
-| `--verbose` | `-v` | | 详细输出模式 |
-
-> 当前更推荐通过 Git 安装或 Git 依赖使用本项目。若后续发布到 crates.io，发布顺序将是：先 `pdfxml`，再 `pdfxml-cli`。
-
-## 📁 项目结构
-
-```
-pdfxml/
-├── Cargo.toml              # 根库 crate + workspace 配置
-├── README.md               # 项目说明
-├── cli/
-│   ├── Cargo.toml          # CLI crate 配置
-│   └── src/
-│       └── main.rs         # CLI 薄壳入口
-├── src/
-│   ├── lib.rs              # 对外 SDK / library 入口
-│   ├── xfdf.rs             # XFDF/XML 解析模块
-│   ├── pdf.rs              # PDF 生成模块
-│   ├── annotation.rs       # 注释数据结构定义
-│   └── error.rs            # 错误类型定义
-├── examples/
-│   ├── sample.xfdf         # 完整示例文件
-│   └── minimal.xfdf        # 最小示例文件
-└── tests/
-    └── integration_test.rs # 面向公开 API 的集成测试
-```
-
-## 💡 使用示例
-
-### 示例 1：从 XFDF 创建新 PDF
-
-```bash
-pdfxml -i examples/sample.xfdf -o output/sample.pdf
-```
-
-### 示例 2：合并注释到现有 PDF
-
-假设你有一个 PDF 和一个包含注释的 XFDF 文件：
-
-```bash
-pdfxml -i comments.xfdf --target-pdf document.pdf -o annotated_document.pdf
-```
-
-### 示例 3：从 PDF 导出 XFDF
-
-```bash
-pdfxml --from-pdf -i annotated_document.pdf -o exported_annotations.xfdf
-```
-
-### 示例 4：在代码中作为库调用
-
-```rust
-use pdfxml::{PdfAnnotationExporter, XfdfDocument};
-use std::path::Path;
-
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let xfdf = std::fs::read_to_string("annotations.xfdf")?;
-    let doc = XfdfDocument::parse(&xfdf)?;
-
-    let mut exporter = PdfAnnotationExporter::new();
-    exporter.export_to_existing_pdf(
-        &doc,
-        Path::new("original.pdf"),
-        Path::new("annotated.pdf"),
-    )?;
-
-    Ok(())
-}
-```
-
-### 示例 5：使用顶层 SDK 包装函数
+#### XFDF -> PDF
 
 ```rust
 use pdfxml::{export_annotations, load_xfdf};
@@ -210,7 +49,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
-### 示例 6：从 PDF 读取注释并转回 XFDF
+#### PDF -> XFDF
 
 ```rust
 use pdfxml::{export_pdf_annotations_to_xfdf, load_annotations_from_pdf};
@@ -218,127 +57,131 @@ use pdfxml::{export_pdf_annotations_to_xfdf, load_annotations_from_pdf};
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let doc = load_annotations_from_pdf("annotated.pdf")?;
     println!("注释数量: {}", doc.annotations.len());
-
     export_pdf_annotations_to_xfdf("annotated.pdf", "annotated.xfdf")?;
     Ok(())
 }
 ```
 
-## 🧪 运行测试
+### 文档
+
+- API 文档（docs.rs）：<https://docs.rs/pdfxml>
+- SDK 文档：`SDK_GUIDE.md`
+- 注释支持范围：`ANNOTATION_SUPPORT.md`
+- CLI 文档：`cli/README.md`
+
+### 开发与测试
 
 ```bash
-# 运行所有测试
 cargo test --workspace
-
-# 显示详细输出
-cargo test --workspace -- --nocapture
-
-# 仅运行库测试
-cargo test -p pdfxml
-
-# 仅运行 CLI crate 检查/测试
-cargo test -p pdfxml-cli
 ```
 
-## 📌 图形注释显式 AP 计划
+### 中文 FreeText 字体
 
-目前 `square` 已经补了显式外观流（AP, Appearance Stream），也就是不仅写入“这是一个矩形注释”的属性，还会把矩形本身直接画进 PDF。这样做的效果是：
+当导出包含中文的 FreeText 注释时，程序会尝试从系统中寻找可用 CJK 字体。
+如需显式指定字体，可设置环境变量：
 
-- 不同阅读器显示更一致
-- 降低“对象存在但看不见”的概率
-- 导出的结果更接近标注软件原始效果
-
-下一步计划把同样的方式扩展到这些图形注释：
-
-- `circle`
-- `line`
-- `polygon`
-- `polyline`
-
-通俗理解：
-
-- 现在很多图形注释只是告诉阅读器“这里有个圆/线/多边形，请你自己画”
-- 显式 AP 是把“已经画好的外观”直接放进 PDF，让阅读器直接显示
-
-### 计划中的预期行为
-
-- `circle`：生成显式 AP，稳定显示圆形/椭圆边框，保留线宽、边框色、填充色
-- `line`：生成显式 AP，稳定显示线段，后续可继续细化端点样式（箭头等）
-- `polygon`：生成显式 AP，按顶点绘制封闭多边形
-- `polyline`：生成显式 AP，按顶点绘制非封闭折线
-
-### 当前状态
-
-这一轮先不改实现，只先补：
-
-1. 文档说明
-2. 测试用例骨架
-
-等你先提交当前这版代码后，再继续改 `circle / line / polygon / polyline` 的显式 AP 实现。
-
-## 🛠️ 技术实现
-
-### 核心依赖库
-
-| 库 | 用途 | 版本 |
-|---|------|------|
-| [quick-xml](https://github.com/tafia/quick-xml) | 高性能 XML 解析 | ^0.36 |
-| [lopdf](https://github.com/J-F-Liu/lopdf) | PDF 生成和操作 | ^0.35 |
-| [clap](https://github.com/clap-rs/clap) | 命令行参数解析 | ^4.5 |
-| [chrono](https://docs.rs/chrono) | 日期时间处理 | ^0.4 |
-
-### 架构设计
-
-```
-XFDF/XML 文件
-     │
-     ▼
-┌─────────────┐    ┌─────────────────┐
-│  xfdf.rs     │───▶│ annotation.rs   │
-│  XML 解析器  │    │  数据结构定义    │
-└─────────────┘    └─────────────────┘
-                          │
-                          ▼
-                   ┌─────────────┐
-                   │  pdf.rs      │
-                   │  PDF 生成器   │
-                   └─────────────┘
-                          │
-                          ▼
-                    PDF 文件输出
+```bash
+PDFXML_CJK_FONT=/path/to/font.ttf
 ```
 
-## 📋 待办功能
+### 许可证
 
-- [ ] 支持 FDF（非 XML）格式
-- [ ] 支持富文本内容（HTML/XHTML）
-- [ ] 支持附件注释
-- [ ] 支持声音注释
-- [ ] 支持链接注释
-- [ ] 支持表单字段填充
-- [ ] GUI 界面
-- [ ] WebAssembly 编译支持
+本项目采用 MIT 许可证。详情见仓库中的 `LICENSE` 文件。
 
-## 🤝 贡献
-
-欢迎提交 Issue 和 Pull Request！
-
-1. Fork 本仓库
-2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 开启 Pull Request
-
-## 📄 许可证
-
-本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情。
-
-## 🙏 致谢
+### 致谢
 
 - Adobe XFDF 规范
-- lopdf 库的维护者
+- `lopdf`、`quick-xml`、`ttf-parser` 等 Rust 生态项目
 - Rust 社区
 
 ---
 
-**Made with ❤️ using Rust**
+## English
+
+`pdfxml` is a **Rust library crate** for converting between XFDF/XML and PDF annotations.
+
+Important:
+- `pdfxml` provides **library APIs only; it does not ship a CLI binary**
+- For command-line usage, install **`pdfxml-cli`**
+
+### Features
+
+- Parse XFDF/XML annotations
+- Export XFDF/XML annotations into a new PDF
+- Merge XFDF/XML annotations into an existing PDF
+- Extract annotations from PDF and export them as XFDF
+- Supports common annotation types: Text, Highlight, Underline, StrikeOut, FreeText, Square, Circle, Line, Polygon, Ink, Stamp, Popup
+
+### Installation
+
+#### Use as a library
+
+```toml
+[dependencies]
+pdfxml = "0.1.1"
+```
+
+#### Install the CLI
+
+```bash
+cargo install pdfxml-cli
+```
+
+### Library examples
+
+#### XFDF -> PDF
+
+```rust
+use pdfxml::{export_annotations, load_xfdf};
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let doc = load_xfdf("annotations.xfdf")?;
+    export_annotations(&doc, Some("original.pdf"), "annotated.pdf")?;
+    Ok(())
+}
+```
+
+#### PDF -> XFDF
+
+```rust
+use pdfxml::{export_pdf_annotations_to_xfdf, load_annotations_from_pdf};
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let doc = load_annotations_from_pdf("annotated.pdf")?;
+    println!("annotation count: {}", doc.annotations.len());
+    export_pdf_annotations_to_xfdf("annotated.pdf", "annotated.xfdf")?;
+    Ok(())
+}
+```
+
+### Documentation
+
+- API docs (docs.rs): <https://docs.rs/pdfxml>
+- SDK guide: `SDK_GUIDE.md`
+- Annotation support matrix: `ANNOTATION_SUPPORT.md`
+- CLI guide: `cli/README.md`
+
+### Development
+
+```bash
+cargo test --workspace
+```
+
+### CJK FreeText fonts
+
+When exporting Chinese or other CJK FreeText annotations, the crate will try to locate a usable system font.
+You can also specify one explicitly:
+
+```bash
+PDFXML_CJK_FONT=/path/to/font.ttf
+```
+
+### License
+
+This project is licensed under the MIT License. See the `LICENSE` file in the repository for details.
+
+### Acknowledgements
+
+- Adobe XFDF specification
+- Rust ecosystem projects such as `lopdf`, `quick-xml`, and `ttf-parser`
+- The Rust community

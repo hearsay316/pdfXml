@@ -1,6 +1,6 @@
 [package]
 name = "pdfxml"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 description = "将 XFDF/XML 注释导出为 PDF 文件或作为 Rust SDK 调用"
 license = "MIT"

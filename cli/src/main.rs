@@ -1,10 +1,21 @@
 //! 这是命令行程序的入口文件。
 //!
-//! 它自己不做复杂的 PDF 或 XML 处理，
-//! 主要负责三件事：
-//! 1. 读取命令行参数
-//! 2. 判断用户想走哪条流程
-//! 3. 调用库里的函数并把结果打印出来
+//! 可以把它理解成一层“很薄的命令行外壳”：
+//! - 负责读终端参数
+//! - 负责判断用户是要做 `XFDF -> PDF`，还是 `PDF -> XFDF`
+//! - 负责调用底层库 `pdfxml` 的公开 API
+//! - 负责把结果、日志、错误打印给用户看
+//!
+//! 它本身不负责真正解析 XFDF，也不负责真正操作 PDF。
+//! 真正干活的是库里的这些能力：
+//! - [`pdfxml::load_xfdf`]
+//! - [`pdfxml::load_annotations_from_pdf`]
+//! - [`pdfxml::export_annotations`]
+//! - [`pdfxml::export_pdf_annotations_to_xfdf`]
+//!
+//! 所以如果你在排查 CLI 问题，可以这样分：
+//! - 参数、路径、输出格式问题：先看这里
+//! - XFDF / PDF 真正处理逻辑：去看库里的 `src/` 模块
 
 use anyhow::Result;
 use clap::Parser;

@@ -1,9 +1,10 @@
 [package]
 name = "pdfxml-cli"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
-description = "pdfxml command-line interface"
+description = "Command-line tool for converting XFDF/PDF annotations"
 license = "MIT"
+readme = "README.md"
 repository = "https://github.com/hearsay316/pdfXml.git"
 homepage = "https://github.com/hearsay316/pdfXml.git"
 documentation = "https://docs.rs/pdfxml-cli"
@@ -11,11 +12,12 @@ keywords = ["pdf", "xfdf", "cli"]
 categories = ["command-line-utilities"]
 include = [
     "Cargo.toml",
+    "README.md",
     "src/**/*.rs"
 ]
 
 [dependencies]
-pdfxml = { path = "..", version = "0.1.0" }
+pdfxml = { path = "..", version = "0.1.1" }
 anyhow = "1.0"
 clap = { version = "4.5", features = ["derive"] }
 log = "0.4"

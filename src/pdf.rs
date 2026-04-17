@@ -1,19 +1,33 @@
-//! 这个文件负责真正和 PDF 打交道。
+//! 这个文件是“真正处理 PDF 的地方”。
 //!
-//! 前面的模块主要是在整理数据：
-//! - `xfdf.rs` 负责把 XFDF 读成 Rust 结构
-//! - `annotation.rs` 负责定义这些结构长什么样
+//! 如果把整个项目想成一条流水线，可以这样理解：
+//! - `annotation.rs` 定义“注释长什么样”
+//! - `xfdf.rs` 负责“把 XFDF/XML 读进来，或再写回去”
+//! - `pdf.rs` 负责“把这些注释真正写进 PDF，或者从 PDF 里读出来”
 //!
-//! 而这里负责的是最后一步：
-//! - 把注释写进 PDF
-//! - 从 PDF 里把注释读回来
-//! - 为某些注释补上外观流，让不同阅读器显示得更稳定
+//! 所以，这个文件做的事情很直接：
+//! 1. 把 Rust 里的注释对象写进 PDF
+//! 2. 从 PDF 里把注释重新读出来
+//! 3. 为一部分注释生成外观流（AP）
 //!
-//! 这个文件比较长，建议按下面顺序阅读：
-//! 1. 先看最前面的字符串、颜色、字体小工具
-//! 2. 再看 FreeText 和各种图形的 AP 外观流怎么生成
-//! 3. 再看“从 PDF 读回注释”的那一段
+//! 这里的“外观流”可以简单理解成：
+//! “不仅告诉 PDF 这是什么注释，还把它该怎么显示也直接画好。”
+//!
+//! 这样做的好处是：
+//! - 不同 PDF 阅读器显示更稳定
+//! - 降低“注释数据写进去了，但看起来没显示”的概率
+//! - FreeText、图形注释在很多场景下更接近标注软件原始效果
+//!
+//! 如果你是第一次看这个文件，建议按下面顺序读：
+//! 1. 先看前面的字符串、颜色、字体这些小工具函数
+//! 2. 再看 FreeText 和图形注释的 AP 外观流生成逻辑
+//! 3. 再看“从 PDF 读取注释”的逻辑
 //! 4. 最后看“导出到新 PDF / 合并到现有 PDF”的主流程
+//!
+//! 如果你只是想会用，而不是研究实现，重点关注这些公开入口：
+//! - [`PdfAnnotationExporter::load_annotations_from_pdf`]
+//! - [`PdfAnnotationExporter::export_to_new_pdf`]
+//! - [`PdfAnnotationExporter::export_to_existing_pdf`]
 
 use base64::Engine;
 use crate::annotation::*;
@@ -311,6 +325,31 @@ impl OutlineBuilder for GlyphPathBuilder {
     }
 }
 
+/// 负责 PDF 注释导入与导出的核心对象。
+///
+/// 它提供三类常见能力：
+/// - 从 PDF 中读取注释
+/// - 把 XFDF 注释导出到新的 PDF
+/// - 把 XFDF 注释合并到现有 PDF
+///
+/// # 示例
+///
+/// ```no_run
+/// use pdfxml::{PdfAnnotationExporter, XfdfDocument};
+///
+/// let doc = XfdfDocument::parse(r#"
+/// <?xml version="1.0" encoding="UTF-8" ?>
+/// <xfdf xmlns="http://ns.adobe.com/xfdf/" xml:space="preserve">
+///   <annots>
+///     <text page="0" rect="100,700,250,730">Hello</text>
+///   </annots>
+/// </xfdf>
+/// "#)?;
+///
+/// let mut exporter = PdfAnnotationExporter::new();
+/// exporter.export_to_new_pdf(&doc, std::path::Path::new("output.pdf"))?;
+/// # Ok::<(), pdfxml::PdfXmlError>(())
+/// ```
 pub struct PdfAnnotationExporter {
     // 默认页面大小。创建“新 PDF”时会用到它。
     // 目前默认值接近 A4（595 x 842 point）。
@@ -328,6 +367,15 @@ impl PdfAnnotationExporter {
     ///
     /// 你可以把它理解成“准备好一个负责写 PDF 的工具对象”。
     /// 后面无论是新建 PDF，还是合并到已有 PDF，都会通过它来完成。
+    ///
+    /// # 示例
+    ///
+    /// ```
+    /// use pdfxml::PdfAnnotationExporter;
+    ///
+    /// let exporter = PdfAnnotationExporter::new();
+    /// let _ = exporter;
+    /// ```
     pub fn new() -> Self {
         Self {
             page_size: (595.0, 842.0),
@@ -338,6 +386,15 @@ impl PdfAnnotationExporter {
     /// 创建一个自定义页面大小的导出器。
     ///
     /// 当你不是用默认页面尺寸时，可以用这个函数覆盖宽高。
+    ///
+    /// # 示例
+    ///
+    /// ```
+    /// use pdfxml::PdfAnnotationExporter;
+    ///
+    /// let exporter = PdfAnnotationExporter::with_page_size(595.0, 842.0);
+    /// let _ = exporter;
+    /// ```
     pub fn with_page_size(width: f64, height: f64) -> Self {
         Self {
             page_size: (width, height),
@@ -1137,6 +1194,18 @@ impl PdfAnnotationExporter {
         Ok(dict)
     }
 
+    /// 从指定 PDF 中读取注释并转换为 [`XfdfDocument`]。
+    ///
+    /// # 示例
+    ///
+    /// ```no_run
+    /// use pdfxml::PdfAnnotationExporter;
+    ///
+    /// let mut exporter = PdfAnnotationExporter::new();
+    /// let doc = exporter.load_annotations_from_pdf(std::path::Path::new("annotated.pdf"))?;
+    /// println!("{}", doc.annotations.len());
+    /// # Ok::<(), pdfxml::PdfXmlError>(())
+    /// ```
     pub fn load_annotations_from_pdf(&mut self, input_path: &Path) -> Result<XfdfDocument> {
         let document = lopdf::Document::load(input_path)
             .map_err(|e| PdfXmlError::PdfProcessing(format!("加载PDF失败: {}", e)))?;
@@ -1752,6 +1821,24 @@ impl PdfAnnotationExporter {
             .join(pair_separator)
     }
 
+    /// 把 XFDF 注释导出到一个新的 PDF 文件。
+    ///
+    /// # 示例
+    ///
+    /// ```no_run
+    /// use pdfxml::{PdfAnnotationExporter, XfdfDocument};
+    ///
+    /// let doc = XfdfDocument::parse(r#"<?xml version="1.0" encoding="UTF-8" ?>
+    /// <xfdf xmlns="http://ns.adobe.com/xfdf/" xml:space="preserve">
+    ///   <annots>
+    ///     <text page="0" rect="100,700,250,730">Hello</text>
+    ///   </annots>
+    /// </xfdf>"#)?;
+    ///
+    /// let mut exporter = PdfAnnotationExporter::new();
+    /// exporter.export_to_new_pdf(&doc, std::path::Path::new("output.pdf"))?;
+    /// # Ok::<(), pdfxml::PdfXmlError>(())
+    /// ```
     pub fn export_to_new_pdf(&mut self, xfdf_doc: &XfdfDocument, output_path: &Path) -> Result<()> {
         // 这种模式下，不依赖外部已有 PDF，
         // 而是直接创建一个新的 PDF，把每一页的注释放进去。
@@ -1867,6 +1954,28 @@ impl PdfAnnotationExporter {
     //
     // 所以它不会像 `export_to_new_pdf` 那样从零开始建整份文档，
     // 而是先打开原 PDF，再决定每一页该追加什么。
+    /// 把 XFDF 注释合并到一个已有 PDF 中。
+    ///
+    /// # 示例
+    ///
+    /// ```no_run
+    /// use pdfxml::{PdfAnnotationExporter, XfdfDocument};
+    ///
+    /// let doc = XfdfDocument::parse(r#"<?xml version="1.0" encoding="UTF-8" ?>
+    /// <xfdf xmlns="http://ns.adobe.com/xfdf/" xml:space="preserve">
+    ///   <annots>
+    ///     <text page="0" rect="100,700,250,730">Hello</text>
+    ///   </annots>
+    /// </xfdf>"#)?;
+    ///
+    /// let mut exporter = PdfAnnotationExporter::new();
+    /// exporter.export_to_existing_pdf(
+    ///     &doc,
+    ///     std::path::Path::new("input.pdf"),
+    ///     std::path::Path::new("annotated.pdf"),
+    /// )?;
+    /// # Ok::<(), pdfxml::PdfXmlError>(())
+    /// ```
     pub fn export_to_existing_pdf(&mut self, xfdf_doc: &XfdfDocument, input_path: &Path, output_path: &Path) -> Result<()> {
         // 这个函数的目标是：
         // “保留原来的 PDF 内容，只把新的注释加进去”。

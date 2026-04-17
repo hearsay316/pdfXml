@@ -1,14 +1,23 @@
-//! 这个文件是整个库对外的统一入口。
+//! 这个文件可以理解成“库的总入口”。
 //!
-//! 别的 Rust 项目如果依赖本库，最先接触到的通常就是这里：
-//! - 这里决定哪些模块要公开
-//! - 这里决定哪些类型和函数要直接暴露给外部使用
-//! - 这里提供最常见的顶层便捷函数
+//! 别的 Rust 项目接入 `pdfxml` 时，最先接触到的通常就是这里。
+//! 因为这里决定了两件事：
+//! - 哪些模块对外公开
+//! - 外部最常用的类型和函数有哪些
 //!
-//! 阅读建议：
-//! 1. 先看下面的 `pub mod ...`，知道项目分成了哪些模块
-//! 2. 再看 `pub use ...`，知道库对外主要提供了什么
-//! 3. 最后看几个顶层函数，了解最常见的调用流程
+//! 如果你只是想会用这个库，不想一下子钻进所有实现细节，
+//! 那直接从这个文件看就够了。
+//!
+//! 你可以把这里当成“对外使用说明 + API 门面”：
+//! - 想读 XFDF：看 [`load_xfdf`]
+//! - 想从 PDF 读注释：看 [`load_annotations_from_pdf`]
+//! - 想把注释导出成 PDF：看 [`export_annotations`]
+//! - 想自己细调导出行为：看 [`PdfAnnotationExporter`]
+//!
+//! 建议阅读顺序：
+//! 1. 先看下面的 `pub mod ...`，知道项目分成哪几块
+//! 2. 再看 `pub use ...`，知道外部能直接拿到哪些 API
+//! 3. 最后看几个顶层函数，理解最常见调用流程
 
 /// 注释数据结构模块。
 ///
@@ -46,6 +55,16 @@ use std::path::Path;
 /// 可以把它理解成“两步合成一步”：
 /// 1. 先把文件内容读出来
 /// 2. 再把读到的 XML 解析成程序能直接使用的数据结构
+///
+/// # 示例
+///
+/// ```no_run
+/// use pdfxml::load_xfdf;
+///
+/// let doc = load_xfdf("examples/sample.xfdf")?;
+/// assert!(!doc.annotations.is_empty());
+/// # Ok::<(), pdfxml::PdfXmlError>(())
+/// ```
 pub fn load_xfdf(path: impl AsRef<Path>) -> Result<XfdfDocument> {
     let content = fs::read_to_string(path)
         .map_err(|e| PdfXmlError::PdfProcessing(format!("读取 XFDF 文件失败: {}", e)))?;
@@ -57,12 +76,31 @@ pub fn load_xfdf(path: impl AsRef<Path>) -> Result<XfdfDocument> {
 /// 这样做的好处是：
 /// - 后面可以继续复用同一套数据结构
 /// - 测试和导出 XFDF 的逻辑也都能继续复用
+///
+/// # 示例
+///
+/// ```no_run
+/// use pdfxml::load_annotations_from_pdf;
+///
+/// let doc = load_annotations_from_pdf("annotated.pdf")?;
+/// println!("{}", doc.annotations.len());
+/// # Ok::<(), pdfxml::PdfXmlError>(())
+/// ```
 pub fn load_annotations_from_pdf(path: impl AsRef<Path>) -> Result<XfdfDocument> {
     let mut exporter = PdfAnnotationExporter::new();
     exporter.load_annotations_from_pdf(path.as_ref())
 }
 
 /// 把 PDF 里的注释直接导出成一个标准 XFDF 文件。
+///
+/// # 示例
+///
+/// ```no_run
+/// use pdfxml::export_pdf_annotations_to_xfdf;
+///
+/// export_pdf_annotations_to_xfdf("annotated.pdf", "exported.xfdf")?;
+/// # Ok::<(), pdfxml::PdfXmlError>(())
+/// ```
 pub fn export_pdf_annotations_to_xfdf(
     input_pdf: impl AsRef<Path>,
     output_xfdf: impl AsRef<Path>,
@@ -82,6 +120,23 @@ pub fn export_pdf_annotations_to_xfdf(
 ///
 /// 这个函数适合直接给 SDK 调用方使用。
 /// 如果你需要更细的控制，也可以直接使用 [`PdfAnnotationExporter`]。
+///
+/// # 示例
+///
+/// ```no_run
+/// use pdfxml::{export_annotations, XfdfDocument};
+///
+/// let doc = XfdfDocument::parse(r#"
+/// <?xml version="1.0" encoding="UTF-8" ?>
+/// <xfdf xmlns="http://ns.adobe.com/xfdf/" xml:space="preserve">
+///   <annots>
+///     <text page="0" rect="100,700,250,730">Hello</text>
+///   </annots>
+/// </xfdf>
+/// "#)?;
+/// export_annotations(&doc, Option::<&str>::None, "output.pdf")?;
+/// # Ok::<(), pdfxml::PdfXmlError>(())
+/// ```
 pub fn export_annotations(
     xfdf_doc: &XfdfDocument,
     target_pdf: Option<impl AsRef<Path>>,

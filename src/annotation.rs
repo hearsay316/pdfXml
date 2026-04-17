@@ -1,13 +1,17 @@
-//! 这个文件专门定义“注释数据长什么样”。
+//! 这个文件只做一件事：定义“注释数据长什么样”。
 //!
-//! 它不负责读取 XML，也不负责写 PDF。
-//! 它的任务很单纯：把项目里会用到的各种注释类型整理成统一的数据结构。
+//! 它不负责读 XML，也不负责写 PDF。
+//! 它负责的是把项目里会用到的注释数据，整理成统一、稳定、可传递的 Rust 结构。
 //!
-//! 你可以把这里理解成一份“数据模型说明书”：
-//! - `Color` 和 `Rect` 是基础小零件
-//! - `AnnotationBase` 是大多数注释都会共用的公共部分
-//! - 各种具体注释类型是在公共部分上再加自己的专属字段
-//! - 最下面的 `Annotation` 则把所有注释统一收口到一个枚举里
+//! 你可以把这里理解成“整套注释模型的说明书”：
+//! - [`Color`] 和 [`Rect`] 是基础零件
+//! - [`AnnotationBase`] 是大多数注释都会共用的公共字段
+//! - 各种具体注释类型是在公共字段基础上，再加自己的专属字段
+//! - 最后的 [`Annotation`] 枚举负责把所有注释统一收口到一个入口
+//!
+//! 如果你要做二次开发，这个文件通常是最值得先看的地方之一，
+//! 因为它决定了：
+//! “一条注释在程序里到底有哪些字段、长什么样、怎么被统一表示。”
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -25,14 +29,15 @@ use std::collections::HashMap;
 
 // ===== 基础小零件：颜色和矩形 =====
 
-/// 注释颜色（RGB）。
-///
-/// PDF 最终使用的是 0.0 ~ 1.0 的浮点数颜色值，
-/// 所以这里会把常见的十六进制颜色转换成内部可用的 RGB。
-#[derive(Debug, Clone, Serialize, Deserialize)]
 /// 颜色，使用 RGB 三个分量表示。
 ///
-/// 在内部会用 0.0 到 1.0 的浮点数保存颜色。
+/// 这个结构体是项目里最基础的小零件之一。
+///
+/// 你可以把它理解成“程序内部统一使用的颜色格式”：
+/// - 外部常见输入可能是 `#FF0000` 这种十六进制字符串
+/// - 进入程序后，会被转换成 `0.0 ~ 1.0` 的 RGB 浮点值
+/// - 后面无论写 XFDF 还是写 PDF，都更容易统一处理
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Color {
     pub r: f32,
     pub g: f32,
@@ -71,14 +76,17 @@ impl Default for Color {
     }
 }
 
-/// 矩形坐标 (x1, y1, x2, y2)。
-///
-/// 很多注释都需要一个外接矩形，告诉 PDF：
-/// “这个注释大概占据页面上的哪一块区域”。
-#[derive(Debug, Clone, Serialize, Deserialize)]
 /// 矩形范围，表示注释大概占据页面上的哪一块区域。
 ///
-/// 四个值分别是：左、下、右、上。
+/// 很多注释都需要一个“边界框”，告诉 PDF：
+/// “这个注释大概在页面上的哪里。”
+///
+/// 这里的四个值分别是：
+/// - `left`：左边界
+/// - `bottom`：下边界
+/// - `right`：右边界
+/// - `top`：上边界
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Rect {
     pub left: f64,
     pub bottom: f64,
@@ -114,26 +122,21 @@ impl Rect {
     }
 }
 
-/// 注释基础属性。
-///
-/// 可以把它理解成“所有注释都共享的公共部分”。
-/// 比如：页码、矩形、标题、内容、颜色、日期等。
-///
-/// 具体到某种注释时，再在这个基础上补自己的专属字段。
-// ===== 所有注释都会共用的大框架 =====
-//
-// `AnnotationBase` 可以理解成“公共部分”。
-// 不管是文本注释、高亮、线条还是图章，
-// 它们大多都会有页码、位置、颜色、内容、日期这些共同字段。
-//
-// 这样做的好处是：
-// 公共字段只定义一次，后面的具体注释类型直接复用。
-#[derive(Debug, Clone, Serialize, Deserialize)]
-// ===== 所有注释都会共用的大框架 =====
-//
-// `AnnotationBase` 可以理解成“公共部分”。
-// 不管是什么注释，通常都会有页码、位置、内容、颜色、日期这些信息。
 /// 所有注释都会共用的基础字段。
+///
+/// 可以把它理解成“注释的公共部分”。
+///
+/// 不管是文本注释、高亮、图章、线条还是 FreeText，
+/// 大多数都会共享这些信息：
+/// - 在第几页
+/// - 大概位于哪里
+/// - 内容是什么
+/// - 颜色是什么
+/// - 作者、时间、透明度这些元数据
+///
+/// 后面的具体注释类型，基本都是：
+/// “先带上一个 `AnnotationBase`，再补自己专属的字段”。
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AnnotationBase {
     /// 唯一标识符
     #[serde(rename = "name", skip_serializing_if = "Option::is_none")]
@@ -186,21 +189,15 @@ pub struct AnnotationBase {
 
 fn default_opacity() -> f32 { 1.0 }
 
-/// 文本注释（便签）。
-///
-/// 这是最常见的“小便签”类型，通常会有一个图标，
-/// 点开后能看到内容。
-// ===== 具体的注释种类 =====
-// 下面这些结构体分别对应一种具体注释。
-// 可以把它们理解成：
-// “先带上公共字段，再加上这类注释自己独有的字段”。
-#[derive(Debug, Clone, Serialize, Deserialize)]
-// ===== 具体的注释种类 =====
-//
-// 下面这些结构体分别对应一种具体注释。
-// 可以把它们理解成：
-// “先带上公共字段，再加上这类注释自己独有的字段”。
 /// 文本注释，也就是常见的小便签注释。
+///
+/// 这是最常见的一类批注：
+/// 页面上通常显示成一个小图标，点开后能看到具体内容。
+///
+/// 它在公共字段基础上，主要再补两类信息：
+/// - 是否默认展开 (`open`)
+/// - 图标长什么样 (`icon_type`)
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TextAnnotation {
     #[serde(flatten)]
     pub base: AnnotationBase,
@@ -269,12 +266,15 @@ pub struct SquigglyAnnotation {
 
 /// 自由文本注释。
 ///
-/// 和 TextAnnotation 不同，FreeText 通常是“直接显示在页面上的文字框”。
-/// 所以它除了内容，还会关心文字外观、对齐方式、字体信息等。
-#[derive(Debug, Clone, Serialize, Deserialize)]
-/// 自由文本注释。
+/// 它和普通便签注释最大的区别是：
+/// 内容通常直接显示在页面上，而不是点开图标后再看。
 ///
-/// 它和普通文本注释不同：内容通常直接显示在页面上。
+/// 所以除了公共字段，它还会关心：
+/// - 文本样式
+/// - 默认外观
+/// - 文字颜色
+/// - 左中右对齐方式
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FreeTextAnnotation {
     #[serde(flatten)]
     pub base: AnnotationBase,
@@ -467,6 +467,12 @@ pub struct PopupAnnotation {
 // - 判断注释类型
 // - 导出到 PDF 或 XFDF
 /// 统一收口的注释总类型。
+///
+/// 当前项目支持的各种注释，最后都会被包进这个枚举里。
+///
+/// 这样外层逻辑就不用到处分别处理十几种结构体，
+/// 而是可以先拿一个统一的 `Annotation`，
+/// 再根据类型做分发。
 pub enum Annotation {
     Text(TextAnnotation),
     Highlight(HighlightAnnotation),

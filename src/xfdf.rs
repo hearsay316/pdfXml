@@ -1,15 +1,18 @@
-//! 这个文件负责把 XFDF/XML 和 Rust 数据结构互相转换。
+//! 这个文件专门负责“XFDF/XML 和 Rust 对象之间来回转换”。
 //!
-//! 如果把项目想成一条流水线：
-//! 1. `xfdf.rs` 负责“读懂 XML”
-//! 2. `annotation.rs` 负责“定义数据长什么样”
-//! 3. `pdf.rs` 负责“把这些数据写进 PDF”
+//! 你可以把它理解成项目里的“翻译层”：
+//! - 一边负责把 XFDF/XML 读成 Rust 结构
+//! - 另一边负责把 Rust 结构再写回 XFDF/XML
 //!
-//! 阅读建议：
-//! 1. 先看 `XfdfDocument`
-//! 2. 再看 `parse`
-//! 3. 最后看 `to_xfdf_string`
-//! 这样最容易看懂“进来是什么，出去又是什么”。
+//! 它不负责真正操作 PDF，那部分在 `pdf.rs`。
+//! 它更像是在做：
+//! “把外部文件格式，变成程序内部好处理的数据；
+//!  再把内部数据重新变回标准交换格式。”
+//!
+//! 如果你第一次看这个文件，建议顺序是：
+//! 1. 先看 [`XfdfDocument`]，知道最终会得到什么对象
+//! 2. 再看 [`XfdfDocument::parse`]，理解 XFDF 是怎么读进来的
+//! 3. 最后看 [`XfdfDocument::to_xfdf_string`]，理解对象是怎么再写回 XML 的
 
 use crate::annotation::*;
 use crate::error::{PdfXmlError, Result};
@@ -105,6 +108,23 @@ impl XfdfDocument {
     // 它们的作用很像便签纸：
     // 先把读到一半的信息记下来，等后面拼完整了再放进最终结果。
     /// 解析 XFDF/XML 字符串，得到统一的文档对象。
+    ///
+    /// # 示例
+    ///
+    /// ```
+    /// use pdfxml::XfdfDocument;
+    ///
+    /// let xml = r#"<?xml version="1.0" encoding="UTF-8" ?>
+    /// <xfdf xmlns="http://ns.adobe.com/xfdf/" xml:space="preserve">
+    ///   <annots>
+    ///     <text page="0" rect="100,700,250,730">Hello</text>
+    ///   </annots>
+    /// </xfdf>"#;
+    ///
+    /// let doc = XfdfDocument::parse(xml)?;
+    /// assert_eq!(doc.annotations.len(), 1);
+    /// # Ok::<(), pdfxml::PdfXmlError>(())
+    /// ```
     pub fn parse(xml_str: &str) -> Result<Self> {
         let mut reader = Reader::from_str(xml_str);
         reader.config_mut().trim_text(true);
@@ -571,11 +591,46 @@ impl XfdfDocument {
     }
 
     /// 获取指定页面上的所有注释。
+    ///
+    /// # 示例
+    ///
+    /// ```
+    /// use pdfxml::XfdfDocument;
+    ///
+    /// let doc = XfdfDocument::parse(r#"<?xml version="1.0" encoding="UTF-8" ?>
+    /// <xfdf xmlns="http://ns.adobe.com/xfdf/" xml:space="preserve">
+    ///   <annots>
+    ///     <text page="0" rect="100,700,250,730">Hello</text>
+    ///     <text page="1" rect="100,650,250,680">World</text>
+    ///   </annots>
+    /// </xfdf>"#)?;
+    ///
+    /// assert_eq!(doc.get_annotations_for_page(0).len(), 1);
+    /// # Ok::<(), pdfxml::PdfXmlError>(())
+    /// ```
     pub fn get_annotations_for_page(&self, page: usize) -> Vec<&Annotation> {
         self.annotations.iter().filter(|a| a.page() == page).collect()
     }
 
     /// 返回文档总页数。
+    ///
+    /// 如果没有任何注释，默认返回 `1`。
+    ///
+    /// # 示例
+    ///
+    /// ```
+    /// use pdfxml::XfdfDocument;
+    ///
+    /// let doc = XfdfDocument::parse(r#"<?xml version="1.0" encoding="UTF-8" ?>
+    /// <xfdf xmlns="http://ns.adobe.com/xfdf/" xml:space="preserve">
+    ///   <annots>
+    ///     <text page="2" rect="100,700,250,730">Hello</text>
+    ///   </annots>
+    /// </xfdf>"#)?;
+    ///
+    /// assert_eq!(doc.total_pages(), 3);
+    /// # Ok::<(), pdfxml::PdfXmlError>(())
+    /// ```
     pub fn total_pages(&self) -> usize {
         self.annotations
             .iter()
@@ -588,6 +643,23 @@ impl XfdfDocument {
     // `parse` 是把 XML 变成 Rust 对象；
     // 这里则是把 Rust 对象重新拼回标准 XFDF 字符串。
     /// 把当前文档重新序列化成 XFDF 字符串。
+    ///
+    /// # 示例
+    ///
+    /// ```
+    /// use pdfxml::XfdfDocument;
+    ///
+    /// let doc = XfdfDocument::parse(r#"<?xml version="1.0" encoding="UTF-8" ?>
+    /// <xfdf xmlns="http://ns.adobe.com/xfdf/" xml:space="preserve">
+    ///   <annots>
+    ///     <text page="0" rect="100,700,250,730">Hello</text>
+    ///   </annots>
+    /// </xfdf>"#)?;
+    ///
+    /// let xml = doc.to_xfdf_string()?;
+    /// assert!(xml.contains("<xfdf"));
+    /// # Ok::<(), pdfxml::PdfXmlError>(())
+    /// ```
     pub fn to_xfdf_string(&self) -> Result<String> {
         // 这个函数和 `parse` 正好相反。
         // `parse` 是把 XML 变成 Rust 对象；
