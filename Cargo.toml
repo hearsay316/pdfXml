@@ -22,7 +22,7 @@ include = [
 ]
 
 [workspace]
-members = [".", "cli"]
+members = [".", "cli", "gui"]
 
 [dependencies]
 # XML 解析
