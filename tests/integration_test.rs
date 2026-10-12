@@ -98,7 +98,8 @@ fn test_round_trip_pdf_to_xfdf() {
 
     let xml = loaded.to_xfdf_string().expect("Failed to serialize xfdf");
     assert!(xml.contains("<xfdf xmlns=\"http://ns.adobe.com/xfdf/\" xml:space=\"preserve\">"));
-    assert!(xml.contains("<text name=\"note-1\" page=\"0\" rect=\"100,700,250,730\" title=\"Alice\" subject=\"Comment 1\" color=\"#FF0000\">First comment</text>"));
+    assert!(xml.contains("<contents>First comment</contents>"));
+    assert!(xml.contains("<text name=\"note-1\" page=\"0\" rect=\"100,700,250,730\" title=\"Alice\" subject=\"Comment 1\" color=\"#FF0000\">"));
     assert!(xml.contains("<square page=\"0\" rect=\"50,600,200,620\" color=\"#FFFF00\" width=\"2\"/>"));
     assert!(xml.contains("<circle page=\"1\" rect=\"100,500,300,550\" color=\"#00FF00\" width=\"3\" interiorcolor=\"#FFCCCC\"/>"));
 }
@@ -215,6 +216,7 @@ fn test_export_to_existing_pdf_appends_missing_pages() {
         fields: Vec::new(),
         annotations: Vec::new(),
         metadata: HashMap::new(),
+        ..XfdfDocument::default()
     };
     let merge_doc = XfdfDocument::parse(
         r##"<?xml version="1.0" encoding="UTF-8" ?>

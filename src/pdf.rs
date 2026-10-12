@@ -42,6 +42,13 @@ use std::io::Cursor;
 use std::path::{Path, PathBuf};
 use ttf_parser::{Face, OutlineBuilder};
 
+mod interactive;
+
+fn pdf_text_string(value: &str) -> lopdf::Object {
+    if value.is_ascii() { lopdf::Object::string_literal(value) }
+    else { lopdf::Object::String(to_utf16be(value), lopdf::StringFormat::Hexadecimal) }
+}
+
 // 这个文件是项目里最“动手干活”的一层。
 // 前面的模块只是把数据整理好，
 // 真正把注释写进 PDF、或者从 PDF 里读回注释，都是这里负责。
@@ -354,6 +361,7 @@ pub struct PdfAnnotationExporter {
     // 默认页面大小。创建“新 PDF”时会用到它。
     // 目前默认值接近 A4（595 x 842 point）。
     page_size: (f64, f64),
+    pending_link_destinations: Vec<(lopdf::ObjectId, usize)>,
 }
 
 impl Default for PdfAnnotationExporter {
@@ -379,6 +387,7 @@ impl PdfAnnotationExporter {
     pub fn new() -> Self {
         Self {
             page_size: (595.0, 842.0),
+            pending_link_destinations: Vec::new(),
         }
     }
 
@@ -398,6 +407,7 @@ impl PdfAnnotationExporter {
     pub fn with_page_size(width: f64, height: f64) -> Self {
         Self {
             page_size: (width, height),
+            pending_link_destinations: Vec::new(),
         }
     }
 
@@ -598,6 +608,8 @@ impl PdfAnnotationExporter {
             ]));
         }
 
+        if let Some(rich) = base.extra.get("contents-richtext") { dict.set("RC", pdf_text_string(rich)); }
+
         if let Some(dt) = &base.modification_date {
             dict.set("M", lopdf::Object::String(dt.clone().into_bytes(), lopdf::StringFormat::Literal));
         }
@@ -634,6 +646,8 @@ impl PdfAnnotationExporter {
             Annotation::Ink(_) => "Ink",
             Annotation::Stamp(_) => "Stamp",
             Annotation::Popup(_) => "Popup",
+            Annotation::Link(_) => "Link",
+            Annotation::Caret(_) => "Caret",
         };
 
         let mut dict = lopdf::Dictionary::new();
@@ -1215,6 +1229,7 @@ impl PdfAnnotationExporter {
             fields: Vec::new(),
             annotations: Vec::new(),
             metadata: HashMap::new(),
+            ..XfdfDocument::default()
         };
 
         for (page_number, page_id) in document.get_pages() {
@@ -1279,7 +1294,7 @@ impl PdfAnnotationExporter {
             color: Self::dict_color(document, dict, b"C")?,
             opacity: Self::dict_number(document, dict, b"CA")?.unwrap_or(1.0) as f32,
             flags: Self::dict_integer(document, dict, b"F")?.unwrap_or(0) as u32,
-            extra: HashMap::new(),
+            extra: Self::dict_string(document, dict, b"RC")?.map(|rich| HashMap::from([("contents-richtext".into(), rich)])).unwrap_or_default(),
         };
 
         let annotation = match subtype.as_str() {
@@ -1372,6 +1387,16 @@ impl PdfAnnotationExporter {
                 base,
                 icon: Self::dict_name_or_string(document, dict, b"Name")?.unwrap_or_default(),
                 image_data: Self::stamp_image_data_from_annotation(document, dict)?,
+            })),
+            "Link" => Some(Annotation::Link(Self::read_link(document, dict, base)?)),
+            "Caret" => Some(Annotation::Caret(CaretAnnotation {
+                base,
+                symbol: match Self::dict_name_or_string(document, dict, b"Sy")?.as_deref().unwrap_or("None") {
+                    "None" => CaretSymbol::None,
+                    "P" => CaretSymbol::P,
+                    other => return Err(PdfXmlError::PdfProcessing(format!("无效 Caret symbol: {other}"))),
+                },
+                fringe: Self::dict_rect(document, dict, b"RD")?,
             })),
             "Popup" => Some(Annotation::Popup(PopupAnnotation {
                 base,
@@ -1842,6 +1867,7 @@ impl PdfAnnotationExporter {
     pub fn export_to_new_pdf(&mut self, xfdf_doc: &XfdfDocument, output_path: &Path) -> Result<()> {
         // 这种模式下，不依赖外部已有 PDF，
         // 而是直接创建一个新的 PDF，把每一页的注释放进去。
+        self.pending_link_destinations.clear();
         info!("创建新 PDF，共 {} 页", xfdf_doc.total_pages());
 
         let mut document = lopdf::Document::with_version("1.5");
@@ -1865,6 +1891,7 @@ impl PdfAnnotationExporter {
 
         self.setup_document_structure(&mut document, &page_ids)?;
 
+        self.resolve_pending_link_destinations(&mut document)?;
         document.save(output_path)
             .map_err(|e| PdfXmlError::PdfProcessing(format!("保存PDF失败: {}", e)))?;
 
@@ -1984,6 +2011,7 @@ impl PdfAnnotationExporter {
         // 而是先打开原 PDF，再决定每一页该追加什么。
         // 这种模式不是新建空白 PDF，
         // 而是在已有 PDF 基础上，把 XFDF 里的注释挂到对应页面上。
+        self.pending_link_destinations.clear();
         info!("打开现有 PDF 并合并注释");
 
         let mut document = lopdf::Document::load(input_path)
@@ -2024,6 +2052,7 @@ impl PdfAnnotationExporter {
             debug!("为注释新增了第 {} 页", page_num + 1);
         }
 
+        self.resolve_pending_link_destinations(&mut document)?;
         document.save(output_path)
             .map_err(|e| PdfXmlError::PdfProcessing(format!("保存PDF失败: {}", e)))?;
 
@@ -2034,7 +2063,7 @@ impl PdfAnnotationExporter {
     // 1. 页面本身
     // 2. 页面里要挂的注释
     // 3. 让这页至少有一段能被阅读器识别的内容流
-    fn create_page(&self, document: &mut lopdf::Document, _font_name: &str, font_id: lopdf::ObjectId,
+    fn create_page(&mut self, document: &mut lopdf::Document, _font_name: &str, font_id: lopdf::ObjectId,
                      annotations: &[&Annotation], page_number: usize) -> Result<lopdf::ObjectId> {
         // 这个函数负责“真正新建一页”。
         // 它会同时准备：
@@ -2092,7 +2121,7 @@ impl PdfAnnotationExporter {
     }
     // 这一层负责把“内存里的注释结构体”变成“PDF 里的对象”。
     // 先全部创建出来，再补 Popup 这种需要互相引用的关系。
-    fn create_annotation_objects(&self, document: &mut lopdf::Document, annotations: &[&Annotation]) -> Result<Vec<lopdf::ObjectId>> {
+    fn create_annotation_objects(&mut self, document: &mut lopdf::Document, annotations: &[&Annotation]) -> Result<Vec<lopdf::ObjectId>> {
         // 这一层负责把“内存里的注释结构体”变成“PDF 里的对象”。
         // 先全部创建出来，再补 Popup 这种需要互相引用的关系。
         let mut ids = Vec::new();
@@ -2104,6 +2133,9 @@ impl PdfAnnotationExporter {
         for annotation in annotations {
             let annot_dict = self.build_annotation(document, annotation)?;
             let annot_id = document.add_object(annot_dict);
+            if let Annotation::Link(LinkAnnotation { target: Some(LinkTarget::Page { page, .. }), .. }) = annotation {
+                self.pending_link_destinations.push((annot_id, *page));
+            }
 
             if let Some(name) = annotation.base().name.as_ref() {
                 match named_annotations.entry(name.clone()) {
@@ -2149,6 +2181,11 @@ impl PdfAnnotationExporter {
         // 这里是“把一种注释翻译成 PDF 字典”的总入口。
         // 前面解析器已经告诉我们：这是一条 text / square / line / polygon ...
         // 现在要决定：PDF 里该写哪些字段，是否要补 AP，要不要带边框、坐标、文字等。
+        let base = annotation.base();
+        if !base.opacity.is_finite() || !(0.0..=1.0).contains(&base.opacity)
+            || base.rect.as_ref().is_some_and(|r| [r.left, r.bottom, r.right, r.top].iter().any(|v| !v.is_finite() || !(*v as f32).is_finite())) {
+            return Err(PdfXmlError::PdfProcessing("注释坐标/透明度必须是有效有限数".into()));
+        }
         let mut dict = Self::build_base_annotation_dict(annotation);
 
         match annotation {
@@ -2321,6 +2358,22 @@ impl PdfAnnotationExporter {
                     }));
                 }
             }
+            Annotation::Link(link) => Self::build_link_fields(&mut dict, link)?,
+            Annotation::Caret(caret) => {
+                dict.set("Sy", lopdf::Object::Name(match caret.symbol { CaretSymbol::None => b"None".to_vec(), CaretSymbol::P => b"P".to_vec() }));
+                if let Some(fringe) = &caret.fringe {
+                    if [fringe.left, fringe.bottom, fringe.right, fringe.top].iter().any(|n| !n.is_finite() || *n < 0.0 || !(*n as f32).is_finite()) {
+                        return Err(PdfXmlError::PdfProcessing("无效 Caret fringe".into()));
+                    }
+                    dict.set("RD", lopdf::Object::Array(fringe.to_pdf_array()));
+                }
+                if let Some(stream) = Self::build_caret_appearance(caret) {
+                    let id = document.add_object(stream);
+                    let mut appearance = lopdf::Dictionary::new();
+                    appearance.set("N", lopdf::Object::Reference(id));
+                    dict.set("AP", appearance);
+                }
+            }
             Annotation::Popup(p) => {
                 if p.open {
                     dict.set("Open", lopdf::Object::Boolean(true));
@@ -2338,7 +2391,7 @@ impl PdfAnnotationExporter {
             return None;
         }
         let values: Vec<lopdf::Object> = parts.iter()
-            .filter_map(|s| s.trim().parse::<f64>().ok())
+            .filter_map(|s| s.trim().parse::<f64>().ok().filter(|v| v.is_finite() && (*v as f32).is_finite()))
             .map(|v| lopdf::Object::Real(v as f32))
             .collect();
         if values.len() == parts.len() {
@@ -2383,7 +2436,7 @@ impl PdfAnnotationExporter {
         if points.is_empty() { None } else { Some(points) }
     }
 
-    fn add_annotations_to_page(&self, document: &mut lopdf::Document, page_id: lopdf::ObjectId,
+    fn add_annotations_to_page(&mut self, document: &mut lopdf::Document, page_id: lopdf::ObjectId,
                               annotations: &[&Annotation], _font_id: lopdf::ObjectId) -> Result<()> {
         let new_ids = self.create_annotation_objects(document, annotations)?;
         let new_refs: Vec<lopdf::Object> = new_ids.iter().map(|id| lopdf::Object::Reference(*id)).collect();

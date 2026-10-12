@@ -1,5 +1,8 @@
 use anyhow::{Context, Result};
-use pdfxml::{export_annotations, load_annotations_from_pdf, load_xfdf, Annotation, XfdfDocument};
+use pdfxml::{
+    export_annotations, load_annotations_from_pdf, load_xfdf, load_xfdf_with_options,
+    Annotation, XfdfDiagnosticSeverity, XfdfDocument, XfdfParseOptions,
+};
 use std::collections::BTreeMap;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -73,17 +76,29 @@ pub fn convert(
 ) -> Result<OperationResult> {
     match mode {
         ConversionMode::XfdfToPdf => {
-            let document = load_xfdf(&input_path)
+            let report = load_xfdf_with_options(&input_path, &XfdfParseOptions::default())
                 .with_context(|| format!("读取 XFDF 失败: {}", input_path.as_ref().display()))?;
+            let mut warnings = report.diagnostics.iter()
+                .filter(|diagnostic| diagnostic.severity == XfdfDiagnosticSeverity::Warning)
+                .map(|diagnostic| diagnostic.message.clone())
+                .collect::<Vec<_>>();
+            let document = report.document;
+            warnings.extend(document.pdf_conversion_warnings());
+            let warning_summary = if warnings.is_empty() {
+                String::new()
+            } else {
+                format!("\n注意：{}", warnings.join("；"))
+            };
             export_annotations(&document, target_pdf, &output_path)
                 .with_context(|| format!("导出 PDF 失败: {}", output_path.as_ref().display()))?;
 
             Ok(OperationResult {
                 overview: build_overview(&document),
                 message: format!(
-                    "已导出 PDF：{}（{} 条批注）",
+                    "已导出 PDF：{}（{} 条批注）{}",
                     output_path.as_ref().display(),
-                    document.annotations.len()
+                    document.annotations.len(),
+                    warning_summary
                 ),
             })
         }
@@ -173,9 +188,9 @@ mod tests {
 
     #[test]
     fn loads_sample_xfdf_into_rows() {
-        let input = Path::new(env!("CARGO_MANIFEST_DIR")).join("../examples/sample.xfdf");
-        let overview = load_annotation_overview(ConversionMode::XfdfToPdf, &input)
+        let document = XfdfDocument::parse(include_str!("../../examples/sample.xfdf"))
             .expect("sample xfdf should load");
+        let overview = build_overview(&document);
 
         assert!(overview.total_annotations >= 1);
         assert_eq!(overview.rows.len(), overview.total_annotations);

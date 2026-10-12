@@ -45,9 +45,13 @@ pub mod xfdf;
 pub use annotation::*;
 pub use error::{PdfXmlError, Result};
 pub use pdf::PdfAnnotationExporter;
-pub use xfdf::{XfdfDocument, XfdfField};
+pub use xfdf::{
+    XfdfDiagnostic, XfdfDiagnosticCode, XfdfDiagnosticSeverity, XfdfDocument, XfdfField,
+    XfdfIds, XfdfParseMode, XfdfParseOptions, XfdfParseReport, XFDF_NAMESPACE,
+};
 
 use std::fs;
+use std::io::Read;
 use std::path::Path;
 
 /// 从磁盘读取一个 XFDF 文件，并解析成 [`XfdfDocument`]。
@@ -66,9 +70,35 @@ use std::path::Path;
 /// # Ok::<(), pdfxml::PdfXmlError>(())
 /// ```
 pub fn load_xfdf(path: impl AsRef<Path>) -> Result<XfdfDocument> {
-    let content = fs::read_to_string(path)
-        .map_err(|e| PdfXmlError::PdfProcessing(format!("读取 XFDF 文件失败: {}", e)))?;
-    XfdfDocument::parse(&content)
+    let report = load_xfdf_with_options(path, &XfdfParseOptions::default())?;
+    for diagnostic in &report.diagnostics {
+        if diagnostic.severity == XfdfDiagnosticSeverity::Warning {
+            log::warn!("XFDF {:?} at byte {}: {}", diagnostic.code, diagnostic.byte_offset, diagnostic.message);
+        }
+    }
+    Ok(report.document)
+}
+
+/// 有输入大小限制、兼容策略和结构化诊断的文件加载入口。
+/// 不会访问 XFDF 的 f/href、URI 或扩展资源。
+pub fn load_xfdf_with_options(
+    path: impl AsRef<Path>,
+    options: &XfdfParseOptions,
+) -> Result<XfdfParseReport> {
+    let file = fs::File::open(path)
+        .map_err(|error| PdfXmlError::PdfProcessing(format!("读取 XFDF 文件失败: {error}")))?;
+    let mut bytes = Vec::new();
+    file.take((options.max_input_bytes as u64).saturating_add(1))
+        .read_to_end(&mut bytes)
+        .map_err(|error| PdfXmlError::PdfProcessing(format!("读取 XFDF 文件失败: {error}")))?;
+    if bytes.len() > options.max_input_bytes {
+        return Err(PdfXmlError::InvalidXfdfFormat(format!(
+            "XML 超过输入字节限制 {}", options.max_input_bytes
+        )));
+    }
+    let content = String::from_utf8(bytes)
+        .map_err(|error| PdfXmlError::InvalidXfdfFormat(format!("XFDF 必须是有效 UTF-8 文本: {error}")))?;
+    XfdfDocument::parse_with_options(&content, options)
 }
 
 /// 从 PDF 中读取注释，并转换成项目统一使用的 [`XfdfDocument`]。

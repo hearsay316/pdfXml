@@ -1,5 +1,7 @@
 # pdfxml SDK 详细说明
 
+> 当前仓库源码的 XFDF/Link/Caret 升级尚未发布。新诊断 API 与公开类型迁移见第 9 节，已发布的 `0.1.1` 不包含这些新增能力。
+
 这份文档是给“第一次接触这个项目的人”准备的。
 
 你可以把 `pdfxml` 理解成两种用法：
@@ -380,3 +382,104 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 - 更完整的 PDF 注释兼容
 
 都已经有一个比较清晰的基础。
+
+---
+
+## 9. 本批 XFDF 升级：诊断、交互注释与迁移
+
+### 9.1 读取并检查诊断
+
+```rust
+use pdfxml::{export_annotations, load_xfdf_with_options, XfdfParseOptions};
+
+fn main() -> pdfxml::Result<()> {
+    let report = load_xfdf_with_options("examples/interactive.xfdf", &XfdfParseOptions::default())?;
+    for diagnostic in &report.diagnostics {
+        eprintln!("{:?} {:?} <{}> byte {}: {}",
+            diagnostic.severity, diagnostic.code, diagnostic.element,
+            diagnostic.byte_offset, diagnostic.message);
+    }
+    for warning in report.document.pdf_conversion_warnings() {
+        eprintln!("PDF 转换限制：{warning}");
+    }
+    export_annotations(&report.document, None::<&str>, "interactive.pdf")?;
+    Ok(())
+}
+```
+
+已有字符串时使用 `XfdfDocument::parse_with_report(xml)`。
+原有 `parse` / `load_xfdf` 仍可用，但只返回文档并通过 `log` 输出警告；需要可靠展示警告时应使用 report API。
+
+### 9.2 严格模式与输入上限
+
+```rust
+use pdfxml::{XfdfDocument, XfdfParseMode, XfdfParseOptions};
+
+fn main() -> pdfxml::Result<()> {
+    let options = XfdfParseOptions {
+        mode: XfdfParseMode::Strict,
+        max_input_bytes: 8 * 1024 * 1024,
+        max_annotations: 10_000,
+        max_page_index: 1_000,
+        ..Default::default()
+    };
+    let report = XfdfDocument::parse_with_options(
+        r#"<xfdf xmlns="http://ns.adobe.com/xfdf/"><annots><caret page="0" rect="0,0,20,20"/></annots></xfdf>"#,
+        &options,
+    )?;
+    assert_eq!(report.document.annotations.len(), 1);
+    Ok(())
+}
+```
+
+严格模式遇到 Warning 时返回错误；保留扩展的 Info 诊断不会失败。
+它不是完整 XFDF XSD 校验，更不是“全部内容可无损写入 PDF”的开关。`fields`、扩展 XML、富文本样式、命名目的地等限制仍需检查 `pdf_conversion_warnings()`。
+输入必须是 UTF-8/XML 1.0，允许 UTF-8 BOM；DTD、外部实体和不完整 XML 无论何种模式都不接受。
+序列化会再次按默认 XML 资源边界检查结果；手工构造的大文档不能绕过该检查。
+
+### 9.3 Link / Caret 模型
+
+- `Annotation::Link(LinkAnnotation)`：`target` 是 `Option<LinkTarget>`，避免同时存在多个跳转目标。
+- `LinkTarget::Uri { uri, is_map }`：只存储地址，不发起请求。
+- `LinkTarget::Named { name }`：仅名称引用，不复制或生成名称树。
+- `LinkTarget::Page { page, view }`：`page` 是零基索引；`view` 使用 `LinkDestinationMode` 和有序的 `Vec<Option<f64>>`。参数顺序可查 `parameter_names()`；`None` 表示 PDF `null`。
+- `LinkHighlightMode`：`None`、`Invert`、`Outline`、`Push`，与目标页面显示模式互相独立。
+- `Annotation::Caret(CaretAnnotation)`：`CaretSymbol::None` / `P`，`fringe` 对应 PDF `/RD` 四边差值。
+
+新 PDF 页数仍由注释实际所在页决定。内部 Link 指向不存在的页会在保存前失败；不会写出一个假页面引用，也不会仅根据链接目标自动创建大量空白页。
+
+### 9.4 公开类型迁移（有源码兼容性变化）
+
+`XfdfDocument` 新增 `file_reference`、`ids`、`unsupported_annotations`、`extensions`，`XfdfField` 新增 `additional_values`。
+以前直接列出所有字段的结构体字面量需要补上新字段，建议使用默认值：
+
+```rust
+use pdfxml::{XfdfDocument, XfdfField};
+
+let document = XfdfDocument {
+    fields: vec![XfdfField {
+        name: "choices".into(),
+        value: Some("first".into()),
+        additional_values: vec!["second".into()],
+        ..Default::default()
+    }],
+    ..Default::default()
+};
+assert_eq!(document.fields[0].values().collect::<Vec<_>>(), ["first", "second"]);
+```
+
+- `value` 仍表示第一个值；`additional_values` 为后续值；`values()` 按顺序遍历全部值。无值与 `Some("")` 区分。
+- 穷举匹配 `Annotation` 的代码需补充 `Link`、`Caret` 分支。
+- `annotation_type()` 对未闭合多边形现在返回 `PolyLine` 而非 `Polygon`，类型统计/筛选代码需同步。
+- 文本输出统一为 `<contents>`，旧式标签直接文本仍可读；不要依赖旧的 XML 字面格式或属性排序。
+- 命名 flags 优先输出；历史 `flags="10"` 仍按 **十六进制 0x10** 解释，不改成十进制 10。推荐使用 `print,readonly` 或显式 `0x...`。
+- 兼容模式会记录无效已建模属性的降级；未实现注释放入 `unsupported_annotations`，不再默默当成已支持注释。
+- 未建模注释属性和子元素的 XFDF 保留不等于 PDF 映射。FreeText 的 `fringe` / `callout` 等本批仅保留，不能因此认为外观已实现。
+
+本批不直接发布或修改包版本。由于以上公开类型变化，后续发版应按破坏性升级处理，不能作为 `0.1.x` 的普通补丁发布。
+
+### 9.5 可运行示例与边界
+
+仓库示例：`examples/interactive.xfdf`，包含 URI 链接、第二页跳转和两种 Caret。
+支持清单见 `ANNOTATION_SUPPORT.md`，实施记录见 `XFDF_UPGRADE_PROGRESS.md`。
+`FileAttachment`、`Sound`、`Widget/AcroForm`、完整富文本样式和安全删密均未在本批实现。

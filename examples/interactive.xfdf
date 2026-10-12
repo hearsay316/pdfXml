@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xfdf xmlns="http://ns.adobe.com/xfdf/" xml:space="preserve">
+  <annots>
+    <link name="website" page="0" rect="80,700,300,725" highlight="Outline" width="1" color="#3366CC">
+      <contents>外部链接（程序只保存地址，不会访问网站）</contents>
+      <OnActivation><Action><URI Name="https://example.com/?a=1&amp;b=2" IsMap="false"/></Action></OnActivation>
+    </link>
+    <link name="next-page" page="0" rect="80,650,300,675">
+      <contents>跳转到第二页，适应页面</contents>
+      <Dest><Fit Page="1"/></Dest>
+    </link>
+    <caret name="insert" page="1" rect="100,650,120,675" color="#CC3333" flags="print">
+      <contents>在此插入文字</contents>
+    </caret>
+    <caret name="paragraph" page="1" rect="150,650,180,680" symbol="P" fringe="2,2,2,2" color="#333399" flags="print">
+      <contents>在此插入段落</contents>
+    </caret>
+  </annots>
+</xfdf>

@@ -21,10 +21,8 @@ use anyhow::Result;
 use clap::Parser;
 use log::{info, warn};
 use pdfxml::{
-    export_annotations,
-    export_pdf_annotations_to_xfdf,
-    load_annotations_from_pdf,
-    load_xfdf,
+    export_annotations, export_pdf_annotations_to_xfdf, load_annotations_from_pdf,
+    load_xfdf_with_options, XfdfDiagnosticSeverity, XfdfParseMode, XfdfParseOptions,
 };
 use std::env;
 use std::path::{Path, PathBuf};
@@ -47,7 +45,7 @@ fn enable_utf8_console() {}
 #[derive(Parser, Debug)]
 #[command(name = "pdfxml")]
 #[command(about = "XFDF 与 PDF 注释互转工具", long_about = None)]
-#[command(version = "0.1.0")]
+#[command(version)]
 struct Args {
     /// 输入文件路径。
     #[arg(short, long, value_name = "FILE")]
@@ -66,6 +64,10 @@ struct Args {
     /// 是否走 “PDF -> XFDF” 模式。
     #[arg(long)]
     from_pdf: bool,
+
+    /// 严格校验 XFDF；遇到无效属性、历史结构或不支持的注释时失败。
+    #[arg(long, conflicts_with = "from_pdf")]
+    strict: bool,
 
     /// 是否输出更详细的日志。
     #[arg(short, long)]
@@ -172,7 +174,25 @@ fn main() -> Result<()> {
     // 走到这里，就表示当前方向是 “XFDF -> PDF”。
     info!("开始处理 XFDF 文件: {:?}", input_path);
 
-    let xfdf_doc = load_xfdf(&input_path)?;
+    let options = XfdfParseOptions {
+        mode: if args.strict {
+            XfdfParseMode::Strict
+        } else {
+            XfdfParseMode::Compatible
+        },
+        ..XfdfParseOptions::default()
+    };
+    let report = load_xfdf_with_options(&input_path, &options)?;
+    for diagnostic in &report.diagnostics {
+        if diagnostic.severity == XfdfDiagnosticSeverity::Warning {
+            warn!("XFDF {:?} <{}> at byte {}: {}",
+                diagnostic.code, diagnostic.element, diagnostic.byte_offset, diagnostic.message);
+        }
+    }
+    let xfdf_doc = report.document;
+    for message in xfdf_doc.pdf_conversion_warnings() {
+        warn!("转换限制: {}", message);
+    }
     info!("解析完成，发现 {} 条注释", xfdf_doc.annotations.len());
 
     if xfdf_doc.annotations.is_empty() {
@@ -219,4 +239,20 @@ fn main() -> Result<()> {
     }
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn strict_is_opt_in_and_available_for_xfdf_input() {
+        assert!(!Args::try_parse_from(["pdfxml", "--input", "input.xfdf"]).unwrap().strict);
+        assert!(Args::try_parse_from(["pdfxml", "--input", "input.xfdf", "--strict"]).unwrap().strict);
+    }
+
+    #[test]
+    fn strict_does_not_claim_to_validate_pdf_input() {
+        assert!(Args::try_parse_from(["pdfxml", "--input", "input.pdf", "--from-pdf", "--strict"]).is_err());
+    }
 }

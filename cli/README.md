@@ -52,12 +52,22 @@ pdfxml --from-pdf -i annotated.pdf -o exported.xfdf
 pdfxml -i annotations.xfdf -t original.pdf -o annotated.pdf -v
 ```
 
+#### 严格 XFDF 校验（当前源码，尚未发布）
+
+```bash
+cargo run -p pdfxml-cli -- --strict -i examples/interactive.xfdf -o interactive.pdf
+```
+
+默认兼容模式显示警告并转换支持的数据。`--strict` 遇到无效属性、历史结构或未实现的注释时失败，不可与 `--from-pdf` 同时使用。
+表单、富文本样式等 PDF 转换限制仍会另外提示；严格解析不等于无损转换。
+
 ### 参数
 
 - `-i, --input <FILE>`：输入文件
 - `-o, --output <FILE>`：输出文件
 - `-t, --target-pdf <FILE>`：目标 PDF
 - `--from-pdf`：从 PDF 导出 XFDF
+- `--strict`：严格校验 XFDF 输入（当前源码新增）
 - `-v, --verbose`：详细日志
 
 ### 路径解析
@@ -134,12 +144,22 @@ pdfxml --from-pdf -i annotated.pdf -o exported.xfdf
 pdfxml -i annotations.xfdf -t original.pdf -o annotated.pdf -v
 ```
 
+#### Strict XFDF validation (unreleased source)
+
+```bash
+cargo run -p pdfxml-cli -- --strict -i examples/interactive.xfdf -o interactive.pdf
+```
+
+Compatibility mode reports warnings and converts supported annotations. `--strict` rejects invalid attributes, legacy structures, and unsupported annotations; it conflicts with `--from-pdf`.
+Conversion limitations are reported separately: strict parsing does not guarantee lossless PDF output.
+
 ### Arguments
 
 - `-i, --input <FILE>`: input file
 - `-o, --output <FILE>`: output file
 - `-t, --target-pdf <FILE>`: target PDF
 - `--from-pdf`: export XFDF from PDF
+- `--strict`: validate XFDF input strictly (new in current source)
 - `-v, --verbose`: verbose logging
 
 ### Path resolution

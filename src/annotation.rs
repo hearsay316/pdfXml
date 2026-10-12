@@ -47,8 +47,8 @@ pub struct Color {
 impl Color {
     /// 把像 `#FF0000` 这样的十六进制颜色，转换成内部的 RGB 结构。
     pub fn from_hex(hex: &str) -> Option<Self> {
-        let hex = hex.trim_start_matches('#');
-        if hex.len() != 6 {
+        let hex = hex.strip_prefix('#').unwrap_or(hex);
+        if hex.len() != 6 || !hex.is_ascii() {
             return None;
         }
 
@@ -102,12 +102,16 @@ impl Rect {
             return None;
         }
 
-        Some(Rect {
+        let rect = Rect {
             left: parts[0].trim().parse().ok()?,
             bottom: parts[1].trim().parse().ok()?,
             right: parts[2].trim().parse().ok()?,
             top: parts[3].trim().parse().ok()?,
-        })
+        };
+        [rect.left, rect.bottom, rect.right, rect.top]
+            .iter()
+            .all(|v| v.is_finite() && (*v as f32).is_finite())
+            .then_some(rect)
     }
 
     #[allow(dead_code)]
@@ -444,6 +448,134 @@ pub struct PopupAnnotation {
     pub parent_name: Option<String>,
 }
 
+/// 链接的点击高亮模式。它与目标页面的显示方式是两个独立概念。
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub enum LinkHighlightMode {
+    None,
+    #[default]
+    Invert,
+    Outline,
+    Push,
+}
+
+impl LinkHighlightMode {
+    pub fn pdf_name(self) -> &'static str {
+        match self {
+            Self::None => "N",
+            Self::Invert => "I",
+            Self::Outline => "O",
+            Self::Push => "P",
+        }
+    }
+}
+
+/// PDF 内部跳转支持的页面显示方式。
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum LinkDestinationMode {
+    XYZ,
+    Fit,
+    FitH,
+    FitV,
+    FitR,
+    FitB,
+    FitBH,
+    FitBV,
+}
+
+impl LinkDestinationMode {
+    pub fn from_name(name: &str) -> Option<Self> {
+        Some(match name {
+            "XYZ" => Self::XYZ,
+            "Fit" => Self::Fit,
+            "FitH" => Self::FitH,
+            "FitV" => Self::FitV,
+            "FitR" => Self::FitR,
+            "FitB" => Self::FitB,
+            "FitBH" => Self::FitBH,
+            "FitBV" => Self::FitBV,
+            _ => return None,
+        })
+    }
+
+    pub fn name(self) -> &'static str {
+        match self {
+            Self::XYZ => "XYZ",
+            Self::Fit => "Fit",
+            Self::FitH => "FitH",
+            Self::FitV => "FitV",
+            Self::FitR => "FitR",
+            Self::FitB => "FitB",
+            Self::FitBH => "FitBH",
+            Self::FitBV => "FitBV",
+        }
+    }
+
+    /// 参数顺序与 PDF 目的地数组一致；None 表示保留阅读器的当前值。
+    pub fn parameter_names(self) -> &'static [&'static str] {
+        match self {
+            Self::XYZ => &["Left", "Top", "Zoom"],
+            Self::FitH | Self::FitBH => &["Top"],
+            Self::FitV | Self::FitBV => &["Left"],
+            Self::FitR => &["Left", "Bottom", "Right", "Top"],
+            Self::Fit | Self::FitB => &[],
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct LinkDestinationView {
+    pub mode: LinkDestinationMode,
+    pub parameters: Vec<Option<f64>>,
+}
+
+impl Default for LinkDestinationView {
+    fn default() -> Self {
+        Self { mode: LinkDestinationMode::Fit, parameters: Vec::new() }
+    }
+}
+
+/// 支持 URI、命名目的地以及零基页码的内部跳转。
+/// 这里只保存目标信息，库不会访问网络、启动程序或执行脚本。
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "kind")]
+pub enum LinkTarget {
+    Uri { uri: String, #[serde(default)] is_map: bool },
+    Named { name: String },
+    Page { page: usize, #[serde(default)] view: LinkDestinationView },
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LinkAnnotation {
+    #[serde(flatten)]
+    pub base: AnnotationBase,
+    pub target: Option<LinkTarget>,
+    #[serde(default)]
+    pub highlight_mode: LinkHighlightMode,
+    #[serde(default)]
+    pub coords: Option<String>,
+    #[serde(default)]
+    pub border_width: f32,
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub enum CaretSymbol {
+    #[default]
+    None,
+    P,
+}
+
+/// 插入符标记；不是编辑或删除页面正文的操作。
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CaretAnnotation {
+    #[serde(flatten)]
+    pub base: AnnotationBase,
+    #[serde(default)]
+    pub symbol: CaretSymbol,
+    /// PDF /RD：矩形四边与标记范围的差值，不是绝对坐标。
+    #[serde(default)]
+    pub fringe: Option<Rect>,
+}
+
 /// 枚举所有支持的注释类型。
 ///
 /// 这是对外最常用的统一入口：
@@ -487,6 +619,8 @@ pub enum Annotation {
     Ink(InkAnnotation),
     Stamp(StampAnnotation),
     Popup(PopupAnnotation),
+    Link(LinkAnnotation),
+    Caret(CaretAnnotation),
 }
 
 impl Annotation {
@@ -502,10 +636,12 @@ impl Annotation {
             Annotation::Square(_) => "Square",
             Annotation::Circle(_) => "Circle",
             Annotation::Line(_) => "Line",
-            Annotation::Polygon(_) => "Polygon",
+            Annotation::Polygon(p) => if p.is_closed { "Polygon" } else { "PolyLine" },
             Annotation::Ink(_) => "Ink",
             Annotation::Stamp(_) => "Stamp",
             Annotation::Popup(_) => "Popup",
+            Annotation::Link(_) => "Link",
+            Annotation::Caret(_) => "Caret",
         }
     }
 
@@ -528,6 +664,8 @@ impl Annotation {
             Annotation::Ink(a) => &a.base,
             Annotation::Stamp(a) => &a.base,
             Annotation::Popup(a) => &a.base,
+            Annotation::Link(a) => &a.base,
+            Annotation::Caret(a) => &a.base,
         }
     }
 

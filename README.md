@@ -18,7 +18,21 @@
 - 将 XFDF/XML 注释导出到新 PDF
 - 将 XFDF/XML 注释合并到现有 PDF
 - 从 PDF 中提取注释并导出为 XFDF
-- 支持常见注释类型：Text、Highlight、Underline、StrikeOut、FreeText、Square、Circle、Line、Polygon、Ink、Stamp、Popup
+- 支持常见注释类型：Text、Highlight、Underline、StrikeOut、Squiggly、FreeText、Square、Circle、Line、Polygon、PolyLine、Ink、Stamp、Popup
+- 当前源码新增 Link / Caret、XFDF 结构化诊断和严格模式，尚未发布；完整范围见 `ANNOTATION_SUPPORT.md`
+
+### 当前源码的 XFDF 升级
+
+可使用仓库中的 `examples/interactive.xfdf` 验证链接和插入符：
+
+```bash
+cargo run -p pdfxml-cli -- --strict -i examples/interactive.xfdf -o interactive.pdf
+cargo run -p pdfxml-cli -- --from-pdf -i interactive.pdf -o interactive-roundtrip.xfdf
+```
+
+SDK 新增 `load_xfdf_with_options`、`XfdfDocument::parse_with_report` 和 `pdf_conversion_warnings()`。
+严格模式校验当前支持的 XFDF 结构，不代表全部数据都能映射到 PDF。
+本批有公开结构体/枚举变更，接入迁移见 `SDK_GUIDE.md` 第 9 节；发布状态与验证记录见 `XFDF_UPGRADE_PROGRESS.md`。
 
 ### 安装
 
@@ -110,7 +124,14 @@ Important:
 - Export XFDF/XML annotations into a new PDF
 - Merge XFDF/XML annotations into an existing PDF
 - Extract annotations from PDF and export them as XFDF
-- Supports common annotation types: Text, Highlight, Underline, StrikeOut, FreeText, Square, Circle, Line, Polygon, Ink, Stamp, Popup
+- Supports common annotation types: Text, Highlight, Underline, StrikeOut, Squiggly, FreeText, Square, Circle, Line, Polygon, PolyLine, Ink, Stamp, Popup
+- Current unreleased source adds Link/Caret, structured XFDF diagnostics, and opt-in strict parsing
+
+### Unreleased XFDF upgrade
+
+Try `examples/interactive.xfdf` with `cargo run -p pdfxml-cli -- --strict -i examples/interactive.xfdf -o interactive.pdf`.
+Use `load_xfdf_with_options` or `XfdfDocument::parse_with_report` to inspect diagnostics and `pdf_conversion_warnings()` before PDF export.
+Strict parsing is not a lossless-PDF guarantee. Public struct/enum changes require migration; see `SDK_GUIDE.md` section 9 and `XFDF_UPGRADE_PROGRESS.md`.
 
 ### Installation
 
