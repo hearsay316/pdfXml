@@ -36,6 +36,8 @@ use crate::xfdf::XfdfDocument;
 use image::{DynamicImage, GenericImageView, ImageFormat, RgbaImage};
 use log::{debug, info, warn};
 use lopdf;
+use once_cell::sync::Lazy;
+use regex::Regex;
 use std::collections::{hash_map::Entry, HashMap};
 use std::fs;
 use std::io::Cursor;
@@ -88,14 +90,46 @@ fn to_utf16be(s: &str) -> Vec<u8> {
     result
 }
 
+// 正则表达式缓存 - 避免每次调用都重新编译
+static FONT_PATTERN: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(r"/[A-Za-z][A-Za-z0-9_-]*\s+\d+(\.\d+)?\s*Tf").unwrap()
+});
+
+static FILL_COLOR_PATTERN: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(r"(?:\d*\.?\d+\s+){2}\d*\.?\d+\s+rg").unwrap()
+});
+
+static STROKE_COLOR_PATTERN: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(r"(?:\d*\.?\d+\s+){2}\d*\.?\d+\s+RG").unwrap()
+});
+
+static FILL_COLOR_CAPTURE: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(r"(\d*\.?\d+)\s+(\d*\.?\d+)\s+(\d*\.?\d+)\s+rg").unwrap()
+});
+
+static STROKE_COLOR_CAPTURE: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(r"(\d*\.?\d+)\s+(\d*\.?\d+)\s+(\d*\.?\d+)\s+RG").unwrap()
+});
+
+static ANY_COLOR_PATTERN: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(r"(\d*\.?\d+)\s+(\d*\.?\d+)\s+(\d*\.?\d+)\s+r[gG]").unwrap()
+});
+
+static FONT_SIZE_PATTERN: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(r"/[A-Za-z][A-Za-z0-9_-]*\s+(\d+(?:\.\d+)?)\s*Tf").unwrap()
+});
+
+static FONT_NAME_PATTERN: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(r"/([^\s/]+)\s+\d+(?:\.\d+)?\s*Tf").unwrap()
+});
+
 fn escape_pdf_literal_string(s: &str) -> String {
     s.replace('\\', "\\\\").replace('(', "\\(").replace(')', "\\)")
 }
 
 fn replace_font_in_da(da: &str, new_font: &str) -> String {
     let trimmed = da.trim();
-    let re = regex::Regex::new(r"/[A-Za-z][A-Za-z0-9_-]*\s+\d+(\.\d+)?\s*Tf").unwrap();
-    if let Some(m) = re.find(trimmed) {
+    if let Some(m) = FONT_PATTERN.find(trimmed) {
         let original = m.as_str();
         let parts: Vec<&str> = original.split_whitespace().collect();
         if parts.len() >= 3 {
@@ -125,21 +159,19 @@ fn apply_text_color_to_da(da: &str, text_color: Option<&str>) -> String {
     };
 
     let trimmed = da.trim();
-    let fill_re = regex::Regex::new(r"(?:\d*\.?\d+\s+){2}\d*\.?\d+\s+rg").unwrap();
-    let stroke_re = regex::Regex::new(r"(?:\d*\.?\d+\s+){2}\d*\.?\d+\s+RG").unwrap();
     let replacement_rg = format!("{} {} {} rg", color.r, color.g, color.b);
     let replacement_rg_stroke = format!("{} {} {} RG", color.r, color.g, color.b);
 
-    let with_fill = if fill_re.is_match(trimmed) {
-        fill_re.replace_all(trimmed, replacement_rg.as_str()).to_string()
+    let with_fill = if FILL_COLOR_PATTERN.is_match(trimmed) {
+        FILL_COLOR_PATTERN.replace_all(trimmed, replacement_rg.as_str()).to_string()
     } else if trimmed.is_empty() {
         replacement_rg.clone()
     } else {
         format!("{} {}", trimmed, replacement_rg)
     };
 
-    if stroke_re.is_match(&with_fill) {
-        stroke_re.replace_all(&with_fill, replacement_rg_stroke.as_str()).to_string()
+    if STROKE_COLOR_PATTERN.is_match(&with_fill) {
+        STROKE_COLOR_PATTERN.replace_all(&with_fill, replacement_rg_stroke.as_str()).to_string()
     } else {
         format!("{} {}", replacement_rg_stroke, with_fill)
     }
@@ -154,15 +186,13 @@ fn parse_da_color_captures(caps: &regex::Captures) -> Option<(f32, f32, f32)> {
 }
 
 fn extract_fill_color_from_da(da: &str) -> (f32, f32, f32) {
-    let fill_re = regex::Regex::new(r"(\d*\.?\d+)\s+(\d*\.?\d+)\s+(\d*\.?\d+)\s+rg").unwrap();
-    if let Some(caps) = fill_re.captures(da) {
+    if let Some(caps) = FILL_COLOR_CAPTURE.captures(da) {
         if let Some(color) = parse_da_color_captures(&caps) {
             return color;
         }
     }
 
-    let stroke_re = regex::Regex::new(r"(\d*\.?\d+)\s+(\d*\.?\d+)\s+(\d*\.?\d+)\s+RG").unwrap();
-    stroke_re
+    STROKE_COLOR_CAPTURE
         .captures(da)
         .and_then(|caps| parse_da_color_captures(&caps))
         .unwrap_or((0.0, 0.0, 0.0))
@@ -171,8 +201,7 @@ fn extract_fill_color_from_da(da: &str) -> (f32, f32, f32) {
 fn parse_text_color_from_da_hex(da: &str) -> Option<String> {
     let (r, g, b) = extract_fill_color_from_da(da);
     if r == 0.0 && g == 0.0 && b == 0.0 {
-        let fill_re = regex::Regex::new(r"(\d*\.?\d+)\s+(\d*\.?\d+)\s+(\d*\.?\d+)\s+r[gG]").unwrap();
-        fill_re.captures(da)?;
+        ANY_COLOR_PATTERN.captures(da)?;
     }
 
     Some(format!(
@@ -184,8 +213,7 @@ fn parse_text_color_from_da_hex(da: &str) -> Option<String> {
 }
 
 fn parse_font_size_from_da(da: &str) -> f32 {
-    let tf_re = regex::Regex::new(r"/[A-Za-z][A-Za-z0-9_-]*\s+(\d+(?:\.\d+)?)\s*Tf").unwrap();
-    tf_re
+    FONT_SIZE_PATTERN
         .captures(da)
         .and_then(|caps| caps.get(1))
         .and_then(|m| m.as_str().parse::<f32>().ok())
@@ -198,8 +226,7 @@ fn parse_font_resource_name_from_da(da: &str) -> Option<String> {
     // 例如 `/Courier 14 Tf` 里，我们要拿到的就是 `Courier`。
     // 后面生成 AP 外观流时，必须用同一个名字，
     // 不然有些 PDF 阅读器会显示成另一种默认字体。
-    let tf_re = regex::Regex::new(r"/([^\s/]+)\s+\d+(?:\.\d+)?\s*Tf").unwrap();
-    tf_re
+    FONT_NAME_PATTERN
         .captures(da)
         .and_then(|caps| caps.get(1))
         .map(|m| m.as_str().to_string())

@@ -17,6 +17,8 @@
 use crate::annotation::*;
 use crate::error::{PdfXmlError, Result};
 use log::warn;
+use once_cell::sync::Lazy;
+use regex::Regex;
 
 mod parser;
 
@@ -35,19 +37,29 @@ use std::collections::HashMap;
 // 3. 最后看 `to_xfdf_string`
 // 这样最容易看懂“进来是什么，出去又是什么”。
 
+// 正则表达式缓存 - 用于富文本解析
+static HTML_BREAKS_PATTERN: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(r"(?is)<\s*br\s*/?\s*>").unwrap()
+});
+
+static HTML_BLOCKS_PATTERN: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(r"(?is)</\s*(p|div|li|tr|h[1-6])\s*>").unwrap()
+});
+
+static HTML_TAGS_PATTERN: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(r"(?is)<[^>]+>").unwrap()
+});
+
 fn extract_plain_text_from_richtext(input: &str) -> String {
     // 有些 XFDF 会把内容放在富文本里，里面带 HTML 标签。
     // 这里尽量保留换行/段落语义，再做基础实体解码。
-    let normalized_breaks = regex::Regex::new(r"(?is)<\s*br\s*/?\s*>")
-        .unwrap()
+    let normalized_breaks = HTML_BREAKS_PATTERN
         .replace_all(input, "\n")
         .to_string();
-    let normalized_blocks = regex::Regex::new(r"(?is)</\s*(p|div|li|tr|h[1-6])\s*>")
-        .unwrap()
+    let normalized_blocks = HTML_BLOCKS_PATTERN
         .replace_all(&normalized_breaks, "\n")
         .to_string();
-    let no_tags = regex::Regex::new(r"(?is)<[^>]+>")
-        .unwrap()
+    let no_tags = HTML_TAGS_PATTERN
         .replace_all(&normalized_blocks, "")
         .to_string();
     let decoded = no_tags

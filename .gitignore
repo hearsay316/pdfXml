@@ -4,3 +4,10 @@
 target
 .claude
 /.claude/
+
+# 临时和调试文件
+*.o
+*.rcgu.o
+*_dump.txt
+inspect_*.rs
+page_annots_dump.txt
