@@ -1,6 +1,6 @@
 # pdfxml SDK 详细说明
 
-> 当前仓库源码的 XFDF/Link/Caret 升级尚未发布。新诊断 API 与公开类型迁移见第 9 节，已发布的 `0.1.1` 不包含这些新增能力。
+> 当前仓库源码的 XFDF/Link/Caret 与高级注释属性升级尚未发布。新诊断 API 与公开类型迁移见第 9 节，已发布的 `0.1.1` 不包含这些新增能力。
 
 这份文档是给“第一次接触这个项目的人”准备的。
 
@@ -385,7 +385,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ---
 
-## 9. 本批 XFDF 升级：诊断、交互注释与迁移
+## 9. XFDF 升级：诊断、交互注释、高级属性与迁移
 
 ### 9.1 读取并检查诊断
 
@@ -470,16 +470,84 @@ assert_eq!(document.fields[0].values().collect::<Vec<_>>(), ["first", "second"])
 
 - `value` 仍表示第一个值；`additional_values` 为后续值；`values()` 按顺序遍历全部值。无值与 `Some("")` 区分。
 - 穷举匹配 `Annotation` 的代码需补充 `Link`、`Caret` 分支。
+- `AnnotationBase` 字面量需补充 `intent: None`、`border_style: None`、`dashes: None`；该类型没有 `Default` 实现，仍需显式初始化其余字段。
+- `FreeTextAnnotation` 新增 `callout: Option<CalloutLine>`、`fringe: Option<Rect>`、`head_style: LineEndingStyle`、`width: f32`；字面量须补齐。普通旧文本可设为 `None`、`None`、`LineEndingStyle::None`、`0.0`。
+- `PolygonAnnotation` 新增 `width: f32`，旧字面量通常补 `width: 1.0`。这些新增字段提供 Serde 默认值，但不能据此认为 Rust 结构体字面量仍源码兼容。
+- FreeText 的 `callout`、`fringe`、`width`、`head` 和通用 `intent` 不再留在 `extra`；有效边框 `style/dashes` 也转为类型化字段。依赖旧扩展字典取值的调用方需改用公开字段。
 - `annotation_type()` 对未闭合多边形现在返回 `PolyLine` 而非 `Polygon`，类型统计/筛选代码需同步。
 - 文本输出统一为 `<contents>`，旧式标签直接文本仍可读；不要依赖旧的 XML 字面格式或属性排序。
 - 命名 flags 优先输出；历史 `flags="10"` 仍按 **十六进制 0x10** 解释，不改成十进制 10。推荐使用 `print,readonly` 或显式 `0x...`。
 - 兼容模式会记录无效已建模属性的降级；未实现注释放入 `unsupported_annotations`，不再默默当成已支持注释。
-- 未建模注释属性和子元素的 XFDF 保留不等于 PDF 映射。FreeText 的 `fringe` / `callout` 等本批仅保留，不能因此认为外观已实现。
+- 未建模注释属性和子元素的 XFDF 保留不等于 PDF 映射；FreeText Callout/Fringe 已打通字典和 AP，仍未映射的扩展应检查 `pdf_conversion_warnings()`。
+- XFDF 的旧 `IT` / `border-style` 输出规范化为 `intent` / `style`；PDF 回读可能明确输出原来隐含的实线边框，不能依赖 XML 字面完全相同。
 
 本批不直接发布或修改包版本。由于以上公开类型变化，后续发版应按破坏性升级处理，不能作为 `0.1.x` 的普通补丁发布。
 
 ### 9.5 可运行示例与边界
 
-仓库示例：`examples/interactive.xfdf`，包含 URI 链接、第二页跳转和两种 Caret。
+仓库示例：
+
+- `examples/interactive.xfdf`：URI 链接、第二页跳转和两种 Caret。
+- `examples/advanced-annotations.xfdf`：7 条高级属性示例，包含两种 Callout、虚线/细线宽形状和仅保留元数据的测量 Intent。
+
+```bash
+cargo run -p pdfxml-cli -- --strict -i examples/advanced-annotations.xfdf -o advanced.pdf
+cargo run -p pdfxml-cli -- --from-pdf -i advanced.pdf -o advanced-roundtrip.xfdf
+cargo run -p pdfxml-cli -- --strict -i advanced-roundtrip.xfdf -o advanced-roundtrip.pdf
+```
+
 支持清单见 `ANNOTATION_SUPPORT.md`，实施记录见 `XFDF_UPGRADE_PROGRESS.md`。
 `FileAttachment`、`Sound`、`Widget/AcroForm`、完整富文本样式和安全删密均未在本批实现。
+
+### 9.6 Intent、FreeText Callout 与 Border/Dash
+
+以下示例使用第二批新增的类型化 API：
+
+```rust
+use pdfxml::{
+    Annotation, AnnotationBase, BorderStyle, CalloutLine, FreeTextAnnotation,
+    LineEndingStyle, Rect, XfdfDocument,
+};
+
+let annotation = FreeTextAnnotation {
+    base: AnnotationBase {
+        name: Some("callout-knee".into()),
+        page: 0,
+        rect: Some(Rect { left: 40.0, bottom: 560.0, right: 550.0, top: 760.0 }),
+        title: None,
+        subject: None,
+        contents: Some("Callout with a knee".into()),
+        creation_date: None,
+        modification_date: None,
+        color: None,
+        opacity: 0.8,
+        flags: 0,
+        intent: Some("FreeTextCallout".into()),
+        border_style: Some(BorderStyle::Dashed),
+        dashes: Some(vec![6.0, 3.0]),
+        extra: Default::default(),
+    },
+    default_style: None,
+    default_appearance: Some("/Helvetica 14 Tf".into()),
+    text_color: Some("#1A4A80".into()),
+    align: 0,
+    callout: Some(CalloutLine::from_coordinates(&[70.0, 590.0, 200.0, 650.0, 300.0, 685.0]).unwrap()),
+    fringe: Some(Rect { left: 260.0, bottom: 100.0, right: 20.0, top: 20.0 }),
+    head_style: LineEndingStyle::ClosedArrow,
+    width: 2.0,
+};
+let document = XfdfDocument {
+    annotations: vec![Annotation::FreeText(annotation)],
+    ..Default::default()
+};
+assert!(document.pdf_conversion_warnings().is_empty());
+```
+
+- `intent` 是 PDF 名称而非行为枚举，不能为空或包含空白/控制字符。`LineDimension`、`PolygonCloud` 等名称可往返，但目前不执行测量/云线绘制，转换会提示限制。
+- `CalloutLine::from_string("x1,y1,x2,y2")` / `from_coordinates` 接受 4 或 6 个有限数；`start` 是标记端点，`knee` 是可选折点，`end` 是文字框连接点。`coordinates()` 可还原有序坐标。
+- `fringe` 复用 `Rect` 的字段表示四边差值，**不是绝对矩形**；必须非负且留下有效文字区域。
+- 普通 XFDF FreeText 未给宽度时为 0；带 Callout 时推断为 1。手工构造模型的 `width` 不会自动变成 1；`width=0` 不绘制线/端点，仍保留文字及几何。
+- `BorderStyle` 五种样式可读写 `/BS`。Solid/Dashed 有显式 AP；Bevelled/Inset/Underline 目前仅写字典，显示依赖阅读器且会报告转换限制。
+- 虚线数组允许空值；非空数组要求非负有限数且至少有一个正值。未指定样式但有数组时推断 Dashed；Dashed 无数组采用 `[3]`；显式 Solid 不使用数组绘制。
+- Callout 伸出原边界时导出会扩大 PDF Rect/BBox 并重算 RD，以保护端点和文字框；因此首次 PDF 回读的 Rect/Fringe 可能不同，但文字框位置不变，原 SDK 对象不被修改。
+- 这些字段支持新 PDF 和合并已有 PDF；导出时校验手工构造值，失败不会覆盖已有输出。类型化字段应作为唯一数据来源，不要在 `extra` 中再塞同名属性。

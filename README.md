@@ -19,7 +19,7 @@
 - 将 XFDF/XML 注释合并到现有 PDF
 - 从 PDF 中提取注释并导出为 XFDF
 - 支持常见注释类型：Text、Highlight、Underline、StrikeOut、Squiggly、FreeText、Square、Circle、Line、Polygon、PolyLine、Ink、Stamp、Popup
-- 当前源码新增 Link / Caret、XFDF 结构化诊断和严格模式，尚未发布；完整范围见 `ANNOTATION_SUPPORT.md`
+- 当前源码新增 Link / Caret、XFDF 结构化诊断和严格模式，以及 Intent、FreeText 引出线/内边距、Border/Dash，尚未发布；完整范围见 `ANNOTATION_SUPPORT.md`
 
 ### 当前源码的 XFDF 升级
 
@@ -30,9 +30,21 @@ cargo run -p pdfxml-cli -- --strict -i examples/interactive.xfdf -o interactive.
 cargo run -p pdfxml-cli -- --from-pdf -i interactive.pdf -o interactive-roundtrip.xfdf
 ```
 
+第二批高级属性示例包含 7 条注释，可验证引出线、箭头、虚线、细线宽和透明度：
+
+```bash
+cargo run -p pdfxml-cli -- --strict -i examples/advanced-annotations.xfdf -o advanced.pdf
+cargo run -p pdfxml-cli -- --from-pdf -i advanced.pdf -o advanced-roundtrip.xfdf
+cargo run -p pdfxml-cli -- --strict -i advanced-roundtrip.xfdf -o advanced-roundtrip.pdf
+```
+
+Intent 元数据往返不代表执行测量/云线；bevelled/inset/underline 目前仅写字典、由阅读器生成外观，转换会明确提示。
+
 SDK 新增 `load_xfdf_with_options`、`XfdfDocument::parse_with_report` 和 `pdf_conversion_warnings()`。
 严格模式校验当前支持的 XFDF 结构，不代表全部数据都能映射到 PDF。
 本批有公开结构体/枚举变更，接入迁移见 `SDK_GUIDE.md` 第 9 节；发布状态与验证记录见 `XFDF_UPGRADE_PROGRESS.md`。
+
+PDF 输入兼容修复：直接接收 `xref 0 175` 这类交叉引用表头共行的文件，库在内存中适配分隔符，不要求预处理或修改原 PDF。读取与合并使用同一入口；已用 `examples/cc.xml` 和原始 `examples/mwnodbDo.pdf` 验证，具体边界见 `ANNOTATION_SUPPORT.md`。
 
 ### 安装
 
@@ -125,13 +137,17 @@ Important:
 - Merge XFDF/XML annotations into an existing PDF
 - Extract annotations from PDF and export them as XFDF
 - Supports common annotation types: Text, Highlight, Underline, StrikeOut, Squiggly, FreeText, Square, Circle, Line, Polygon, PolyLine, Ink, Stamp, Popup
-- Current unreleased source adds Link/Caret, structured XFDF diagnostics, and opt-in strict parsing
+- Current unreleased source adds Link/Caret, structured XFDF diagnostics, opt-in strict parsing, Intent, FreeText callouts/fringe, and Border/Dash
 
 ### Unreleased XFDF upgrade
 
 Try `examples/interactive.xfdf` with `cargo run -p pdfxml-cli -- --strict -i examples/interactive.xfdf -o interactive.pdf`.
+Try the seven-annotation advanced sample with `cargo run -p pdfxml-cli -- --strict -i examples/advanced-annotations.xfdf -o advanced.pdf`.
+Callout/solid/dashed appearances are generated explicitly; measurement/cloud intents remain metadata, and bevelled/inset/underline appearances are left to the reader with conversion warnings.
 Use `load_xfdf_with_options` or `XfdfDocument::parse_with_report` to inspect diagnostics and `pdf_conversion_warnings()` before PDF export.
 Strict parsing is not a lossless-PDF guarantee. Public struct/enum changes require migration; see `SDK_GUIDE.md` section 9 and `XFDF_UPGRADE_PROGRESS.md`.
+
+PDF loading and merging now accept an inline classic xref header such as `xref 0 175` through a shared in-memory compatibility path. No source-file preprocessing is required. This has been verified with the original `examples/mwnodbDo.pdf`; see `ANNOTATION_SUPPORT.md` for the limits.
 
 ### Installation
 

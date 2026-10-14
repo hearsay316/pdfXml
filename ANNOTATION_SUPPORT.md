@@ -1,6 +1,6 @@
 # 批注与 XFDF 支持清单
 
-更新：2026-10-09，适用于当前仓库源码；本批升级尚未发布到 crates.io。
+更新：2026-10-14，适用于当前仓库源码；本批升级尚未发布到 crates.io。
 
 这里区分三个层次：**数据解析/保留**、**PDF 字典读写**和**可视外观**。
 支持基本往返不代表覆盖该类型的全部属性，也不代表跨阅读器像素一致。
@@ -11,15 +11,15 @@
 | --- | --- | --- |
 | `text` | 基础字段、图标、打开状态 | 依赖阅读器生成便签外观 |
 | `highlight`、`underline`、`strikeout`、`squiggly` | 基础字段、QuadPoints | 依赖阅读器生成标记外观 |
-| `freetext` | 基础字段、DA/DS、TextColor、对齐 | 有文字 AP；不是完整富文本排版 |
-| `square`、`circle` | 基础几何和线宽；Circle 填充色 | 有显式 AP；复杂边框仍有限制 |
-| `line` | 端点、线宽、端点样式字段 | 有基础 AP；端点样式字段不等于全部箭头已绘制 |
-| `polygon`、`polyline` | 顶点及闭合语义 | 有基础 AP；高级样式仍有限制 |
+| `freetext` | 基础字段、DA/DS、TextColor、对齐、CL/LE/RD/BS | 文字、引出线及实线/虚线 AP；不是完整富文本排版 |
+| `square`、`circle` | 基础几何、线宽、BS；Circle 填充色 | 实线/虚线和透明度 AP；其他边框样式见下文 |
+| `line` | 端点、线宽、端点样式、BS | 线条/箭头 AP；测量 Intent 仅作为元数据保留 |
+| `polygon`、`polyline` | 顶点、闭合语义、线宽、BS | 实线/虚线 AP；不生成云线或测量外观 |
 | `ink` | 多条手势路径和线宽 | 写入 InkList，由阅读器呈现；不是完整笔刷引擎 |
 | `stamp` | 图标、支持的图片数据 | 有图片 AP；外部 PDF 的复杂图章不保证完整回提 |
 | `popup` | 打开状态、父注释关联 | 依赖阅读器弹窗；支持嵌套 XFDF Popup 的父子关系 |
-| `link`（本批新增） | URI、命名目的地、内部页面跳转 | 写入交互字典、Border、H、QuadPoints；不生成页面链接文字 |
-| `caret`（本批新增） | `/Sy`、`/RD`、基础字段 | 有插入符/段落符 AP，支持颜色、透明度和内边距 |
+| `link`（第一批新增） | URI、命名目的地、内部页面跳转、BS | 写入交互字典、Border、H、QuadPoints；不生成页面链接文字 |
+| `caret`（第一批新增） | `/Sy`、`/RD`、基础字段 | 有插入符/段落符 AP，支持颜色、透明度和内边距 |
 
 ### Link 的具体范围
 
@@ -39,7 +39,30 @@
 - 有效非退化矩形且内边距留有绘制空间时生成 AP；不执行正文编辑或删除。
 - 当前未做 Acrobat、PDFium、MuPDF 的跨阅读器可视一致性验收。
 
-## 2. XFDF 数据保真与诊断
+## 2. 第二批：Intent、Callout 与 Border/Dash
+
+| 能力 | XFDF / PDF 映射 | 外观边界 |
+| --- | --- | --- |
+| Intent | 标准 `intent`，兼容旧 `IT`；读写 PDF `/IT` | 不再强制覆盖成 `FreeTextTypeWriter`；名称保留不等于执行其专用效果 |
+| FreeText Callout | `callout` 的 4 或 6 个数字 ↔ `/CL`；`head` ↔ 单个 `/LE` 名称 | 直线/折线引出线、端点和文字框 AP；无内容时仍保留几何 |
+| FreeText Fringe | `fringe="left,bottom,right,top"` ↔ `/RD` | 四边差值定义文字框；文字在框内裁剪，不是绝对坐标 |
+| 边框样式 | `style`，兼容 `border-style`；`solid/dash/bevelled/inset/underline` ↔ `/BS /S` | 实线/虚线生成 AP；后三者只写字典、移除替代 AP 并给出转换警告，交给阅读器显示 |
+| 虚线数组 | `dashes="长度,间隔,..."` ↔ `/BS /D`；兼容回读旧 `/Border` 数组 | FreeText、Square、Circle、Line、Polygon/PolyLine 的 AP 使用相同虚线；Ink/Link 由阅读器呈现 |
+| 线宽与透明度 | 支持 BS 的类型读写宽度；图形/Callout AP 使用透明度状态 | 保留小于 1 的线宽；显式 0 不绘制描边，不变成 PDF hairline |
+
+- BS 适用于 FreeText、Square、Circle、Line、Polygon、PolyLine、Ink、Link；其他类型的同名 XFDF 属性仍按扩展保留。
+- Callout 的点顺序为端点、可选折点、文字框连接点；无显式 Intent 时推断 `FreeTextCallout`。XFDF 未指定线宽时 Callout 默认 1，普通 FreeText 默认 0；显式 0 会保留。手工构造 SDK 对象时需自行设置线宽。
+- 引出线伸出原 `rect` 时扩大 PDF `/Rect` 和 AP `/BBox`，同步重算 `/RD`，保持文字框位置/大小；不会修改调用方对象。
+- FreeText Callout 和 Line 可绘制 `None`、`Square`、`Circle`、`Diamond`、`OpenArrow`、`ClosedArrow`、`Butt`、`ROpenArrow`、`RClosedArrow`、`Slash`。这不代表 PolyLine 的端点属性也已建模。
+- 只有 `dashes` 时推断虚线；`style="dash"` 未指定数组时使用 `[3]`；空数组保持空。显式 `style="solid"` 优先，数组可保留但 AP 不使用它。
+- Callout 与显式非 Callout Intent 冲突会产生 Warning；不偷偷覆盖调用方意图。两个别名冲突时标准属性优先，亦报告 Warning。
+- 未知边框名称、`cloudy` 和 CSS 风格 `style` 保存在 `extra` 并提示未映射，不等同于 PDF 边框实现。
+- 非有限坐标、负线宽、非法虚线及端点样式会诊断；严格模式失败。Fringe 若未留下有效文字区域，PDF 导出失败且不覆盖输出。
+- 文字复用现有西文/CJK 渲染；CJK 需要可用系统字体或 `PDFXML_CJK_FONT`，不是完整多行/富文本排版引擎。
+
+已对 `examples/advanced-annotations.xfdf` 做 CLI 严格转换及 PDF→XFDF→PDF 往返，7 条注释全部保留；MuPDF 单引擎渲染前后像素一致。另以系统字体验证中文 Callout 可见及其往返渲染一致。**尚未完成 Acrobat/PDFium 等跨阅读器验收。**
+
+## 3. XFDF 数据保真与诊断
 
 | 能力 | 当前实现 |
 | --- | --- |
@@ -73,7 +96,16 @@
 - 以上是 XFDF 解析限制，不是 PDF 解压/图片解码的全局资源限制。手工构造的 SDK 对象仍需调用方控制规模。
 - URI 按数据保留，不验证其安全性；输出 PDF 不是经过安全净化的文件，业务系统应自行限制 URI 协议和可访问目的地。
 
-## 3. 尚未实现的转换能力
+### PDF 输入兼容（当前源码，尚未发布）
+
+- PDF→XFDF 与合并到现有 PDF 共用 `src/pdf/reader.rs`，SDK、CLI 及调用这些 API 的 GUI 服务层均无需额外预处理。
+- 首先使用原始字节加载；解析失败且最新 `startxref` 明确指向 `xref` 后紧接单个空格/制表符和首个分段编号时，只在内存中适配这个分隔符，再交给底层解析器校验。
+- 不移动任何对象偏移、不全局替换内容流、不创建修复版输入文件，也不删除尾部附加数据。兼容成功会记录 warning。
+- 原始 `examples/mwnodbDo.pdf` 同时包含 `xref 0 175` 与 `WebFastLoad` 尾部数据；本次阻塞原因是前者，而不是后者。原文件可直接读取和合并，两个输入文件 SHA-256 均保持不变。
+- 不回退到较早的增量修订，不掩盖错误偏移/无效结构；这不是通用损坏 PDF 修复器，也不保证任意长度尾部数据或历史 `/Prev` 链中其他畸形结构均可加载。
+- 合并仍输出新 PDF，不承诺保留 PDF 结构以外的厂商尾部数据或原数字签名有效性。
+
+## 4. 尚未实现的转换能力
 
 - `fileattachment`：仅 XFDF XML 保留，尚无 EmbeddedFiles/Filespec 导出与附件提取策略。
 - `sound`：仅 XFDF XML 保留，没有声音流处理。
@@ -81,6 +113,7 @@
 - `redact` 及其他未建模类型：仅 XFDF XML 保留；**没有安全删密能力**。
 - 非 XML 的 FDF 格式。
 - 完整富文本/XHTML 排版与字体样式回放。
-- 完整 Intent、Callout、Reply/State、BlendMode、Border/Dash 的 PDF 映射及外观实现。
+- Reply/State 审阅关系与状态、BlendMode 的完整 PDF 映射及外观实现。
+- 测量/云线/高亮型墨迹等 Intent 专用行为、云状边框，以及 bevelled/inset/underline 的显式 AP。
 
 后续工作与 API 迁移见 [XFDF_UPGRADE_PROGRESS.md](XFDF_UPGRADE_PROGRESS.md)。

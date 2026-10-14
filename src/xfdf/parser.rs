@@ -433,6 +433,11 @@ impl Context<'_> {
             "coords",
             "start",
             "end",
+            "callout",
+            "head",
+            "dashes",
+            "intent",
+            "IT",
         ] {
             if !XfdfDocument::is_known_attr(&node.local, key) {
                 continue;
@@ -460,6 +465,10 @@ impl Context<'_> {
                     .is_some_and(|r| [r.left, r.bottom, r.right, r.top].iter().all(|n| *n >= 0.0)),
                 "coords" => valid_numbers(value, 8, true),
                 "start" | "end" => valid_numbers(value, 2, false),
+                "callout" => CalloutLine::from_string(value).is_some(),
+                "head" if node.local == "freetext" => LineEndingStyle::from_name(value).is_some(),
+                "dashes" => parse_dashes(value).is_some(),
+                "intent" | "IT" => !value.is_empty() && !value.chars().any(|c| c.is_whitespace() || c.is_control()),
                 _ => true,
             };
             if !valid {
@@ -469,6 +478,25 @@ impl Context<'_> {
                     format!("无效属性 {key}={value:?}，使用默认值；可能影响 PDF 转换"),
                 )?;
                 attrs.remove(key);
+            }
+        }
+        for (standard, legacy) in [("intent", "IT"), ("style", "border-style")] {
+            if !XfdfDocument::is_known_attr(&node.local, standard) { continue; }
+            if let (Some(a), Some(b)) = (attrs.get(standard), attrs.get(legacy)) {
+                if a != b {
+                    self.issue(node, XfdfDiagnosticCode::InvalidAttribute,
+                        format!("{standard} 与 {legacy} 冲突，优先使用 {standard}"))?;
+                }
+            }
+        }
+        for key in ["style", "border-style"] {
+            if XfdfDocument::is_known_attr(&node.local, key) {
+                if let Some(value) = attrs.get(key) {
+                    if BorderStyle::from_name(value).is_none() {
+                        self.issue(node, XfdfDiagnosticCode::PreservedExtension,
+                            format!("{key} 不是已支持的边框样式，作为扩展保留；不生成相应 PDF 边框"))?;
+                    }
+                }
             }
         }
         for key in ["page", "rect"] {
@@ -621,6 +649,17 @@ impl Context<'_> {
             .and_then(|mut annotation| {
                 if let Annotation::Link(link) = &mut annotation {
                     link.target = link_target(node, self.options)?;
+                }
+                if let Annotation::FreeText(text) = &mut annotation {
+                    if text.callout.is_some() {
+                        if !attrs.contains_key("width") { text.width = 1.0; }
+                        match text.base.intent.as_deref() {
+                            None => text.base.intent = Some("FreeTextCallout".into()),
+                            Some("FreeTextCallout") => {},
+                            Some(_) => self.issue(node, XfdfDiagnosticCode::InvalidAttribute,
+                                "FreeText callout 与 intent 不一致；保留原意图并写入引出线")?,
+                        }
+                    }
                 }
                 Ok(annotation)
             });
@@ -847,6 +886,17 @@ pub(super) fn flags_string(flags: u32) -> String {
     .map(|(_, name)| *name)
     .collect::<Vec<_>>()
     .join(",")
+}
+
+pub(super) fn parse_dashes(value: &str) -> Option<Vec<f32>> {
+    let values = if value.trim().is_empty() {
+        Vec::new()
+    } else {
+        value.split(',').map(|v| v.trim().parse::<f32>())
+            .collect::<std::result::Result<Vec<_>, _>>().ok()?
+    };
+    (values.iter().all(|n| n.is_finite() && *n >= 0.0)
+        && (values.is_empty() || values.iter().any(|n| *n > 0.0))).then_some(values)
 }
 
 fn valid_numbers(value: &str, group: usize, multiple: bool) -> bool {

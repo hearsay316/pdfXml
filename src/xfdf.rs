@@ -291,6 +291,10 @@ impl XfdfDocument {
                 align: attrs.get("align")
                     .and_then(|v| v.parse().ok())
                     .unwrap_or(0),
+                callout: attrs.get("callout").and_then(|v| CalloutLine::from_string(v)),
+                fringe: attrs.get("fringe").and_then(|v| Rect::from_string(v)),
+                head_style: attrs.get("head").and_then(|v| LineEndingStyle::from_name(v)).unwrap_or_default(),
+                width: attrs.get("width").and_then(|v| v.parse().ok()).unwrap_or(0.0),
             }),
             "square" => Annotation::Square(SquareAnnotation {
                 base,
@@ -319,6 +323,7 @@ impl XfdfDocument {
                 base,
                 vertices: attrs.get("vertices").cloned(),
                 is_closed: annotation_type == "polygon",
+                width: attrs.get("width").and_then(|v| v.parse().ok()).unwrap_or(1.0),
             }),
             "ink" => {
                 // 处理 inklist 数据
@@ -406,8 +411,17 @@ impl XfdfDocument {
             flags: attrs.get("flags")
                 .and_then(|v| parser::parse_flags(v))
                 .unwrap_or_default(),
+            intent: attrs.get("intent").or_else(|| attrs.get("IT")).cloned(),
+            border_style: Self::supports_border(annotation_type).then(|| {
+                attrs.get("style").or_else(|| attrs.get("border-style"))
+                    .and_then(|v| BorderStyle::from_name(v))
+            }).flatten(),
+            dashes: Self::supports_border(annotation_type).then(|| {
+                attrs.get("dashes").and_then(|v| parser::parse_dashes(v))
+            }).flatten(),
             extra: attrs.iter()
-                .filter(|(k, _)| !Self::is_known_attr(annotation_type, k))
+                .filter(|(k, v)| !Self::is_known_attr(annotation_type, k)
+                    || (matches!(k.as_str(), "style" | "border-style") && BorderStyle::from_name(v).is_none()))
                 .map(|(k, v)| (k.clone(), v.clone()))
                 .collect(),
         })
@@ -417,18 +431,21 @@ impl XfdfDocument {
     fn is_known_attr(annotation_type: &str, key: &str) -> bool {
         if matches!(key,
             "name" | "page" | "rect" | "title" | "subject" |
-            "creationdate" | "date" | "color" | "opacity" | "flags" | "_contents-present"
+            "creationdate" | "date" | "color" | "opacity" | "flags" | "intent" | "IT" | "_contents-present"
         ) {
+            return true;
+        }
+        if Self::supports_border(annotation_type) && matches!(key, "style" | "border-style" | "dashes") {
             return true;
         }
         match annotation_type {
             "text" => matches!(key, "open" | "icon"),
             "highlight" | "underline" | "strikeout" | "squiggly" => key == "coords",
-            "freetext" => matches!(key, "defaultstyle" | "defaultappearance" | "TextColor" | "align"),
+            "freetext" => matches!(key, "defaultstyle" | "defaultappearance" | "TextColor" | "align" | "callout" | "fringe" | "head" | "width"),
             "square" => key == "width",
             "circle" => matches!(key, "width" | "interiorcolor"),
             "line" => matches!(key, "start" | "end" | "head" | "tail" | "width"),
-            "polygon" | "polyline" => key == "vertices",
+            "polygon" | "polyline" => matches!(key, "vertices" | "width"),
             "ink" => matches!(key, "_inklist" | "width"),
             "stamp" => matches!(key, "icon" | "imagedata"),
             "link" => matches!(key, "uri" | "dest" | "highlight" | "coords" | "width"),
@@ -436,6 +453,10 @@ impl XfdfDocument {
             "popup" => matches!(key, "open" | "parent"),
             _ => false,
         }
+    }
+
+    fn supports_border(annotation_type: &str) -> bool {
+        matches!(annotation_type, "freetext" | "square" | "circle" | "line" | "polygon" | "polyline" | "ink" | "link")
     }
 
     /// 获取指定页面上的所有注释。
@@ -560,6 +581,12 @@ impl XfdfDocument {
         if self.annotations.iter().any(|a| a.base().extra.contains_key("contents-richtext")) {
             warnings.push("富文本 XML 会保留为 PDF RC，但当前外观流仍按纯文本绘制".into());
         }
+        if self.annotations.iter().any(|a| matches!(a.base().border_style, Some(BorderStyle::Bevelled | BorderStyle::Inset | BorderStyle::Underline))) {
+            warnings.push("bevelled/inset/underline 边框写入 PDF BS；当前不生成这些样式的显式外观，由阅读器决定显示".into());
+        }
+        if self.annotations.iter().any(|a| a.base().intent.as_deref().is_some_and(|i| !matches!(i, "FreeText" | "FreeTextCallout" | "FreeTextTypeWriter"))) {
+            warnings.push("Intent 名称会写入 PDF IT；不据此执行测量、云线或高亮型墨迹等专用绘制".into());
+        }
         warnings
     }
 
@@ -623,7 +650,11 @@ fn push_base_attrs(attrs: &mut Vec<(String, String)>, base: &AnnotationBase, ann
     if base.flags != 0 {
         attrs.push(("flags".to_string(), parser::flags_string(base.flags)));
     }
-    let mut extra = base.extra.iter().filter(|(key,_)| !key.starts_with("_xml:") && key.as_str() != "contents-richtext" && !XfdfDocument::is_known_attr(annotation_type, key)).collect::<Vec<_>>();
+    if let Some(intent) = &base.intent { attrs.push(("intent".into(), intent.clone())); }
+    if let Some(style) = base.border_style { attrs.push(("style".into(), style.xfdf_name().into())); }
+    if let Some(dashes) = &base.dashes { attrs.push(("dashes".into(), dashes.iter().map(f32::to_string).collect::<Vec<_>>().join(","))); }
+    let mut extra = base.extra.iter().filter(|(key,_)| !key.starts_with("_xml:") && key.as_str() != "contents-richtext"
+        && (!XfdfDocument::is_known_attr(annotation_type, key) || (matches!(key.as_str(), "style" | "border-style") && base.border_style.is_none()))).collect::<Vec<_>>();
     extra.sort_by(|a,b| a.0.cmp(b.0));
     for (key, value) in extra { attrs.push((key.clone(), value.clone())); }
 }
@@ -690,6 +721,10 @@ fn annotation_to_xfdf_element(annotation: &Annotation) -> Result<String> {
             if freetext.align != 0 {
                 attrs.push(("align".to_string(), freetext.align.to_string()));
             }
+            if let Some(callout) = &freetext.callout { attrs.push(("callout".into(), callout.coordinates().iter().map(f64::to_string).collect::<Vec<_>>().join(","))); }
+            if let Some(fringe) = &freetext.fringe { attrs.push(("fringe".into(), format_rect(fringe))); }
+            if freetext.head_style != LineEndingStyle::None { attrs.push(("head".into(), freetext.head_style.name().into())); }
+            if freetext.width != 0.0 || freetext.callout.is_some() { attrs.push(("width".into(), freetext.width.to_string())); }
             ("freetext", attrs, freetext.base.contents.clone())
         }
         Annotation::Square(square) => {
@@ -734,6 +769,7 @@ fn annotation_to_xfdf_element(annotation: &Annotation) -> Result<String> {
         Annotation::Polygon(polygon) => {
             let mut attrs = Vec::new();
             push_base_attrs(&mut attrs, &polygon.base, &annotation_type);
+            if polygon.width != 1.0 { attrs.push(("width".into(), polygon.width.to_string())); }
             if let Some(vertices) = &polygon.vertices {
                 attrs.push(("vertices".to_string(), vertices.clone()));
             }
@@ -926,6 +962,9 @@ mod tests {
                     color: Some("#FFFF00".to_string()),
                     opacity: 1.0,
                     flags: 0,
+                    intent: None,
+                    border_style: None,
+                    dashes: None,
                     extra: HashMap::new(),
                 },
                 open: false,

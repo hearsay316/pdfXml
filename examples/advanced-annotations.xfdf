@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xfdf xmlns="http://ns.adobe.com/xfdf/" xml:space="preserve">
+  <annots>
+    <freetext name="callout-knee" page="0" rect="40,560,550,760"
+      intent="FreeTextCallout" callout="70,590,200,650,300,685"
+      fringe="260,100,20,20" head="ClosedArrow" width="2"
+      TextColor="#1A4A80" style="dash" dashes="6,3">
+      <contents>Callout with a knee</contents>
+      <defaultappearance>/Helvetica 14 Tf</defaultappearance>
+    </freetext>
+    <freetext name="callout-outside" page="0" rect="300,450,530,510"
+      intent="FreeTextCallout" callout="100,430,300,480"
+      head="OpenArrow" width="1.5" TextColor="#A3441D" opacity="0.65">
+      <contents>External callout tip</contents>
+      <defaultappearance>/Courier 14 Tf</defaultappearance>
+    </freetext>
+    <square name="thin-dash" page="0" rect="60,320,250,390"
+      color="#315BAD" width="0.5" style="dash" dashes="8,3"/>
+    <circle name="circle-dash" page="0" rect="320,320,530,390"
+      color="#247047" interiorcolor="#E5F4EB" width="2" style="dash" dashes="4,2" opacity="0.7"/>
+    <line name="dimension-data" page="0" rect="60,240,530,300"
+      start="70,270" end="520,270" head="OpenArrow" tail="ClosedArrow"
+      intent="LineDimension" color="#6B3B8C" width="1.5" style="dash" dashes="8,3"/>
+    <polygon name="polygon-dash" page="0" rect="60,80,250,210"
+      vertices="70,90 240,90 155,200" color="#007F86" width="2" style="dash" dashes="5,2"/>
+    <polyline name="polyline-dash" page="0" rect="320,80,530,210"
+      vertices="330,90 380,190 440,110 520,200" color="#A3441D" width="0.75" style="dash" dashes="4,2"/>
+  </annots>
+</xfdf>

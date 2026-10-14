@@ -43,6 +43,8 @@ use std::path::{Path, PathBuf};
 use ttf_parser::{Face, OutlineBuilder};
 
 mod interactive;
+mod advanced;
+mod reader;
 
 fn pdf_text_string(value: &str) -> lopdf::Object {
     if value.is_ascii() { lopdf::Object::string_literal(value) }
@@ -609,6 +611,7 @@ impl PdfAnnotationExporter {
         }
 
         if let Some(rich) = base.extra.get("contents-richtext") { dict.set("RC", pdf_text_string(rich)); }
+        if let Some(intent) = &base.intent { dict.set("IT", lopdf::Object::Name(intent.as_bytes().to_vec())); }
 
         if let Some(dt) = &base.modification_date {
             dict.set("M", lopdf::Object::String(dt.clone().into_bytes(), lopdf::StringFormat::Literal));
@@ -898,8 +901,8 @@ impl PdfAnnotationExporter {
         let rect = annotation.base.rect.as_ref()?;
         let width = ((rect.right - rect.left).abs() as f32).max(1.0);
         let height = ((rect.top - rect.bottom).abs() as f32).max(1.0);
-        let line_width = annotation.width.max(1.0);
-        let inset = (line_width / 2.0).max(0.5);
+        let line_width = annotation.width;
+        let inset = line_width / 2.0;
         let draw_width = (width - line_width).max(0.0);
         let draw_height = (height - line_width).max(0.0);
         let color = annotation.base.color.as_deref().and_then(Color::from_hex).unwrap_or(Color {
@@ -909,15 +912,17 @@ impl PdfAnnotationExporter {
         });
 
         let content = format!(
-            "q\n{} {} {} RG\n{} w\n[] 0 d\n{} {} {} {} re\nS\nQ\n",
+            "q\n{} {} {} RG\n{} w\n{}{} {} {} {} re\n{}\nQ\n",
             color.r,
             color.g,
             color.b,
             line_width,
+            Self::border_dash_commands(&annotation.base),
             inset,
             inset,
             draw_width,
             draw_height,
+            if line_width > 0.0 { "S" } else { "n" },
         );
 
         let stream_dict = lopdf::Dictionary::from_iter(vec![
@@ -948,8 +953,8 @@ impl PdfAnnotationExporter {
         let rect = annotation.base.rect.as_ref()?;
         let width = ((rect.right - rect.left).abs() as f32).max(1.0);
         let height = ((rect.top - rect.bottom).abs() as f32).max(1.0);
-        let line_width = annotation.width.max(1.0);
-        let inset = (line_width / 2.0).max(0.5);
+        let line_width = annotation.width;
+        let inset = line_width / 2.0;
         let stroke = annotation.base.color.as_deref().and_then(Color::from_hex).unwrap_or(Color {
             r: 0.894,
             g: 0.259,
@@ -980,7 +985,8 @@ impl PdfAnnotationExporter {
             cx - ox, cy + ry, cx - rx, cy + oy, cx - rx, cy,
             cx - rx, cy - oy, cx - ox, cy - ry, cx, cy - ry,
             cx + ox, cy - ry, cx + rx, cy - oy, cx + rx, cy,
-            if has_fill { "b" } else { "S" }
+            if has_fill { if line_width > 0.0 { "b" } else { "f" } }
+                else if line_width > 0.0 { "S" } else { "n" }
         ));
 
         let stream_dict = lopdf::Dictionary::from_iter(vec![
@@ -1007,6 +1013,11 @@ impl PdfAnnotationExporter {
             return None;
         }
 
+        if matches!(style, "ROpenArrow" | "RClosedArrow") {
+            return Self::build_arrowhead_path(tip_x, tip_y, tip_x * 2.0 - base_x,
+                tip_y * 2.0 - base_y, size,
+                if style == "ROpenArrow" { "OpenArrow" } else { "ClosedArrow" });
+        }
         let dx = tip_x - base_x;
         let dy = tip_y - base_y;
         let length = (dx * dx + dy * dy).sqrt();
@@ -1060,6 +1071,22 @@ impl PdfAnnotationExporter {
                     tip_x + ox, tip_y - r, tip_x + r, tip_y - oy, tip_x + r, tip_y,
                 ))
             }
+            "Diamond" => Some(format!(
+                "{} {} m\n{} {} l\n{} {} l\n{} {} l\nh\nB\n",
+                tip_x + ux * arrow_half_width, tip_y + uy * arrow_half_width,
+                tip_x + px * arrow_half_width, tip_y + py * arrow_half_width,
+                tip_x - ux * arrow_half_width, tip_y - uy * arrow_half_width,
+                tip_x - px * arrow_half_width, tip_y - py * arrow_half_width,
+            )),
+            "Butt" | "Slash" => {
+                let slant = if style == "Slash" { 0.5 } else { 0.0 };
+                Some(format!("{} {} m\n{} {} l\nS\n",
+                    tip_x + (px + ux * slant) * arrow_half_width,
+                    tip_y + (py + uy * slant) * arrow_half_width,
+                    tip_x - (px + ux * slant) * arrow_half_width,
+                    tip_y - (py + uy * slant) * arrow_half_width,
+                ))
+            }
             _ => Some(format!(
                 "{} {} m\n{} {} l\n{} {} m\n{} {} l\nS\n",
                 lx, ly, tip_x, tip_y, rx, ry, tip_x, tip_y
@@ -1071,7 +1098,7 @@ impl PdfAnnotationExporter {
         let rect = annotation.base.rect.as_ref()?;
         let width = ((rect.right - rect.left).abs() as f32).max(1.0);
         let height = ((rect.top - rect.bottom).abs() as f32).max(1.0);
-        let line_width = annotation.width.max(1.0);
+        let line_width = annotation.width;
         let stroke = annotation.base.color.as_deref().and_then(Color::from_hex).unwrap_or(Color {
             r: 0.894,
             g: 0.259,
@@ -1085,14 +1112,15 @@ impl PdfAnnotationExporter {
         let ey = (end.1 - rect.bottom) as f32;
 
         let mut content = format!(
-            "q\n{} {} {} RG\n{} {} {} rg\n{} w\n{} {} m\n{} {} l\nS\n",
-            stroke.r, stroke.g, stroke.b, stroke.r, stroke.g, stroke.b, line_width, sx, sy, ex, ey
+            "q\n{} {} {} RG\n{} {} {} rg\n{} w\n{} {} m\n{} {} l\n{}\n[] 0 d\n",
+            stroke.r, stroke.g, stroke.b, stroke.r, stroke.g, stroke.b, line_width, sx, sy, ex, ey,
+            if line_width > 0.0 { "S" } else { "n" }
         );
 
-        if let Some(path) = Self::build_arrowhead_path(sx, sy, ex, ey, line_width * 4.0, &annotation.head_style) {
+        if let Some(path) = (line_width > 0.0).then(|| Self::build_arrowhead_path(sx, sy, ex, ey, line_width * 4.0, &annotation.head_style)).flatten() {
             content.push_str(&path);
         }
-        if let Some(path) = Self::build_arrowhead_path(ex, ey, sx, sy, line_width * 4.0, &annotation.tail_style) {
+        if let Some(path) = (line_width > 0.0).then(|| Self::build_arrowhead_path(ex, ey, sx, sy, line_width * 4.0, &annotation.tail_style)).flatten() {
             content.push_str(&path);
         }
         content.push_str("Q\n");
@@ -1145,11 +1173,13 @@ impl PdfAnnotationExporter {
         }
 
         let content = format!(
-            "q\n{} {} {} RG\n1 w\n{}S\nQ\n",
+            "q\n{} {} {} RG\n{} w\n{}{}\nQ\n",
             stroke.r,
             stroke.g,
             stroke.b,
-            path
+            annotation.width,
+            path,
+            if annotation.width > 0.0 { "S" } else { "n" }
         );
 
         let stream_dict = lopdf::Dictionary::from_iter(vec![
@@ -1179,25 +1209,30 @@ impl PdfAnnotationExporter {
             dict.set("DS", lopdf::Object::String(style.clone().into_bytes(), lopdf::StringFormat::Literal));
         }
 
-        let Some(spec) = Self::build_freetext_render_spec(annotation) else {
-            return Ok(dict);
-        };
-
-        dict.set("DA", lopdf::Object::String(spec.da.as_bytes().to_vec(), lopdf::StringFormat::Literal));
-        dict.set("Q", lopdf::Object::Integer(spec.align as i64));
-        dict.set("IT", lopdf::Object::Name(b"FreeTextTypeWriter".to_vec()));
-        dict.set("RD", lopdf::Object::Array(vec![
-            lopdf::Object::Real(0.0),
-            lopdf::Object::Real(0.0),
-            lopdf::Object::Real(0.0),
-            lopdf::Object::Real(0.0),
-        ]));
-
-        let ap_stream = if spec.is_cjk {
-            Self::build_cjk_ap_stream(&spec, annotation.base.rect.as_ref())?
+        let spec = Self::build_freetext_render_spec(annotation);
+        let da = spec.as_ref().map(|s| s.da.clone()).unwrap_or_else(|| {
+            apply_text_color_to_da(annotation.default_appearance.as_deref().unwrap_or("/Helvetica 12 Tf"), annotation.text_color.as_deref())
+        });
+        dict.set("DA", pdf_text_string(&da));
+        dict.set("Q", lopdf::Object::Integer(spec.as_ref().map(|s| s.align).unwrap_or(annotation.align) as i64));
+        if let Some(fringe) = &annotation.fringe { dict.set("RD", lopdf::Object::Array(fringe.to_pdf_array())); }
+        if let Some(callout) = &annotation.callout {
+            dict.set("CL", lopdf::Object::Array(callout.coordinates().iter().map(|v| lopdf::Object::Real(*v as f32)).collect()));
+            if annotation.base.intent.is_none() { dict.set("IT", lopdf::Object::Name(b"FreeTextCallout".to_vec())); }
+        }
+        if annotation.callout.is_some() || annotation.head_style != LineEndingStyle::None {
+            dict.set("LE", lopdf::Object::Name(annotation.head_style.name().as_bytes().to_vec()));
+        }
+        let ap_stream = if annotation.callout.is_some() || annotation.fringe.is_some()
+            || annotation.width > 0.0 || annotation.base.opacity != 1.0 {
+            Self::build_freetext_appearance(document, &mut dict, annotation, spec.as_ref())?
+        } else if let Some(spec) = spec {
+            Some(if spec.is_cjk { Self::build_cjk_ap_stream(&spec, annotation.base.rect.as_ref())? }
+                else { Self::build_text_ap_stream(&spec, annotation.base.rect.as_ref()) })
         } else {
-            Self::build_text_ap_stream(&spec, annotation.base.rect.as_ref())
+            None
         };
+        let Some(ap_stream) = ap_stream else { return Ok(dict); };
         let ap_stream_id = document.add_object(ap_stream);
         dict.set("AP", lopdf::Object::Dictionary({
             let mut ap_dict = lopdf::Dictionary::new();
@@ -1221,8 +1256,7 @@ impl PdfAnnotationExporter {
     /// # Ok::<(), pdfxml::PdfXmlError>(())
     /// ```
     pub fn load_annotations_from_pdf(&mut self, input_path: &Path) -> Result<XfdfDocument> {
-        let document = lopdf::Document::load(input_path)
-            .map_err(|e| PdfXmlError::PdfProcessing(format!("加载PDF失败: {}", e)))?;
+        let document = reader::load_document(input_path)?;
 
         let mut xfdf_doc = XfdfDocument {
             xmlns: Some("http://ns.adobe.com/xfdf/".to_string()),
@@ -1282,6 +1316,9 @@ impl PdfAnnotationExporter {
             Err(_) => return Ok(None),
         };
 
+        let (border_style, dashes) = if matches!(subtype.as_str(), "FreeText" | "Square" | "Circle" | "Line" | "Polygon" | "PolyLine" | "Ink" | "Link") {
+            Self::read_border_fields(document, dict)?
+        } else { (None, None) };
         let base = AnnotationBase {
             name: Self::dict_string(document, dict, b"NM")?,
             page,
@@ -1294,6 +1331,9 @@ impl PdfAnnotationExporter {
             color: Self::dict_color(document, dict, b"C")?,
             opacity: Self::dict_number(document, dict, b"CA")?.unwrap_or(1.0) as f32,
             flags: Self::dict_integer(document, dict, b"F")?.unwrap_or(0) as u32,
+            intent: Self::dict_name_or_string(document, dict, b"IT")?,
+            border_style,
+            dashes,
             extra: Self::dict_string(document, dict, b"RC")?.map(|rich| HashMap::from([("contents-richtext".into(), rich)])).unwrap_or_default(),
         };
 
@@ -1333,6 +1373,14 @@ impl PdfAnnotationExporter {
                     default_appearance,
                     text_color,
                     align: Self::dict_integer(document, dict, b"Q")?.unwrap_or(0) as i32,
+                    callout: Self::dict_number_list(document, dict, b"CL")?.map(|values| {
+                        CalloutLine::from_coordinates(&values).ok_or_else(|| PdfXmlError::PdfProcessing("无效 PDF FreeText CL".into()))
+                    }).transpose()?,
+                    fringe: Self::dict_rect(document, dict, b"RD")?,
+                    head_style: Self::dict_name_or_string(document, dict, b"LE")?.map(|name| {
+                        LineEndingStyle::from_name(&name).ok_or_else(|| PdfXmlError::PdfProcessing(format!("无效 PDF FreeText LE: {name}")))
+                    }).transpose()?.unwrap_or_default(),
+                    width: Self::annotation_width(document, dict)?.unwrap_or(1.0),
                 }))
             },
             "Square" => Some(Annotation::Square(SquareAnnotation {
@@ -1372,11 +1420,13 @@ impl PdfAnnotationExporter {
                 base,
                 vertices: Self::dict_number_list(document, dict, b"Vertices")?.map(Self::numbers_to_vertices),
                 is_closed: true,
+                width: Self::annotation_width(document, dict)?.unwrap_or(1.0),
             })),
             "PolyLine" => Some(Annotation::Polygon(PolygonAnnotation {
                 base,
                 vertices: Self::dict_number_list(document, dict, b"Vertices")?.map(Self::numbers_to_vertices),
                 is_closed: false,
+                width: Self::annotation_width(document, dict)?.unwrap_or(1.0),
             })),
             "Ink" => Some(Annotation::Ink(InkAnnotation {
                 base,
@@ -1730,7 +1780,11 @@ impl PdfAnnotationExporter {
             Ok(obj) => {
                 let arr = Self::resolve_object(document, obj)?.as_array()
                     .map_err(|e| PdfXmlError::PdfProcessing(format!("字段 {:?} 不是数组: {}", String::from_utf8_lossy(key), e)))?;
-                let values = arr.iter().filter_map(Self::object_number).collect::<Vec<_>>();
+                let values = arr.iter().map(|value| {
+                    Self::object_number(Self::resolve_object(document, value)?)
+                        .filter(|n| n.is_finite())
+                        .ok_or_else(|| PdfXmlError::PdfProcessing(format!("字段 {:?} 包含非数字/非有限数", String::from_utf8_lossy(key))))
+                }).collect::<Result<Vec<_>>>()?;
                 Ok(Some(values))
             }
             Err(_) => Ok(None),
@@ -2014,8 +2068,7 @@ impl PdfAnnotationExporter {
         self.pending_link_destinations.clear();
         info!("打开现有 PDF 并合并注释");
 
-        let mut document = lopdf::Document::load(input_path)
-            .map_err(|e| PdfXmlError::PdfProcessing(format!("加载PDF失败: {}", e)))?;
+        let mut document = reader::load_document(input_path)?;
 
         let pages = document.get_pages();
         let existing_page_count = pages.len();
@@ -2188,6 +2241,7 @@ impl PdfAnnotationExporter {
         }
         let mut dict = Self::build_base_annotation_dict(annotation);
 
+        Self::validate_advanced_fields(annotation)?;
         match annotation {
             Annotation::Text(t) => {
                 if t.open {
@@ -2229,7 +2283,7 @@ impl PdfAnnotationExporter {
             Annotation::Square(sq) => {
                 // square 不只是写“这是个矩形注释”，
                 // 还会尽量补显式 AP，让阅读器直接看到我们画好的外观。
-                let line_width = sq.width.max(1.0);
+                let line_width = sq.width;
                 dict.set("BS", lopdf::Dictionary::from_iter(vec![
                     ("W", lopdf::Object::Real(line_width)),
                     ("S", lopdf::Object::Name(b"S".to_vec())),
@@ -2257,7 +2311,7 @@ impl PdfAnnotationExporter {
             Annotation::Circle(c) => {
                 // circle 的思路和 square 类似：
                 // 除了基础字典字段，还会补边框、填充色和显式 AP。
-                let line_width = c.width.max(1.0);
+                let line_width = c.width;
                 dict.set("BS", lopdf::Dictionary::from_iter(vec![
                     ("W", lopdf::Object::Real(line_width)),
                     ("S", lopdf::Object::Name(b"S".to_vec())),
@@ -2283,7 +2337,7 @@ impl PdfAnnotationExporter {
             Annotation::Line(l) => {
                 // line 需要的关键数据是起点、终点，以及两端样式。
                 // 如果补了显式 AP，线段和箭头在不同阅读器里会更稳定。
-                let line_width = l.width.max(1.0);
+                let line_width = l.width;
                 if let (Some(start_str), Some(end_str)) = (&l.start, &l.end) {
                     if let (Some(start), Some(end)) = (Self::parse_point(start_str), Self::parse_point(end_str)) {
                         dict.set("L", lopdf::Object::Array(vec![
@@ -2381,6 +2435,12 @@ impl PdfAnnotationExporter {
             }
         }
 
+        if let Some(width) = Self::border_width(annotation) {
+            Self::apply_border_fields(&mut dict, annotation.base(), width);
+        }
+        if matches!(annotation, Annotation::Square(_) | Annotation::Circle(_) | Annotation::Line(_) | Annotation::Polygon(_)) {
+            Self::apply_shape_appearance_properties(document, &dict, base)?;
+        }
         Ok(dict)
     }
 
@@ -2540,12 +2600,19 @@ mod tests {
                 color: None,
                 opacity: 1.0,
                 flags: 0,
+                intent: None,
+                border_style: None,
+                dashes: None,
                 extra: HashMap::new(),
             },
             default_style: None,
             default_appearance: Some("/Courier 14 Tf".to_string()),
             text_color: None,
             align: 0,
+            callout: None,
+            fringe: None,
+            head_style: LineEndingStyle::None,
+            width: 0.0,
         };
 
         let mut document = lopdf::Document::with_version("1.5");
@@ -2595,6 +2662,9 @@ mod tests {
                 color: Some("#E44234".to_string()),
                 opacity: 1.0,
                 flags: 0,
+                intent: None,
+                border_style: None,
+                dashes: None,
                 extra: HashMap::new(),
             },
             width: 2.0,
@@ -2628,6 +2698,9 @@ mod tests {
                 color: Some("#E44234".to_string()),
                 opacity: 1.0,
                 flags: 0,
+                intent: None,
+                border_style: None,
+                dashes: None,
                 extra: HashMap::new(),
             },
             start: Some("110,110".to_string()),
@@ -2668,10 +2741,14 @@ mod tests {
                 color: Some("#E44234".to_string()),
                 opacity: 1.0,
                 flags: 0,
+                intent: None,
+                border_style: None,
+                dashes: None,
                 extra: HashMap::new(),
             },
             vertices: Some("110,110 210,120 180,210 120,200".to_string()),
             is_closed: true,
+            width: 1.0,
         };
 
         let mut document = lopdf::Document::with_version("1.5");

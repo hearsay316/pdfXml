@@ -582,9 +582,9 @@ fn type_specific_attributes_do_not_consume_other_annotations_extensions() {
         .unwrap()
         .document;
     for (index, attributes) in [
-        &["fringe", "width", "symbol", "IT", "callout"][..],
+        &["symbol"][..],
         &["highlight", "align"][..],
-        &["width", "head"][..],
+        &["head"][..],
         &["defaultstyle"][..],
     ]
     .iter()

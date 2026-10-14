@@ -186,12 +186,147 @@ pub struct AnnotationBase {
     #[serde(default)]
     pub flags: u32,
 
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub intent: Option<String>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub border_style: Option<BorderStyle>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub dashes: Option<Vec<f32>>,
+
     /// 自定义属性
     #[serde(flatten)]
     pub extra: HashMap<String, String>,
 }
 
 fn default_opacity() -> f32 { 1.0 }
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum BorderStyle {
+    Solid,
+    Dashed,
+    Bevelled,
+    Inset,
+    Underline,
+}
+
+impl BorderStyle {
+    pub fn from_name(name: &str) -> Option<Self> {
+        match name {
+            "solid" | "S" => Some(Self::Solid),
+            "dash" | "dashed" | "D" => Some(Self::Dashed),
+            "bevelled" | "beveled" | "B" => Some(Self::Bevelled),
+            "inset" | "I" => Some(Self::Inset),
+            "underline" | "U" => Some(Self::Underline),
+            _ => None,
+        }
+    }
+
+    pub fn xfdf_name(self) -> &'static str {
+        match self {
+            Self::Solid => "solid",
+            Self::Dashed => "dash",
+            Self::Bevelled => "bevelled",
+            Self::Inset => "inset",
+            Self::Underline => "underline",
+        }
+    }
+
+    pub fn pdf_name(self) -> &'static str {
+        match self {
+            Self::Solid => "S",
+            Self::Dashed => "D",
+            Self::Bevelled => "B",
+            Self::Inset => "I",
+            Self::Underline => "U",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub enum LineEndingStyle {
+    #[default]
+    None,
+    Square,
+    Circle,
+    Diamond,
+    OpenArrow,
+    ClosedArrow,
+    Butt,
+    ROpenArrow,
+    RClosedArrow,
+    Slash,
+}
+
+impl LineEndingStyle {
+    pub fn from_name(name: &str) -> Option<Self> {
+        match name {
+            "None" => Some(Self::None),
+            "Square" => Some(Self::Square),
+            "Circle" => Some(Self::Circle),
+            "Diamond" => Some(Self::Diamond),
+            "OpenArrow" => Some(Self::OpenArrow),
+            "ClosedArrow" => Some(Self::ClosedArrow),
+            "Butt" => Some(Self::Butt),
+            "ROpenArrow" => Some(Self::ROpenArrow),
+            "RClosedArrow" => Some(Self::RClosedArrow),
+            "Slash" => Some(Self::Slash),
+            _ => None,
+        }
+    }
+
+    pub fn name(self) -> &'static str {
+        match self {
+            Self::None => "None",
+            Self::Square => "Square",
+            Self::Circle => "Circle",
+            Self::Diamond => "Diamond",
+            Self::OpenArrow => "OpenArrow",
+            Self::ClosedArrow => "ClosedArrow",
+            Self::Butt => "Butt",
+            Self::ROpenArrow => "ROpenArrow",
+            Self::RClosedArrow => "RClosedArrow",
+            Self::Slash => "Slash",
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct CalloutLine {
+    pub start: [f64; 2],
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub knee: Option<[f64; 2]>,
+    pub end: [f64; 2],
+}
+
+impl CalloutLine {
+    pub fn from_coordinates(values: &[f64]) -> Option<Self> {
+        if !matches!(values.len(), 4 | 6)
+            || values.iter().any(|v| !v.is_finite() || !(*v as f32).is_finite())
+        {
+            return None;
+        }
+        Some(Self {
+            start: [values[0], values[1]],
+            knee: (values.len() == 6).then(|| [values[2], values[3]]),
+            end: [values[values.len() - 2], values[values.len() - 1]],
+        })
+    }
+
+    pub fn from_string(value: &str) -> Option<Self> {
+        let values = value.split(',').map(|v| v.trim().parse::<f64>())
+            .collect::<std::result::Result<Vec<_>, _>>().ok()?;
+        Self::from_coordinates(&values)
+    }
+
+    pub fn coordinates(&self) -> Vec<f64> {
+        let mut values = self.start.to_vec();
+        if let Some(knee) = self.knee { values.extend(knee); }
+        values.extend(self.end);
+        values
+    }
+}
 
 /// 文本注释，也就是常见的小便签注释。
 ///
@@ -298,6 +433,18 @@ pub struct FreeTextAnnotation {
     /// 对齐方式（0=左对齐, 1=居中, 2=右对齐）
     #[serde(default)]
     pub align: i32,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub callout: Option<CalloutLine>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fringe: Option<Rect>,
+
+    #[serde(default)]
+    pub head_style: LineEndingStyle,
+
+    #[serde(default)]
+    pub width: f32,
 }
 
 /// 方形注释。
@@ -386,6 +533,9 @@ pub struct PolygonAnnotation {
     /// true 表示 polygon（闭合），false 表示 polyline（不闭合）
     #[serde(default = "default_polygon_closed")]
     pub is_closed: bool,
+
+    #[serde(default = "default_line_width")]
+    pub width: f32,
 }
 
 fn default_polygon_closed() -> bool { true }
