@@ -1,7 +1,0 @@
-[target.x86_64-pc-windows-msvc]
-linker = "C:/Program Files/Microsoft Visual Studio/18/Insiders/VC/Tools/MSVC/14.50.35717/bin/Hostx64/x64/link.exe"
-rustflags = [
-    "-L", "D:/Windows Kits/10/Lib/10.0.26100.0/um/x64",
-    "-L", "D:/Windows Kits/10/Lib/10.0.26100.0/ucrt/x64",
-    "-L", "C:/Program Files/Microsoft Visual Studio/18/Insiders/VC/Tools/MSVC/14.44.35207/lib/x64",
-]
